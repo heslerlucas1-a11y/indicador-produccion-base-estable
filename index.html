@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Industrial Excel PRO V27 Roles Google</title>
+  <title>Dashboard Industrial Excel PRO V30 Estable</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
@@ -11,9 +11,9 @@
   <style>
     :root{--bg:#07131f;--panel:#0d2740;--text:#ecf6ff;--muted:#9fc2e3;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;--radius:18px;--kpiH:116px;--fontScale:.92;--topbarH:64px}
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;min-height:100%;background:radial-gradient(circle at top,#0d2944 0,#07131f 58%,#050d15 100%);color:var(--text);font-family:Segoe UI,Arial,sans-serif;overflow:auto}
-    body{display:flex;flex-direction:column;min-height:100vh}
-    .topbar{height:var(--topbarH);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:rgba(5,14,24,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(65,120,165,.35)}
+    html,body{margin:0;padding:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;overflow-x:hidden;overflow-y:auto}
+    body{display:block;min-height:100vh}
+    .topbar{height:var(--topbarH);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);backdrop-filter:blur(10px);border-bottom:1px solid rgba(65,120,165,.35);position:sticky;top:0;z-index:20}
     .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .btn,.file-label{border:none;border-radius:12px;padding:9px 13px;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,#144d7a,#1d77b6)}
     .btn.secondary{background:linear-gradient(135deg,#334155,#475569)}
@@ -25,7 +25,7 @@
     .shell{flex:1 0 auto;min-height:0;padding:12px;overflow:visible}
     #captureArea{min-height:100%;display:grid;grid-template-columns:minmax(640px,1.22fr) minmax(520px,.98fr);gap:12px;align-items:start}
     .col{display:grid;gap:12px;min-height:0}
-    .card{background:linear-gradient(180deg,rgba(16,51,82,.97),rgba(9,32,52,.97));border:1px solid rgba(72,133,182,.32);border-radius:var(--radius);box-shadow:0 0 28px rgba(56,189,248,.10);overflow:hidden}
+    .card{background:var(--panel);border:1px solid rgba(72,133,182,.32);border-radius:var(--radius);box-shadow:0 0 28px rgba(56,189,248,.10);overflow:hidden}
     .pad{padding:14px}
     .header-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .header-card{min-height:128px}
@@ -41,20 +41,19 @@
     .dot{width:13px;height:13px;border-radius:50%}.dot.green{background:var(--green)} .dot.yellow{background:var(--yellow)} .dot.red{background:var(--red)}
     .section-title{font-size:calc(16px * var(--fontScale));font-weight:900;margin-bottom:10px}
     .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-    .kpi{min-height:var(--kpiH);padding:13px}.kpi .t{font-size:calc(11px * var(--fontScale));text-transform:uppercase;letter-spacing:.10em;color:var(--muted);min-height:28px}.kpi .v{font-size:calc(28px * var(--fontScale));font-weight:950;line-height:1.04;margin-top:8px}.kpi .n{font-size:calc(12px * var(--fontScale));color:var(--muted);margin-top:8px;line-height:1.25}
+    .kpi{min-height:var(--kpiH);padding:13px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.kpi .t{font-size:calc(11px * var(--fontScale));text-transform:uppercase;letter-spacing:.10em;color:var(--muted);min-height:28px;display:flex;align-items:center;justify-content:center}.kpi .v{font-size:calc(38px * var(--fontScale));font-weight:950;line-height:1.04;margin-top:10px}.kpi .n{font-size:calc(13px * var(--fontScale));color:var(--muted);margin-top:8px;line-height:1.25}
     .goal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
     .goal{padding:14px;border-radius:16px;background:rgba(4,22,36,.35);border:1px solid rgba(85,138,179,.25)}
     .goal-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:8px}.goal-name{font-size:calc(13px * var(--fontScale));font-weight:800;text-transform:uppercase;color:var(--muted)}.goal-pct{font-size:calc(20px * var(--fontScale));font-weight:900}
     .bar{height:14px;border-radius:999px;background:#05111c;overflow:hidden}.bar>div{height:100%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#22c55e);width:0%}
     .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px;font-size:calc(11px * var(--fontScale));color:var(--muted)} .nums b{display:block;color:#fff;font-size:calc(15px * var(--fontScale));margin-top:2px}
-    .orange-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}.orange-card{padding:14px;border-radius:16px;background:linear-gradient(180deg,rgba(124,45,18,.42),rgba(154,52,18,.22));border:1px solid rgba(249,115,22,.45)}
-    .orange-card .lbl{font-size:calc(12px * var(--fontScale));text-transform:uppercase;letter-spacing:.08em;color:#fed7aa}.orange-card .val{font-size:calc(30px * var(--fontScale));font-weight:950;margin-top:8px;color:#ffedd5}.orange-card .note{font-size:calc(12px * var(--fontScale));color:#fed7aa;margin-top:8px;line-height:1.25}
+    .orange-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}.orange-card{padding:14px;border-radius:16px;background:linear-gradient(180deg,rgba(124,45,18,.42),rgba(154,52,18,.22));border:1px solid rgba(249,115,22,.45);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.orange-card .lbl{font-size:calc(12px * var(--fontScale));text-transform:uppercase;letter-spacing:.08em;color:#fed7aa}.orange-card .val{font-size:calc(34px * var(--fontScale));font-weight:950;margin-top:8px;color:#ffedd5}.orange-card .note{font-size:calc(12px * var(--fontScale));color:#fed7aa;margin-top:8px;line-height:1.25}
     .right-top{display:grid;grid-template-rows:auto 1fr;gap:12px;min-height:0}
     .week-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-    .week-box{padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)} .week-box .w-label{font-size:calc(12px * var(--fontScale));text-transform:uppercase;color:var(--muted)} .week-box .w-value{font-size:calc(24px * var(--fontScale));font-weight:950;margin-top:7px}.week-box .w-miss{font-size:calc(12px * var(--fontScale));color:#ffcc99;margin-top:6px}
+    .week-box{padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center} .week-box .w-label{font-size:calc(12px * var(--fontScale));text-transform:uppercase;color:var(--muted)} .week-box .w-value{font-size:calc(34px * var(--fontScale));font-weight:950;margin-top:7px}.week-box .w-miss{font-size:calc(13px * var(--fontScale));color:#ffcc99;margin-top:6px}
     .chart-wrap{padding:12px;height:100%;min-height:0}.chart-wrap canvas{width:100%!important;height:100%!important}
     .cfg-backdrop,.login-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;z-index:39;pointer-events:none} .login-backdrop.open{pointer-events:auto} .app-content{display:none} body.auth-ok .app-content{display:block} body.auth-ok{overflow:auto} body.auth-locked{overflow:hidden} body.auth-locked #verticalExport{display:none !important}
-    .cfg{position:fixed;top:0;right:0;width:min(920px,97vw);height:100vh;background:linear-gradient(180deg,#0b1e31,#071421);border-left:1px solid rgba(72,133,182,.35);z-index:40;transform:translateX(100%);transition:.25s ease;overflow:auto}.cfg.open{transform:translateX(0)} .cfg-backdrop.open,.login-backdrop.open{display:block}
+    .cfg{position:fixed;top:0;right:0;width:min(920px,97vw);height:100vh;background:linear-gradient(180deg,#0b1e31,#071421);border-left:1px solid rgba(72,133,182,.35);z-index:40;transform:translateX(100%);transition:.25s ease;overflow-y:auto;overscroll-behavior:contain}.cfg.open{transform:translateX(0)} .cfg-backdrop.open,.login-backdrop.open{display:block}
     .cfg-head{position:sticky;top:0;background:rgba(7,20,33,.96);padding:16px;border-bottom:1px solid rgba(72,133,182,.25);display:flex;justify-content:space-between;align-items:center}
     .cfg-body{padding:16px;display:grid;gap:18px}.cfg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:14px}.cfg-card h3{margin:0 0 12px;font-size:16px}
     .row2,.row3,.row4{display:grid;gap:10px}.row2{grid-template-columns:1fr 1fr}.row3{grid-template-columns:1fr 1fr 1fr}.row4{grid-template-columns:1fr 1fr 1fr 1fr}
@@ -66,6 +65,7 @@
     .account-card{width:min(430px,92vw);background:linear-gradient(180deg,#0b1e31,#071421);border:1px solid rgba(72,133,182,.35);border-radius:18px;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,.45)}
     .user-chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px}
     .warn{color:#fcd34d}
+    .users-grid{display:grid;gap:8px}.user-row{display:grid;grid-template-columns:1.2fr 1fr .72fr .72fr;gap:8px;align-items:end;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);padding:10px;border-radius:14px}.user-row.head{background:transparent;border:none;padding:0 2px 6px}.user-row.head div{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.user-row .field{margin-bottom:0}.user-row input,.user-row select{min-width:0}.user-actions{display:flex;gap:8px;justify-content:flex-end}.centered-num{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 
     
     .critical-glow{animation:criticalPulse 1.0s infinite ease-in-out; box-shadow:0 0 16px rgba(239,68,68,.30), 0 0 40px rgba(239,68,68,.28)}
@@ -111,7 +111,7 @@
     .vx-note{font-size:22px;color:#d4ecff;margin-top:12px;line-height:1.25}
 
     @media (max-width:1500px){
-      html,body{overflow:auto}
+      html,body{overflow-y:auto}
       .shell{overflow:visible}
       #captureArea{grid-template-columns:1fr}
       .right-top{grid-template-rows:auto auto}
@@ -122,7 +122,7 @@
       .big-date{font-size:36px}
       .main-rend .val{font-size:56px}
       .topbar{height:auto;flex-wrap:wrap}
-      html,body{overflow:auto}
+      html,body{overflow-y:auto}
     }
   </style>
 </head>
@@ -133,7 +133,7 @@
       <button class="btn" id="openCfg" data-admin-only="true">⚙ Configuración</button>
       <label class="file-label" id="fileLabel" data-admin-only="true">📂 Cargar Excel <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"></label>
       <button class="btn secondary" id="reloadBtn" data-admin-only="true">↻ Recargar Excel</button>
-      <button class="btn secondary" id="googleSyncBtn" data-admin-only="true">☁ Sincronizar Google</button>
+      <button class="btn secondary" id="googleSyncBtn">☁ Sincronizar Google</button>
       <button class="btn green" id="exportBtn">🖼 Exportar PNG</button>
       <select class="btn secondary" id="exportMode" style="appearance:none;min-width:170px;padding-right:34px"><option value="mobile">PNG Celular</option><option value="presentation">PNG Presentación</option><option value="desktop">PNG PC</option></select>
     </div>
@@ -180,13 +180,17 @@
         <h3>Hoja y estilo general</h3>
         <div class="row4">
           <div class="field"><label>Hoja a leer</label><select id="sheetSelect"></select></div>
-          <div class="field"><label>Título ventana</label><input id="dashTitle" value="Dashboard Industrial Excel PRO V27 Roles Google"></div>
+          <div class="field"><label>Título ventana</label><input id="dashTitle" value="Dashboard Industrial Excel PRO V30 Estable"></div>
           <div class="field"><label>Meta semanal (línea roja)</label><input id="weeklyTargetLine" type="number" value="700000"></div>
           <div class="field"><label>Escala fuente</label><input id="fontScale" type="number" min="0.70" max="1.20" step="0.02" value="0.92"></div>
           <div class="field"><label>Color fondo</label><input id="bgColor" type="color" value="#07131f"></div>
           <div class="field"><label>Color panel</label><input id="panelColor" type="color" value="#0d2740"></div>
           <div class="field"><label>Color texto</label><input id="textColor" type="color" value="#ecf6ff"></div>
           <div class="field"><label>Alto KPI</label><input id="kpiH" type="number" min="100" max="180" value="116"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Texto marca exportación</label><input id="exportBrandText" value="LAHARRAGUE CHODORGE"></div>
+          <div class="small" style="display:flex;align-items:end">Se usa en el PNG exportado para reemplazar el logo defectuoso y sale limpio en la imagen.</div>
         </div>
         <div class="small">El total faltante activo ahora suma faltantes reales de semanas activas, sin promediar.</div>
       </div>
@@ -198,7 +202,8 @@
           <div class="field"><label>Auto cargar al iniciar</label><select id="googleAutoLoad"><option value="true">Sí</option><option value="false">No</option></select></div>
         </div>
         <div class="field"><label>URL publicada</label><input id="googleSheetUrl" placeholder="Pegá acá la URL pubhtml o CSV"></div>
-        <div class="small">Acepta el link publicado tipo <b>pubhtml</b> y lo convierte automáticamente a CSV. Se leen la fila 1 como encabezados y la fila 2 como valores, manteniendo tus celdas A2, B2, C2, etc.</div>
+        <div class="field"><label>URL Apps Script</label><input id="appScriptUrl" placeholder="Pegá acá la URL /exec del Apps Script"></div>
+        <div class="small">Acepta el link publicado tipo <b>pubhtml</b> y lo convierte automáticamente a CSV. Se leen la fila 1 como encabezados y la fila 2 como valores, manteniendo tus celdas A2, B2, C2, etc. La URL Apps Script te permite cambiar backend sin tocar el código HTML.</div>
       </div>
 
       <div class="cfg-card">
@@ -243,6 +248,8 @@
       <div class="cfg-card">
         <h3>Usuarios</h3>
         <div class="small warn" style="margin-bottom:10px">Esta versión usa login real contra Google Apps Script. Los usuarios ya no se guardan en este navegador.</div>
+        <div class="small" style="margin-bottom:10px">Administración centralizada de usuarios desde Apps Script. Desde acá podés agregar usuarios, cambiar rol, activar/desactivar y definir contraseña inicial.</div>
+        <div class="small warn" id="usersMsg" style="margin-bottom:10px">Cargando lista de usuarios...</div>
         <div id="usersContainer"></div>
         <div class="row2">
           <button class="btn green" id="addUserBtn" style="display:none">Agregar usuario</button>
@@ -310,8 +317,8 @@ const DEFAULT_MAPPING={
   sem3:{label:'Producción semana 3',title:'Semana 3',cell:'P2',manual:'',note:'Acumulado',fmt:'num'},
   sem4:{label:'Producción semana 4',title:'Semana 4',cell:'Q2',manual:'',note:'Acumulado',fmt:'num'}
 };
-const DEFAULT_CFG={dashTitle:'Dashboard Industrial Excel PRO V21 Google',selectedSheet:'',weeklyTargetLine:700000,bgColor:'#07131f',panelColor:'#0d2740',textColor:'#ecf6ff',kpiH:116,fontScale:.92,lastEditedCell:'sin cambios',titles:JSON.parse(JSON.stringify(DEFAULT_TITLES)),weekLabels:[...DEFAULT_WEEK_LABELS],weekLabelsAuto:true,weekLabelStartCell:'U2',useGoogleSheet:true,googleAutoLoad:true,googleSheetUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSATKnC3Gc2QmQIp1oojeY-lTadFdVpaMEMX9SGKQ3sTDxoHMqUvmKOZAm2Q1Li2TO8sUgsg1TGcfEb/pub?output=csv',mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING))};
-const WEB_APP_URL='https://script.google.com/macros/s/AKfycbwlPyp1n7rt5MwcaqW9e6kGvw99Y49PrGXEqtmsaLCztazI-rwHSBc44hefgGCGnGw/exec';
+const DEFAULT_CFG={dashTitle:'Dashboard Industrial Excel PRO V30 Estable',exportBrandText:'LAHARRAGUE CHODORGE',selectedSheet:'',weeklyTargetLine:700000,bgColor:'#07131f',panelColor:'#0d2740',textColor:'#ecf6ff',kpiH:116,fontScale:.92,lastEditedCell:'sin cambios',titles:JSON.parse(JSON.stringify(DEFAULT_TITLES)),weekLabels:[...DEFAULT_WEEK_LABELS],weekLabelsAuto:true,weekLabelStartCell:'U2',useGoogleSheet:true,googleAutoLoad:true,googleSheetUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSATKnC3Gc2QmQIp1oojeY-lTadFdVpaMEMX9SGKQ3sTDxoHMqUvmKOZAm2Q1Li2TO8sUgsg1TGcfEb/pub?output=csv',appScriptUrl:'https://script.google.com/macros/s/AKfycbxdLSz6K_2c3M2L0GqbNwHPXc1ClOa8Ctz7vt4xsDz9nM2xMR9wqAmLK2zbSEVyBLuj/exec',mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING))};
+function getWebAppUrl(){ return String((cfg && cfg.appScriptUrl) || DEFAULT_CFG.appScriptUrl || '').trim(); }
 
 function jsonpRequest(params){
   return new Promise((resolve, reject) => {
@@ -349,7 +356,14 @@ function jsonpRequest(params){
       reject(new Error('Error cargando script JSONP'));
     };
 
-    script.src = WEB_APP_URL + '?' + query.toString();
+    const baseUrl = getWebAppUrl();
+    if(!baseUrl){
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error('No hay URL de Apps Script configurada'));
+      return;
+    }
+    script.src = baseUrl + '?' + query.toString();
     document.body.appendChild(script);
   });
 }
@@ -372,17 +386,18 @@ function normalizeCriticalMappings(target){
   if(up(target.mapping.actualSem.manual)==='' && up(target.mapping.actualSem.cell)!=='S2') target.mapping.actualSem.cell='S2';
   return target;
 }
-function loadCfg(){try{const s=JSON.parse(localStorage.getItem('dashboard_excel_pro_v26')||'null');if(!s)return normalizeCriticalMappings(deep(DEFAULT_CFG));const merged={...deep(DEFAULT_CFG),...s,titles:{...DEFAULT_TITLES,...(s.titles||{})},weekLabels:[...(s.weekLabels||DEFAULT_WEEK_LABELS)],mapping:{...deep(DEFAULT_MAPPING),...(s.mapping||{})}}; return normalizeCriticalMappings(merged)}catch(e){return normalizeCriticalMappings(deep(DEFAULT_CFG))}}
-function saveCfgLS(){localStorage.setItem('dashboard_excel_pro_v26',JSON.stringify(cfg))}
-function loadSession(){try{return JSON.parse(sessionStorage.getItem('dashboard_session_v27')||'null')}catch(e){return null}}
-function saveSession(){if(currentUser)sessionStorage.setItem('dashboard_session_v27',JSON.stringify(currentUser))}
-function clearSession(){sessionStorage.removeItem('dashboard_session_v27')}
+function loadCfg(){try{const raw=localStorage.getItem('dashboard_excel_pro_v30')||localStorage.getItem('dashboard_excel_pro_v29')||localStorage.getItem('dashboard_excel_pro_v27')||localStorage.getItem('dashboard_excel_pro_v26')||'null';const s=JSON.parse(raw);if(!s)return normalizeCriticalMappings(deep(DEFAULT_CFG));const merged={...deep(DEFAULT_CFG),...s,titles:{...DEFAULT_TITLES,...(s.titles||{})},weekLabels:[...(s.weekLabels||DEFAULT_WEEK_LABELS)],mapping:{...deep(DEFAULT_MAPPING),...(s.mapping||{})}}; return normalizeCriticalMappings(merged)}catch(e){return normalizeCriticalMappings(deep(DEFAULT_CFG))}}
+function saveCfgLS(){localStorage.setItem('dashboard_excel_pro_v30',JSON.stringify(cfg)); localStorage.setItem('dashboard_excel_pro_v29',JSON.stringify(cfg))}
+function loadSession(){try{return JSON.parse(sessionStorage.getItem('dashboard_session_v30')||sessionStorage.getItem('dashboard_session_v29')||sessionStorage.getItem('dashboard_session_v27')||'null')}catch(e){return null}}
+function saveSession(){if(currentUser)sessionStorage.setItem('dashboard_session_v30',JSON.stringify(currentUser))}
+function clearSession(){sessionStorage.removeItem('dashboard_session_v30');sessionStorage.removeItem('dashboard_session_v29');sessionStorage.removeItem('dashboard_session_v27')}
 
-function loadRendered(){try{return JSON.parse(localStorage.getItem('dashboard_rendered_v27')||'null')}catch(e){return null}}
-function saveRendered(obj){localStorage.setItem('dashboard_rendered_v27',JSON.stringify(obj)); lastRendered=obj}
+function loadRendered(){try{return JSON.parse(localStorage.getItem('dashboard_rendered_v30')||localStorage.getItem('dashboard_rendered_v29')||localStorage.getItem('dashboard_rendered_v27')||'null')}catch(e){return null}}
+function saveRendered(obj){localStorage.setItem('dashboard_rendered_v30',JSON.stringify(obj)); localStorage.setItem('dashboard_rendered_v29',JSON.stringify(obj)); lastRendered=obj}
 
 
 let googleSheetGrid = null;
+window.userAdminRows = [];
 
 function colToIndex(col){
   let n = 0;
@@ -510,6 +525,7 @@ function updateRoleUi(){
   document.querySelectorAll('[data-admin-only="true"]').forEach(el=>{
     el.style.display = isAdmin ? '' : 'none';
   });
+  $('googleSyncBtn').style.display = currentUser ? 'inline-block' : 'none';
   $('accountBtn').style.display = currentUser ? 'inline-block' : 'none';
   $('logoutBtn').style.display = currentUser ? 'inline-block' : 'none';
 }
@@ -548,6 +564,8 @@ function unlockApp(user, role){
   $('loginBox').style.display='none';
   $('loginMsg').textContent='Acceso correcto';
   $('loginPass').value='';
+  document.documentElement.style.overflowY='auto';
+  document.body.style.overflowY='auto';
   renderUserChip();
   updateRoleUi();
   if(role!=='admin') closeCfg();
@@ -567,14 +585,79 @@ function openAccount(){
   $('accountBox').style.display='flex';
 }
 function closeAccount(){ $('accountBackdrop').classList.remove('open'); $('accountBox').style.display='none'; }
-function openCfg(){ if(!currentUser || currentUser.role!=='admin'){ alert('Solo el usuario administrador puede entrar a configuración.'); return; } $('cfgBackdrop').classList.add('open'); $('cfgPanel').classList.add('open'); }
+function openCfg(){ if(!currentUser || currentUser.role!=='admin'){ alert('Solo el usuario administrador puede entrar a configuración.'); return; } $('cfgBackdrop').classList.add('open'); $('cfgPanel').classList.add('open'); refreshUsersFromBackend(); }
 function closeCfg(){ $('cfgBackdrop').classList.remove('open'); $('cfgPanel').classList.remove('open'); }
 function renderUsers(){
   const box=$('usersContainer');
-  box.innerHTML='<div class="small">Usuarios administrados por Apps Script.<br>Alta y baja de usuarios todavía no están expuestas en este HTML. El cambio de contraseña del usuario activo ya funciona contra Apps Script.</div>';
+  const msg=$('usersMsg');
+  const isAdmin = !!(currentUser && currentUser.role==='admin');
+  $('addUserBtn').style.display = isAdmin ? 'inline-block' : 'none';
+  $('saveUsersBtn').style.display = isAdmin ? 'inline-block' : 'none';
+
+  if(!isAdmin){
+    box.innerHTML='<div class="small">Los usuarios se administran con permisos de administrador.</div>';
+    if(msg) msg.textContent='Modo visor: sin permisos para editar usuarios.';
+    return;
+  }
+
+  if(!window.userAdminRows || !Array.isArray(window.userAdminRows) || !window.userAdminRows.length){
+    box.innerHTML='<div class="small">No hay usuarios cargados todavía o el backend V29 aún no expone la lista.</div>';
+    if(msg) msg.textContent='Podés recargar la lista desde configuración.';
+    return;
+  }
+
+  const head = `<div class="user-row head"><div>Usuario</div><div>Contraseña</div><div>Rol</div><div>Activo</div></div>`;
+  const rows = window.userAdminRows.map((u,idx)=>`
+    <div class="user-row" data-user-idx="${idx}">
+      <div class="field"><input data-key="username" value="${esc(u.username||'')}" ${u.locked?'readonly':''}></div>
+      <div class="field"><input data-key="password" value="${esc(u.password||'')}" placeholder="Contraseña"></div>
+      <div class="field"><select data-key="role"><option value="admin" ${u.role==='admin'?'selected':''}>admin</option><option value="visor" ${u.role==='visor'?'selected':''}>visor</option></select></div>
+      <div class="field"><select data-key="active"><option value="SI" ${(String(u.active||'SI').toUpperCase()==='SI')?'selected':''}>SI</option><option value="NO" ${(String(u.active||'SI').toUpperCase()==='NO')?'selected':''}>NO</option></select></div>
+    </div>`).join('');
+  box.innerHTML = `<div class="users-grid">${head}${rows}</div>`;
+  if(msg) msg.textContent='Editá y guardá. Los cambios impactan sobre la hoja Usuarios vía Apps Script V29.';
+}
+
+async function refreshUsersFromBackend(){
+  const msg=$('usersMsg');
+  if(!currentUser || currentUser.role!=='admin') return;
+  if(msg) msg.textContent='Cargando usuarios desde Apps Script...';
+  try{
+    const data = await jsonpRequest({action:'listUsers', user: currentUser.username, pass: currentUser.password || ''});
+    if(data && data.status==='ok' && Array.isArray(data.users)){
+      window.userAdminRows = data.users.map(u=>({
+        username:String(u.username||''),
+        password:String(u.password||''),
+        role:String(u.role||'visor'),
+        active:String(u.active||'SI').toUpperCase()==='NO'?'NO':'SI',
+        locked:true
+      }));
+      renderUsers();
+      if(msg) msg.textContent='Usuarios cargados correctamente.';
+    }else{
+      window.userAdminRows=[];
+      renderUsers();
+      if(msg) msg.textContent=(data&&data.message)||'El backend no devolvió lista de usuarios.';
+    }
+  }catch(err){
+    console.error(err);
+    window.userAdminRows=[];
+    renderUsers();
+    if(msg) msg.textContent='No se pudo leer la lista de usuarios. Revisá que Apps Script tenga las acciones V29.';
+  }
+}
+
+function collectUsersFromPanel(){
+  const rows=[...document.querySelectorAll('#usersContainer .user-row[data-user-idx]')];
+  return rows.map(row=>({
+    username: row.querySelector('[data-key="username"]').value.trim(),
+    password: row.querySelector('[data-key="password"]').value.trim(),
+    role: row.querySelector('[data-key="role"]').value,
+    active: row.querySelector('[data-key="active"]').value
+  })).filter(u=>u.username);
 }
 function renderConfig(){
-  $('dashTitle').value=cfg.dashTitle; $('weeklyTargetLine').value=cfg.weeklyTargetLine; $('bgColor').value=cfg.bgColor; $('panelColor').value=cfg.panelColor; $('textColor').value=cfg.textColor; $('kpiH').value=cfg.kpiH; $('fontScale').value=cfg.fontScale; $('useGoogleSheet').value=String(!!cfg.useGoogleSheet); $('googleAutoLoad').value=String(!!cfg.googleAutoLoad); $('googleSheetUrl').value=cfg.googleSheetUrl || '';
+  $('dashTitle').value=cfg.dashTitle; $('weeklyTargetLine').value=cfg.weeklyTargetLine; $('exportBrandText').value=cfg.exportBrandText||'LAHARRAGUE CHODORGE'; $('bgColor').value=cfg.bgColor; $('panelColor').value=cfg.panelColor; $('textColor').value=cfg.textColor; $('kpiH').value=cfg.kpiH; $('fontScale').value=cfg.fontScale; $('useGoogleSheet').value=String(!!cfg.useGoogleSheet); $('googleAutoLoad').value=String(!!cfg.googleAutoLoad); $('googleSheetUrl').value=cfg.googleSheetUrl || ''; $('appScriptUrl').value=cfg.appScriptUrl || DEFAULT_CFG.appScriptUrl;
   Object.keys(DEFAULT_TITLES).forEach(k=>{const el=document.getElementById(k+'_in'); if(el) el.value=cfg.titles[k]||DEFAULT_TITLES[k]});
   $('weekLabel1').value=cfg.weekLabels[0]||'Semana 1'; $('weekLabel2').value=cfg.weekLabels[1]||'Semana 2'; $('weekLabel3').value=cfg.weekLabels[2]||'Semana 3'; $('weekLabel4').value=cfg.weekLabels[3]||'Semana 4'; $('weekLabelsAuto').value=String(!!cfg.weekLabelsAuto); $('weekLabelStartCell').value=cfg.weekLabelStartCell||''; $('weekLabelPreview').value=weekLabelPreviewText();
   $('sheetSelect').innerHTML=''; if(workbook){workbook.SheetNames.forEach(n=>{const op=document.createElement('option'); op.value=n; op.textContent=n; if(n===cfg.selectedSheet) op.selected=true; $('sheetSelect').appendChild(op);});} else {const op=document.createElement('option'); op.value=''; op.textContent='Sin libro cargado'; $('sheetSelect').appendChild(op);}
@@ -595,12 +678,36 @@ function renderConfig(){
   renderUsers();
 }
 function applyConfigFromPanel(){
-  cfg.dashTitle=$('dashTitle').value||DEFAULT_CFG.dashTitle; cfg.weeklyTargetLine=normalizeNumber($('weeklyTargetLine').value); cfg.bgColor=$('bgColor').value; cfg.panelColor=$('panelColor').value; cfg.textColor=$('textColor').value; cfg.kpiH=Number($('kpiH').value||DEFAULT_CFG.kpiH); cfg.fontScale=Number($('fontScale').value||DEFAULT_CFG.fontScale); cfg.selectedSheet=$('sheetSelect').value||cfg.selectedSheet; cfg.useGoogleSheet=$('useGoogleSheet').value==='true'; cfg.googleAutoLoad=$('googleAutoLoad').value==='true'; cfg.googleSheetUrl=$('googleSheetUrl').value.trim();
+  cfg.dashTitle=$('dashTitle').value||DEFAULT_CFG.dashTitle;
+  cfg.weeklyTargetLine=normalizeNumber($('weeklyTargetLine').value);
+  cfg.exportBrandText=$('exportBrandText').value||DEFAULT_CFG.exportBrandText;
+  cfg.bgColor=$('bgColor').value;
+  cfg.panelColor=$('panelColor').value;
+  cfg.textColor=$('textColor').value;
+  cfg.kpiH=Number($('kpiH').value||DEFAULT_CFG.kpiH);
+  cfg.fontScale=Number($('fontScale').value||DEFAULT_CFG.fontScale);
+  cfg.selectedSheet=$('sheetSelect').value||cfg.selectedSheet;
+  cfg.useGoogleSheet=$('useGoogleSheet').value==='true';
+  cfg.googleAutoLoad=$('googleAutoLoad').value==='true';
+  cfg.googleSheetUrl=$('googleSheetUrl').value.trim();
+  cfg.appScriptUrl=$('appScriptUrl').value.trim() || DEFAULT_CFG.appScriptUrl;
   Object.keys(DEFAULT_TITLES).forEach(k=>{const el=document.getElementById(k+'_in'); if(el) cfg.titles[k]=el.value||DEFAULT_TITLES[k]});
-  cfg.weekLabels=[$('weekLabel1').value||'Semana 1',$('weekLabel2').value||'Semana 2',$('weekLabel3').value||'Semana 3',$('weekLabel4').value||'Semana 4']; cfg.weekLabelsAuto=$('weekLabelsAuto').value==='true'; cfg.weekLabelStartCell=($('weekLabelStartCell').value||'').trim().toUpperCase();
-  cfg.mapping.sem1.title=cfg.weekLabels[0]; cfg.mapping.sem2.title=cfg.weekLabels[1]; cfg.mapping.sem3.title=cfg.weekLabels[2]; cfg.mapping.sem4.title=cfg.weekLabels[3];
-  document.querySelectorAll('#mappingContainer input').forEach(inp=>{cfg.mapping[inp.dataset.key][inp.dataset.prop]=inp.value; if(inp.dataset.prop==='cell' && inp.value.trim()!=='') cfg.lastEditedCell = `${cfg.mapping[inp.dataset.key].label}: ${inp.value.trim().toUpperCase()}`;});
-  normalizeCriticalMappings(cfg); saveCfgLS(); setVars(); renderTitles(); renderDashboard(); renderConfig();
+  cfg.weekLabels=[$('weekLabel1').value||'Semana 1',$('weekLabel2').value||'Semana 2',$('weekLabel3').value||'Semana 3',$('weekLabel4').value||'Semana 4'];
+  cfg.weekLabelsAuto=$('weekLabelsAuto').value==='true';
+  cfg.weekLabelStartCell=($('weekLabelStartCell').value||'').trim().toUpperCase();
+  cfg.mapping.sem1.title=cfg.weekLabels[0];
+  cfg.mapping.sem2.title=cfg.weekLabels[1];
+  cfg.mapping.sem3.title=cfg.weekLabels[2];
+  cfg.mapping.sem4.title=cfg.weekLabels[3];
+  document.querySelectorAll('#mappingContainer input').forEach(inp=>{
+    cfg.mapping[inp.dataset.key][inp.dataset.prop]=inp.value;
+    if(inp.dataset.prop==='cell' && inp.value.trim()!=='') cfg.lastEditedCell = `${cfg.mapping[inp.dataset.key].label}: ${inp.value.trim().toUpperCase()}`;
+  });
+  normalizeCriticalMappings(cfg);
+  saveCfgLS();
+  setVars();
+  renderTitles();
+  renderConfig();
 }
 function getActualDia(){return numMetric('actualDia')}
 function getActualSem(){return numMetric('actualSem')}
@@ -617,14 +724,15 @@ function renderDashboard(){
   $('rendBand').classList.toggle('optimal-glow', st.cls==='green');
   const weeks=[numMetric('sem1'),numMetric('sem2'),numMetric('sem3'),numMetric('sem4')]; const weekTitles=getWeekTitles(); const activeWeeks=getActiveWeeks(weeks);
   const actualDia=getActualDia(), actualSem=getActualSem(), actualMes=getActualMes(), objDia=numMetric('objDia'), objSem=numMetric('objSem'), objMes=numMetric('objMes');
-  const faltSemana=Math.max(objSem-actualSem,0), faltMes=Math.max(objMes-actualMes,0), faltTotalActivo=activeWeeks.length?activeWeeks.reduce((a,b)=>a+Math.max(cfg.weeklyTargetLine-b,0),0):0;
+  const targetLine = objSem>0 ? objSem : cfg.weeklyTargetLine;
+  const faltSemana=Math.max(objSem-actualSem,0), faltMes=Math.max(objMes-actualMes,0), faltTotalActivo=activeWeeks.length?activeWeeks.reduce((a,b)=>a+Math.max(targetLine-b,0),0):0;
   $('faltSemana').textContent=formatNum(faltSemana,0); $('faltMes').textContent=formatNum(faltMes,0); $('faltMetaProm').textContent=formatNum(faltTotalActivo,0);
   const goals=[{title:cfg.mapping.objDia.title||'Objetivo diario',actual:actualDia,obj:objDia},{title:cfg.mapping.objSem.title||'Objetivo semanal',actual:actualSem,obj:objSem},{title:cfg.mapping.objMes.title||'Objetivo mensual',actual:actualMes,obj:objMes}];
   const kpiData=[]; $('kpiGrid').innerHTML=''; ['totalTablas','tablasNegras','rendTablasNegras','m3Consumido','m3Producido','rendM3','p2Prod','p2Esp'].forEach(k=>{const m=cfg.mapping[k]; const shown=displayMetric(k); kpiData.push({title:m.title,value:shown,note:m.note||''}); const div=document.createElement('div'); div.className='card kpi'; div.innerHTML=`<div class="t">${esc(m.title)}</div><div class="v">${shown}</div><div class="n">${esc(m.note||'')}</div>`; $('kpiGrid').appendChild(div);});
   const goalData=[]; $('goalGrid').innerHTML=''; goals.forEach(g=>{const pct=g.obj>0?(g.actual/g.obj)*100:0, falta=Math.max(g.obj-g.actual,0); goalData.push({title:g.title,actual:formatNum(g.actual,0),obj:formatNum(g.obj,0),falta:formatNum(falta,0),pct:formatPct(pct,1)}); const div=document.createElement('div'); div.className='goal'; div.innerHTML=`<div class="goal-top"><div class="goal-name">${esc(g.title)}</div><div class="goal-pct">${formatPct(pct,1)}</div></div><div class="bar"><div style="width:${Math.min(pct,100)}%"></div></div><div class="nums"><div>Actual<b>${formatNum(g.actual,0)}</b></div><div>Objetivo<b>${formatNum(g.obj,0)}</b></div><div>Falta<b>${formatNum(falta,0)}</b></div></div>`; $('goalGrid').appendChild(div);});
-  const weekData=[]; $('weekGrid').innerHTML=''; weeks.forEach((v,i)=>{const miss=v>0?Math.max(cfg.weeklyTargetLine-v,0):0; weekData.push({title:weekTitles[i],value:formatNum(v,0),miss:v>0?formatNum(miss,0):'Semana inactiva'}); const div=document.createElement('div'); div.className='week-box'; div.innerHTML=`<div class="w-label">${esc(weekTitles[i])}</div><div class="w-value">${formatNum(v,0)}</div><div class="w-miss">${v>0?'Falta: '+formatNum(miss,0):'Semana inactiva'}</div>`; $('weekGrid').appendChild(div);});
+  const weekData=[]; $('weekGrid').innerHTML=''; weeks.forEach((v,i)=>{const miss=v>0?Math.max(targetLine-v,0):0; weekData.push({title:weekTitles[i],value:formatNum(v,0),miss:v>0?formatNum(miss,0):'Semana inactiva'}); const div=document.createElement('div'); div.className='week-box'; div.innerHTML=`<div class="w-label">${esc(weekTitles[i])}</div><div class="w-value">${formatNum(v,0)}</div><div class="w-miss">${v>0?'Falta: '+formatNum(miss,0):'Semana inactiva'}</div>`; $('weekGrid').appendChild(div);});
   saveRendered({fecha,fechaSub:$('fechaSub').textContent,rend:displayMetric('rendP2'),state:st,kpiData,goalData,weekData,faltSemana:formatNum(faltSemana,0),faltMes:formatNum(faltMes,0),faltActivo:formatNum(faltTotalActivo,0)});
-  if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:'Producción semanal',data:weeks,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:cfg.weeklyTargetLine,yMax:cfg.weeklyTargetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(cfg.weeklyTargetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
+  if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:'Producción semanal',data:weeks,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:targetLine,yMax:targetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(targetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
 }
 
 
@@ -671,8 +779,8 @@ function buildStackedExport(mode="mobile"){
     d.style.borderRadius = '16px';
     d.style.padding = '14px';
     d.innerHTML = `<div style="font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:#bfe2ff;font-weight:700">${label}</div>
-      <div style="font-size:36px;font-weight:900;color:#ffffff;margin-top:8px;line-height:1.04">${value}</div>
-      ${note ? `<div style="font-size:15px;color:#d4ecff;margin-top:8px;line-height:1.2">${note}</div>` : ''}`;
+      <div style="font-size:40px;font-weight:900;color:#ffffff;margin-top:10px;line-height:1.04;text-align:center;display:flex;justify-content:center;align-items:center;min-height:44px">${value}</div>
+      ${note ? `<div style="font-size:15px;color:#d4ecff;margin-top:8px;line-height:1.2;text-align:center;display:flex;justify-content:center;align-items:center">${note}</div>` : ''}`;
     return d;
   };
 
@@ -687,10 +795,19 @@ function buildStackedExport(mode="mobile"){
   hleft.innerHTML = `<div style="font-size:34px;font-weight:900;letter-spacing:.08em;color:#ffffff">INDICADOR DE PRODUCCIÓN</div>
     <div style="font-size:18px;color:#cde8ff;margin-top:8px">${d.fechaSub || ''}</div>`;
 
-  const hright = document.createElement('img');
-  hright.src = EXPORT_LOGO;
-  hright.style.height = '70px';
-  hright.style.objectFit = 'contain';
+  const hright = document.createElement('div');
+  hright.style.padding = '10px 14px';
+  hright.style.borderRadius = '14px';
+  hright.style.border = '1px solid rgba(120,180,228,.28)';
+  hright.style.background = 'rgba(255,255,255,.03)';
+  hright.style.fontSize = '18px';
+  hright.style.fontWeight = '900';
+  hright.style.letterSpacing = '.08em';
+  hright.style.textAlign = 'right';
+  hright.style.color = '#d7ecff';
+  hright.style.whiteSpace = 'pre-line';
+  const brandText = cfg.exportBrandText || 'LAHARRAGUE CHODORGE';
+  hright.textContent = brandText.includes('\n') ? brandText : brandText.replace(' CHODORGE','\nCHODORGE');
 
   hwrap.appendChild(hleft);
   hwrap.appendChild(hright);
@@ -702,8 +819,8 @@ function buildStackedExport(mode="mobile"){
   top.style.gap = preset.gap;
 
   const c1 = mkCard();
-  c1.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff">Fecha de proceso</div>
-    <div style="font-size:68px;font-weight:950;line-height:1.05;margin-top:12px">${d.fecha || '--/--/----'}</div>`;
+  c1.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">Fecha de proceso</div>
+    <div style="font-size:68px;font-weight:950;line-height:1.05;margin-top:12px;text-align:center;display:flex;justify-content:center;align-items:center;min-height:80px">${d.fecha || '--/--/----'}</div>`;
   top.appendChild(c1);
 
   const c2 = mkCard();
@@ -747,10 +864,10 @@ function buildStackedExport(mode="mobile"){
       <div style="font-size:${preset.metric}px;font-weight:900;color:#ffffff">${g.pct}</div>
     </div>
     <div style="height:16px;border-radius:999px;background:#05111c;margin-top:12px;overflow:hidden"><div style="height:100%;width:${Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')))}%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#22c55e)"></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;font-size:14px;color:#cde8ff">
-      <div>Actual<br><b style="font-size:24px;color:#fff">${g.actual}</b></div>
-      <div>Objetivo<br><b style="font-size:24px;color:#fff">${g.obj}</b></div>
-      <div>Falta<br><b style="font-size:24px;color:#fff">${g.falta}</b></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;font-size:14px;color:#cde8ff;text-align:center">
+      <div>Actual<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.actual}</b></div>
+      <div>Objetivo<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.obj}</b></div>
+      <div>Falta<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.falta}</b></div>
     </div>`;
     og.appendChild(item);
   });
@@ -811,7 +928,9 @@ function renderFromStored(){
 }
 
 $('openCfg').onclick=()=>openCfg(); $('closeCfg').onclick=()=>closeCfg(); $('cfgBackdrop').onclick=()=>closeCfg();
-$('saveCfg').onclick=()=>{applyConfigFromPanel(); closeCfg();};
+$('saveCfg').onclick=async ()=>{ try{ applyConfigFromPanel(); if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); } renderDashboard(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50); }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola.'); } };
+$('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
+$('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const data = await jsonpRequest({action:'saveUsers', user: currentUser.username, pass: currentUser.password || '', users: JSON.stringify(users)}); if(data && data.status==='ok'){ $('usersMsg').textContent='Usuarios guardados correctamente.'; await refreshUsersFromBackend(); } else { $('usersMsg').textContent=(data&&data.message)||'No se pudieron guardar los usuarios.'; } }catch(err){ console.error(err); $('usersMsg').textContent='Error al guardar usuarios. Revisá Apps Script.'; } };
 $('restoreMappingBtn').onclick=()=>{
   if(!confirm('¿Restaurar el mapeo recomendado? Esto reemplaza solo las celdas, manuales y notas del bloque de mapeo.')) return;
   cfg.mapping = deep(DEFAULT_MAPPING);
@@ -827,7 +946,7 @@ $('resetCfg').onclick=()=>{
   renderConfig();
   renderDashboard();
 };
-$('reloadBtn').onclick=()=>$('fileInput').click(); $('googleSyncBtn').onclick=()=>loadGoogleSheetData(true); $('fileInput').addEventListener('click',e=>{e.target.value='';}); $('fileInput').addEventListener('change',async e=>{const file=e.target.files[0]; if(!file)return; const buf=await file.arrayBuffer(); workbook=XLSX.read(buf,{type:'array'}); googleSheetGrid=null; if(!cfg.selectedSheet || !workbook.SheetNames.includes(cfg.selectedSheet)) cfg.selectedSheet=workbook.SheetNames[0]; $('fileInfo').textContent=`${file.name} · modificado ${new Date(file.lastModified).toLocaleString('es-AR')} · hoja ${cfg.selectedSheet}`; $('googleInfo').textContent='Fuente actual: Excel local'; renderConfig(); renderDashboard();});
+$('reloadBtn').onclick=()=>$('fileInput').click(); $('googleSyncBtn').onclick=()=>loadGoogleSheetData(true); $('fileInput').addEventListener('click',e=>{e.target.value='';}); $('fileInput').addEventListener('change',async e=>{const file=e.target.files[0]; if(!file)return; const buf=await file.arrayBuffer(); workbook=XLSX.read(buf,{type:'array'}); googleSheetGrid=null; if(!cfg.selectedSheet || !workbook.SheetNames.includes(cfg.selectedSheet)) cfg.selectedSheet=workbook.SheetNames[0]; $(`fileInfo`).textContent=`${file.name} · modificado ${new Date(file.lastModified).toLocaleString('es-AR')} · hoja ${cfg.selectedSheet}`; $('googleInfo').textContent='Fuente actual: Excel local'; saveCfgLS(); renderConfig(); renderDashboard();});
 $('exportBtn').onclick=async ()=>{
   try{
     const mode = ($('exportMode')?.value || 'mobile');
@@ -879,7 +998,7 @@ $('exportBtn').onclick=async ()=>{
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dashboard_${mode}_v27.png`;
+      a.download = `dashboard_${mode}_v29.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -890,7 +1009,7 @@ $('exportBtn').onclick=async ()=>{
     alert('Error al exportar PNG.');
   }
 };
-$('logoutBtn').onclick=()=>{currentUser=null; clearSession(); renderUserChip(); updateRoleUi(); lockApp('Sesión cerrada');};
+$('logoutBtn').onclick=()=>{currentUser=null; clearTimeout(sessionTimer); clearSession(); renderUserChip(); updateRoleUi(); lockApp('Sesión cerrada');};
 $('loginBtn').onclick=async ()=>{
   const u=$('loginUser').value.trim();
   const p=$('loginPass').value;
@@ -903,9 +1022,10 @@ $('loginBtn').onclick=async ()=>{
       return;
     }
     const role = String(data.role||'visor').toLowerCase()==='viewer' ? 'visor' : String(data.role||'visor').toLowerCase();
-    currentUser={username:String(data.user||u).trim(),role};
+    currentUser={username:String(data.user||u).trim(),role,password:p};
     saveSession();
     unlockApp(currentUser.username,currentUser.role);
+    bumpSessionTimer();
     await autoSyncGoogleOnAccess(true);
   }catch(err){
     console.error(err);
@@ -943,15 +1063,17 @@ $('saveAccountBtn').onclick=async ()=>{
     $('accountMsg').textContent='No se pudo actualizar la contraseña con Apps Script.';
   }
 };
-$('addUserBtn').onclick=()=>{};
-$('saveUsersBtn').onclick=()=>{};
+let sessionTimer = null;
+function bumpSessionTimer(){ return; }
+
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); }});
+setInterval(()=>{ if(document.body.classList.contains('auth-ok') && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); } }, 60000);
 setVars(); renderConfig(); if(lastRendered) renderFromStored(); else renderDashboard();
-clearSession();
-currentUser=null;
+currentUser=loadSession();
 renderUserChip();
 updateRoleUi();
 setTimeout(()=>{ autoSyncGoogleOnAccess(false); }, 150);
-lockApp('Ingrese usuario y contraseña para visualizar el dashboard');
+if(currentUser){ unlockApp(currentUser.username,currentUser.role); if(cfg.useGoogleSheet && cfg.googleAutoLoad){ setTimeout(()=>autoSyncGoogleOnAccess(false), 400); } } else { lockApp('Ingrese usuario y contraseña para visualizar el dashboard'); }
 </script>
 </body>
 </html>
