@@ -188,7 +188,7 @@
 
   <div class="cfg-backdrop" id="cfgBackdrop"></div>
   <aside class="cfg" id="cfgPanel">
-    <div class="cfg-head"><strong>Configuración del dashboard</strong><button class="btn secondary" id="closeCfg">Cerrar</button></div>
+    <div class="cfg-head"><div style="display:flex;align-items:center;gap:10px"><strong>Configuración del dashboard</strong><span class="save-status" id="saveStatus">Sin cambios pendientes</span></div><button class="btn secondary" id="closeCfg">Cerrar</button></div>
     <div class="cfg-body">
       <div class="cfg-card">
         <h3>Hoja y estilo general</h3>
@@ -268,7 +268,7 @@
         <div id="kpiFieldsContainer"></div></div>
         <div class="row2" style="margin-top:10px">
           <button class="btn green" id="addKpiFieldBtn">Agregar KPI</button>
-          <div class="small">Los cambios se guardan directo en Google Sheets vía Apps Script (POST). En V2.1 ya renderiza featured, indicators, objectives, missing y weekly con soporte <b>cell / calculated</b>.</div>
+          <div class="small">Guardado automático en Google Sheets vía Apps Script (POST). El botón Guardar configuración queda como respaldo manual. Se valida la celda y se registra quién modificó los KPI.</div>
         </div>
       </div>
 
@@ -284,7 +284,7 @@
         </div>
       </div>
 
-      <div class="row2"><button class="btn green" id="saveCfg">Guardar configuración</button><button class="btn secondary" id="resetCfg">Restablecer</button></div>
+      <div class="row2"><button class="btn green" id="saveCfg">Guardar ahora</button><button class="btn secondary" id="resetCfg">Restablecer</button></div>
     </div>
   </aside>
 
@@ -745,6 +745,27 @@ function displayCellByFormat(cell, formato){
   if(['decimal','number','float'].includes(fmt)) return formatNum(normalizeNumber(raw),1);
   return raw===undefined || raw===null ? '' : String(raw);
 }
+
+function isValidCellRef(v){
+  return /^[A-Z]+[1-9]\d*$/.test(String(v||'').trim().toUpperCase());
+}
+function summarizeKpiDiff(oldFields, newFields){
+  const before = JSON.stringify((oldFields||[]).map(normalizeKpiField));
+  const after = JSON.stringify((newFields||[]).map(normalizeKpiField));
+  if(before===after) return 'Sin cambios KPI';
+  const oldCount = (oldFields||[]).length, newCount=(newFields||[]).length;
+  const added = Math.max(0, newCount-oldCount);
+  const removed = Math.max(0, oldCount-newCount);
+  return `KPI ${newCount} total${added?`, +${added}`:''}${removed?`, -${removed}`:''}`;
+}
+function setSaveStatus(msg, cls=''){
+  const el = $('saveStatus'); if(!el) return;
+  el.textContent = msg;
+  el.className = 'save-status' + (cls ? ' '+cls : '');
+}
+let autoSaveTimer = null;
+let autoSaveInFlight = false;
+let autoSaveQueued = false;
 function normalizeKpiField(f){
   const out = {...(f||{})};
   out.activo = !['false','0','no'].includes(String(out.activo).trim().toLowerCase());
@@ -1094,6 +1115,7 @@ function renderKpiFieldsEditor(){
   const fields = (window.remoteKpiFields && window.remoteKpiFields.length ? window.remoteKpiFields : []).map(normalizeKpiField);
   box.innerHTML = '';
   fields.forEach((f, idx)=>{
+    const isValidCell = f.source_type==='calculated' || isValidCellRef(f.celda);
     const preview = resolveFieldDisplay(f, ctx) || '-';
     const row = document.createElement('div');
     row.className = 'kpi-field-row';
@@ -1109,7 +1131,7 @@ function renderKpiFieldsEditor(){
         <option value="calculated" ${f.source_type==='calculated'?'selected':''}>calculated</option>
       </select></div>
       <div class="field"><input data-key="source_key" value="${esc(f.source_key||'')}" placeholder="missing_week / progress_gap_month"></div>
-      <div class="field"><input data-key="celda" value="${esc(f.celda||'')}" placeholder="Ej: B2"></div>
+      <div class="field"><input class="${isValidCell ? 'cell-valid':'cell-invalid'}" data-key="celda" value="${esc(f.celda||'')}" placeholder="Ej: B2"></div>
       <div class="field"><select data-key="formato">
         ${['integer','percent','decimal','text','date'].map(x=>`<option value="${x}" ${f.formato===x?'selected':''}>${x}</option>`).join('')}
       </select></div>
@@ -1117,7 +1139,7 @@ function renderKpiFieldsEditor(){
         ${['small','medium','large'].map(x=>`<option value="${x}" ${f.tamano===x?'selected':''}>${x}</option>`).join('')}
       </select></div>
       <div class="field"><input data-key="orden" type="number" value="${Number.isFinite(f.orden)?f.orden:''}" placeholder="1"></div>
-      <div class="small" style="padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.03);min-height:38px;display:flex;align-items:center">${esc(String(preview))}</div>
+      <div class="preview-chip ${isValidCell ? '' : 'invalid'}"><span>${esc(String(preview))}</span><span class="tag ${isValidCell ? 'ok':'bad'}">${isValidCell ? 'OK':'Celda inválida'}</span></div>
       <div class="remove-col"><button class="mini-btn" data-remove-kpi="${idx}" title="Eliminar">🗑</button></div>
     `;
     box.appendChild(row);
@@ -1488,69 +1510,109 @@ function renderFromStored(){
 }
 
 $('openCfg').onclick=()=>openCfg(); $('closeCfg').onclick=()=>closeCfg(); $('cfgBackdrop').onclick=()=>closeCfg();
-$('saveCfg').onclick=async ()=>{
+
+function buildRemoteConfigPayload(){
+  applyConfigFromPanel();
+  return {
+    title_window: cfg.dashTitle,
+    sheet_to_read: cfg.selectedSheet,
+    use_google_sheets: !!cfg.useGoogleSheet,
+    auto_load_google: !!cfg.googleAutoLoad,
+    font_scale: cfg.fontScale,
+    kpi_height: cfg.kpiH,
+    brand_text_export: cfg.exportBrandText,
+    google_sheet_url: cfg.googleSheetUrl,
+    app_script_url: cfg.appScriptUrl,
+    color_bg: cfg.bgColor,
+    color_panel: cfg.panelColor,
+    color_text: cfg.textColor,
+    label_date: cfg.titles.titleFecha,
+    label_featured_performance: cfg.titles.titleRendDest,
+    label_performance_state: cfg.titles.titleEstado,
+    label_indicators: cfg.titles.titleIndicadores,
+    label_objectives: cfg.titles.titleObjetivos,
+    label_weekly_prod: cfg.titles.titleSemanal,
+    label_missing: cfg.titles.titleFaltantes,
+    label_missing_week: cfg.titles.titleFaltaSemana,
+    label_missing_month: cfg.titles.titleFaltaMes,
+    week_label_1: cfg.weekLabels[0],
+    week_label_2: cfg.weekLabels[1],
+    week_label_3: cfg.weekLabels[2],
+    week_label_4: cfg.weekLabels[3],
+    map_date: cfg.mapping.fecha.cell,
+    map_total_tables: cfg.mapping.totalTablas.cell,
+    map_black_tables: cfg.mapping.tablasNegras.cell,
+    map_black_performance: cfg.mapping.rendTablasNegras.cell,
+    map_m3_consumed: cfg.mapping.m3Consumido.cell,
+    map_m3_produced: cfg.mapping.m3Producido.cell,
+    map_m3_performance: cfg.mapping.rendM3.cell,
+    map_p2_produced: cfg.mapping.p2Prod.cell,
+    map_p2_expected: cfg.mapping.p2Esp.cell,
+    map_p2_performance: cfg.mapping.rendP2.cell,
+    map_daily_target: cfg.mapping.objDia.cell,
+    map_weekly_target: cfg.mapping.objSem.cell,
+    map_monthly_target: cfg.mapping.objMes.cell,
+    map_week_prod_1: cfg.mapping.sem1.cell,
+    map_week_prod_2: cfg.mapping.sem2.cell,
+    map_week_prod_3: cfg.mapping.sem3.cell,
+    map_week_prod_4: cfg.mapping.sem4.cell,
+    map_month_actual: cfg.mapping.actualMes.cell,
+    show_expected_progress: !!cfg.showExpectedProgress,
+    show_progress_gap: !!cfg.showProgressGap
+  };
+}
+async function performSaveCfg(mode='manual', reason=''){
+  if(autoSaveInFlight){ autoSaveQueued = true; return; }
+  autoSaveInFlight = true;
   try{
-    applyConfigFromPanel();
-    const remoteConfig = {
-      title_window: cfg.dashTitle,
-      sheet_to_read: cfg.selectedSheet,
-      use_google_sheets: !!cfg.useGoogleSheet,
-      auto_load_google: !!cfg.googleAutoLoad,
-      font_scale: cfg.fontScale,
-      kpi_height: cfg.kpiH,
-      brand_text_export: cfg.exportBrandText,
-      google_sheet_url: cfg.googleSheetUrl,
-      app_script_url: cfg.appScriptUrl,
-      color_bg: cfg.bgColor,
-      color_panel: cfg.panelColor,
-      color_text: cfg.textColor,
-      label_date: cfg.titles.titleFecha,
-      label_featured_performance: cfg.titles.titleRendDest,
-      label_performance_state: cfg.titles.titleEstado,
-      label_indicators: cfg.titles.titleIndicadores,
-      label_objectives: cfg.titles.titleObjetivos,
-      label_weekly_prod: cfg.titles.titleSemanal,
-      label_missing: cfg.titles.titleFaltantes,
-      label_missing_week: cfg.titles.titleFaltaSemana,
-      label_missing_month: cfg.titles.titleFaltaMes,
-      week_label_1: cfg.weekLabels[0],
-      week_label_2: cfg.weekLabels[1],
-      week_label_3: cfg.weekLabels[2],
-      week_label_4: cfg.weekLabels[3],
-      map_date: cfg.mapping.fecha.cell,
-      map_total_tables: cfg.mapping.totalTablas.cell,
-      map_black_tables: cfg.mapping.tablasNegras.cell,
-      map_black_performance: cfg.mapping.rendTablasNegras.cell,
-      map_m3_consumed: cfg.mapping.m3Consumido.cell,
-      map_m3_produced: cfg.mapping.m3Producido.cell,
-      map_m3_performance: cfg.mapping.rendM3.cell,
-      map_p2_produced: cfg.mapping.p2Prod.cell,
-      map_p2_expected: cfg.mapping.p2Esp.cell,
-      map_p2_performance: cfg.mapping.rendP2.cell,
-      map_daily_target: cfg.mapping.objDia.cell,
-      map_weekly_target: cfg.mapping.objSem.cell,
-      map_monthly_target: cfg.mapping.objMes.cell,
-      map_week_prod_1: cfg.mapping.sem1.cell,
-      map_week_prod_2: cfg.mapping.sem2.cell,
-      map_week_prod_3: cfg.mapping.sem3.cell,
-      map_week_prod_4: cfg.mapping.sem4.cell,
-      map_month_actual: cfg.mapping.actualMes.cell,
-      show_expected_progress: !!cfg.showExpectedProgress,
-      show_progress_gap: !!cfg.showProgressGap
-    };
-    const editorFields = (typeof getAllKpiFieldsFromEditor==='function' ? getAllKpiFieldsFromEditor() : getAllKpiFields());
+    setSaveStatus(mode==='auto' ? `Guardando automáticamente… ${reason||''}` : 'Guardando cambios…', 'saving');
+    const previousFields = (window.remoteKpiFields||[]).map(normalizeKpiField);
+    const editorFields = (typeof getAllKpiFieldsFromEditor==='function' ? getAllKpiFieldsFromEditor() : getAllKpiFields()).map(normalizeKpiField);
+    const invalid = editorFields.filter(f=>f.source_type!=='calculated' && !isValidCellRef(f.celda));
+    if(invalid.length){
+      setSaveStatus(`Revisá ${invalid.length} celda(s) inválida(s)`, 'error');
+      throw new Error('Hay celdas inválidas en KPI dinámicos. Ejemplo válido: B2');
+    }
     window.remoteKpiFields = editorFields;
-    const payload = { username: currentUser?.username || 'system', config: remoteConfig, kpiFields: editorFields };
+    const remoteConfig = buildRemoteConfigPayload();
+    const payload = {
+      username: currentUser?.username || 'system',
+      reason: reason || (mode==='auto' ? 'auto-save' : 'manual-save'),
+      config: remoteConfig,
+      kpiFields: editorFields,
+      diffSummary: summarizeKpiDiff(previousFields, editorFields)
+    };
     const saved = await postJsonToBackend('saveConfig', payload);
     if(saved && saved.status!=='ok') throw new Error(saved.message || 'No se pudo guardar Config remota');
     if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); }
-    renderDashboard(); renderKpiFieldsEditor(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50);
-  }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola y confirmá que Apps Script soporte KPI_FIELDS con source_type y source_key.'); }
-};
+    renderDashboard(); renderKpiFieldsEditor(); renderConfig();
+    setSaveStatus(`Guardado ${mode==='auto' ? 'automático' : 'manual'} · ${new Date().toLocaleTimeString()}`, 'ok');
+    return true;
+  }catch(err){
+    console.error(err);
+    setSaveStatus(err.message || 'No se pudo guardar', 'error');
+    if(mode==='manual') alert('No se pudo guardar la configuración. ' + (err.message||''));
+    return false;
+  }finally{
+    autoSaveInFlight = false;
+    if(autoSaveQueued){
+      autoSaveQueued = false;
+      scheduleAutoSave('cambios pendientes');
+    }
+  }
+}
+function scheduleAutoSave(reason='cambio'){
+  if(!currentUser) return;
+  clearTimeout(autoSaveTimer);
+  setSaveStatus(`Cambios pendientes… ${reason}`, 'saving');
+  autoSaveTimer = setTimeout(()=>performSaveCfg('auto', reason), 900);
+}
+$('saveCfg').onclick=async ()=>{ await performSaveCfg('manual','guardar ahora'); };
 $('addKpiFieldBtn').onclick=()=>{
   if(!window.remoteKpiFields) window.remoteKpiFields=[];
-  window.remoteKpiFields.push({activo:true,grupo:'indicators',titulo:'Nuevo KPI',subtitulo:'',source_type:'cell',source_key:'',celda:'',formato:'integer',tamano:'medium',orden:(window.remoteKpiFields.length+1)});
+  window.remoteKpiFields.push({activo:true,grupo:'indicators',titulo:'Nuevo KPI',subtitulo:'Descripción',source_type:'cell',source_key:'',celda:'A1',formato:'integer',tamano:'medium',orden:(window.remoteKpiFields.length+1)});
   renderKpiFieldsEditor();
+  scheduleAutoSave('nuevo KPI');
 };
 $('kpiFieldsContainer').addEventListener('click', (e)=>{
   const idx = e.target?.closest('[data-remove-kpi]')?.dataset?.removeKpi;
@@ -1559,6 +1621,17 @@ $('kpiFieldsContainer').addEventListener('click', (e)=>{
   rows.splice(Number(idx),1);
   window.remoteKpiFields = rows;
   renderKpiFieldsEditor();
+  scheduleAutoSave('KPI eliminado');
+});
+
+$('kpiFieldsContainer').addEventListener('input', (e)=>{
+  if(e.target && e.target.matches('input,select')) scheduleAutoSave('edición KPI');
+});
+$('mappingContainer').addEventListener('input', ()=>scheduleAutoSave('mapeo'));
+$('cfgPanel').addEventListener('change', (e)=>{
+  if(e.target && !e.target.closest('#usersContainer') && e.target.id!=='accountPass' && e.target.id!=='accountPass2' && e.target.id!=='accountCurrentPass'){
+    scheduleAutoSave('configuración');
+  }
 });
 $('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
 $('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const payload = {
@@ -1739,6 +1812,7 @@ setInterval(()=>{ if(document.body.classList.contains('auth-ok') && cfg.useGoogl
     lockApp('Ingrese usuario y contraseña para visualizar el dashboard');
   }
 
+  setSaveStatus(remoteOk ? 'Configuración remota cargada' : 'Usando localStorage/default', remoteOk ? 'ok' : 'error');
   if(!remoteOk){
     console.warn('Config remota no disponible. Se usó localStorage/default.');
   }
