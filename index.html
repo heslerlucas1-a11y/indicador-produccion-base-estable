@@ -336,6 +336,17 @@ const DEFAULT_CFG={
   googleAutoLoad:true,
   googleSheetUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQUoK49ck4gNqNhLE6ezLfSViLNwseSfkur1jNX3TZcRRaXRM24_763yHbfQ9GoMglGBFCwWVCeoAy/pub?output=csv&gid=290863830&single=true',
   appScriptUrl:'https://script.google.com/macros/s/AKfycbxdLSz6K_2c3M2L0GqbNwHPXc1ClOa8Ctz7vt4xsDz9nM2xMR9wqAmLK2zbSEVyBLuj/exec',
+  stateTextOk:'En línea',
+  stateTextWarn:'Seguimiento',
+  stateTextBad:'Desviado',
+  thresholdOkMin:0.18,
+  thresholdWarnMin:0.10,
+  thresholdBadBelow:0.10,
+  timeProgressMode:'business_days',
+  weekBusinessDays:5,
+  monthBusinessDays:22,
+  showExpectedProgress:true,
+  showProgressGap:true,
   mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING))
 };
 
@@ -442,6 +453,18 @@ function applyRemoteConfigToCfg(remote){
     remote.week_label_3 || cfg.weekLabels[2],
     remote.week_label_4 || cfg.weekLabels[3]
   ];
+
+  if(remote.state_text_ok) cfg.stateTextOk = remote.state_text_ok;
+  if(remote.state_text_warn) cfg.stateTextWarn = remote.state_text_warn;
+  if(remote.state_text_bad) cfg.stateTextBad = remote.state_text_bad;
+  if(remote.threshold_ok_min != null) cfg.thresholdOkMin = Number(remote.threshold_ok_min) || cfg.thresholdOkMin;
+  if(remote.threshold_warn_min != null) cfg.thresholdWarnMin = Number(remote.threshold_warn_min) || cfg.thresholdWarnMin;
+  if(remote.threshold_bad_below != null) cfg.thresholdBadBelow = Number(remote.threshold_bad_below) || cfg.thresholdBadBelow;
+  if(remote.time_progress_mode) cfg.timeProgressMode = String(remote.time_progress_mode).trim();
+  if(remote.week_business_days != null) cfg.weekBusinessDays = Number(remote.week_business_days) || cfg.weekBusinessDays;
+  if(remote.month_business_days != null) cfg.monthBusinessDays = Number(remote.month_business_days) || cfg.monthBusinessDays;
+  if(remote.show_expected_progress !== undefined) cfg.showExpectedProgress = !!remote.show_expected_progress;
+  if(remote.show_progress_gap !== undefined) cfg.showProgressGap = !!remote.show_progress_gap;
 
   const mapPairs = {
     fecha:'map_date',
@@ -671,7 +694,73 @@ function getWeekTitles(){
 function weekLabelPreviewText(){ return getWeekTitles().join(' | '); }
 function numMetric(key){const m=cfg.mapping[key]; const raw=readMetric(key); return m&&m.fmt==='pct' ? normalizePercent(raw) : normalizeNumber(raw)}
 function displayMetric(key){const m=cfg.mapping[key]; if(!m) return ''; const raw=readMetric(key); if(m.fmt==='date')return formatDate(raw); if(m.fmt==='pct')return formatPct(normalizePercent(raw),m.dec??1); return formatNum(normalizeNumber(raw),m.dec??0)}
-function stateInfo(v){const r=normalizePercent(v);if(r<-1)return {name:'Crítico',cls:'red',text:'El rendimiento es menor que -1 y requiere revisión.'};if(r>=0)return {name:'Óptimo',cls:'green',text:'El rendimiento está bien y no requiere intervención.'};return {name:'Atención',cls:'yellow',text:'El rendimiento está entre -1 y 0. Conviene seguirlo.'}}
+function displayCellByFormat(cell, formato){
+  const raw = readSheetCell(cell);
+  const fmt = String(formato||'').trim().toLowerCase();
+  if(fmt==='date') return formatDate(raw);
+  if(['percent','pct','percentage'].includes(fmt)) return formatPct(normalizePercent(raw),1);
+  if(['integer','int','entero'].includes(fmt)) return formatNum(normalizeNumber(raw),0);
+  if(['decimal','number','float'].includes(fmt)) return formatNum(normalizeNumber(raw),1);
+  return raw===undefined || raw===null ? '' : String(raw);
+}
+function remoteFieldsByGroup(group){
+  return (window.remoteKpiFields||[]).filter(f => f && f.activo && String(f.grupo||'').trim().toLowerCase()===group);
+}
+function getBusinessDaysElapsedInWeek(now){
+  const d = new Date(now);
+  const day = d.getDay();
+  const mondayOffset = day===0 ? -6 : 1-day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate()+mondayOffset); monday.setHours(0,0,0,0);
+  let count = 0;
+  for(let i=0;i<7;i++){
+    const cur = new Date(monday); cur.setDate(monday.getDate()+i);
+    if(cur>d) break;
+    const wd = cur.getDay();
+    if(wd!==0 && wd!==6) count++;
+  }
+  return count;
+}
+function getBusinessDaysElapsedInMonth(now){
+  const d = new Date(now);
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  let count = 0;
+  for(let cur=new Date(start); cur<=d; cur.setDate(cur.getDate()+1)){
+    const wd = cur.getDay();
+    if(wd!==0 && wd!==6) count++;
+  }
+  return count;
+}
+function getExpectedProgress(kind){
+  const now = new Date();
+  if(String(cfg.timeProgressMode||'business_days').toLowerCase()==='calendar'){
+    if(kind==='week'){
+      const day = now.getDay();
+      const elapsed = day===0 ? 7 : day;
+      return {elapsed, total:7, pct:(elapsed/7)*100};
+    }
+    const total = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const elapsed = now.getDate();
+    return {elapsed, total, pct:(elapsed/total)*100};
+  }
+  if(kind==='week'){
+    const total = Math.max(1, Number(cfg.weekBusinessDays)||5);
+    const elapsed = Math.min(total, getBusinessDaysElapsedInWeek(now));
+    return {elapsed, total, pct:(elapsed/total)*100};
+  }
+  const total = Math.max(1, Number(cfg.monthBusinessDays)||22);
+  const elapsed = Math.min(total, getBusinessDaysElapsedInMonth(now));
+  return {elapsed, total, pct:(elapsed/total)*100};
+}
+function stateInfo(v){
+  const r = normalizePercent(v);
+  const ok = Number(cfg.thresholdOkMin||0.18) * 100;
+  const warn = Number(cfg.thresholdWarnMin||0.10) * 100;
+  const bad = Number(cfg.thresholdBadBelow||0.10) * 100;
+  if(r >= ok) return {name:cfg.stateTextOk||'En línea',cls:'green',text:'El rendimiento está dentro del objetivo actual.'};
+  if(r < bad) return {name:cfg.stateTextBad||'Desviado',cls:'red',text:'El rendimiento está por debajo del umbral esperado y requiere revisión.'};
+  return {name:cfg.stateTextWarn||'Seguimiento',cls:'yellow',text:'El rendimiento necesita seguimiento para converger al objetivo.'};
+}
 function renderTitles(){Object.keys(cfg.titles).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=cfg.titles[id]})}
 function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
 function renderUserChip(){ $('userChip').textContent = currentUser ? `${currentUser.username} · ${currentUser.role}` : 'No autenticado'; }
@@ -869,25 +958,89 @@ function getActualSem(){return numMetric('actualSem')}
 function getActualMes(){return numMetric('actualMes')}
 function getActiveWeeks(weeks){return weeks.filter(v=>Number(v)>0)}
 function renderDashboard(){
-  setVars(); renderTitles(); document.title=cfg.dashTitle; const fecha=displayMetric('fecha'); const st=stateInfo(readMetric('rendP2'));
-  $('fechaMain').textContent=fecha; $('fechaSub').textContent=`Lectura desde hoja ${cfg.selectedSheet||'-'} · ${new Date().toLocaleString('es-AR')}`; $('rendMain').textContent=displayMetric('rendP2'); $('rendBand').className=`pill ${st.cls}`; $('rendBand').textContent=st.name.toUpperCase(); $('stateDot').className=`dot ${st.cls}`; $('stateName').textContent=st.name; $('stateText').textContent=st.text;
+  setVars(); renderTitles(); document.title=cfg.dashTitle;
+  const fecha=displayMetric('fecha');
+
+  const featuredFields = remoteFieldsByGroup('featured');
+  const featuredField = featuredFields[0] || null;
+  const featuredTitle = featuredField?.titulo || cfg.titles.titleRendDest || 'Rendimiento en p2 destacado';
+  const featuredValue = featuredField ? displayCellByFormat(featuredField.celda, featuredField.formato) : displayMetric('rendP2');
+  const featuredStateValue = featuredField ? normalizePercent(readSheetCell(featuredField.celda)) : normalizePercent(readMetric('rendP2'));
+  const st=stateInfo(featuredStateValue);
+
+  $('titleRendDest').textContent = featuredTitle;
+  $('fechaMain').textContent=fecha;
+  $('fechaSub').textContent=`Lectura desde hoja ${cfg.selectedSheet||'-'} · ${new Date().toLocaleString('es-AR')}`;
+  $('rendMain').textContent=featuredValue; $('rendBand').className=`pill ${st.cls}`; $('rendBand').textContent=st.name.toUpperCase(); $('stateDot').className=`dot ${st.cls}`; $('stateName').textContent=st.name; $('stateText').textContent=st.text;
   document.querySelector('.main-rend').classList.toggle('critical-glow', st.cls==='red');
   document.querySelector('.main-rend').classList.toggle('optimal-glow', st.cls==='green');
   $('rendMain').classList.toggle('critical-text', st.cls==='red');
   $('rendMain').classList.toggle('optimal-text', st.cls==='green');
   $('rendBand').classList.toggle('critical-glow', st.cls==='red');
   $('rendBand').classList.toggle('optimal-glow', st.cls==='green');
-  const weeks=[numMetric('sem1'),numMetric('sem2'),numMetric('sem3'),numMetric('sem4')]; const weekTitles=getWeekTitles(); const activeWeeks=getActiveWeeks(weeks);
+
+  const weeklyFields = remoteFieldsByGroup('weekly');
+  const defaultWeeks=[
+    {title:getWeekTitles()[0], value:numMetric('sem1'), cell:cfg.mapping.sem1.cell},
+    {title:getWeekTitles()[1], value:numMetric('sem2'), cell:cfg.mapping.sem2.cell},
+    {title:getWeekTitles()[2], value:numMetric('sem3'), cell:cfg.mapping.sem3.cell},
+    {title:getWeekTitles()[3], value:numMetric('sem4'), cell:cfg.mapping.sem4.cell}
+  ];
+  const weekEntries = (weeklyFields.length ? weeklyFields.map((f,i)=>({title:f.titulo||getWeekTitles()[i]||`Semana ${i+1}`, value:normalizeNumber(readSheetCell(f.celda)), cell:f.celda})) : defaultWeeks);
+  const weeks = weekEntries.map(x=>Number(x.value)||0);
+  const weekTitles = weekEntries.map(x=>x.title);
+  const activeWeeks=getActiveWeeks(weeks);
   const actualDia=getActualDia(), actualSem=getActualSem(), actualMes=getActualMes(), objDia=numMetric('objDia'), objSem=numMetric('objSem'), objMes=numMetric('objMes');
   const targetLine = objSem>0 ? objSem : cfg.weeklyTargetLine;
   const faltSemana=Math.max(objSem-actualSem,0), faltMes=Math.max(objMes-actualMes,0), faltTotalActivo=activeWeeks.length?activeWeeks.reduce((a,b)=>a+Math.max(targetLine-b,0),0):0;
   $('faltSemana').textContent=formatNum(faltSemana,0); $('faltMes').textContent=formatNum(faltMes,0); $('faltMetaProm').textContent=formatNum(faltTotalActivo,0);
-  const goals=[{title:cfg.mapping.objDia.title||'Objetivo diario',actual:actualDia,obj:objDia},{title:cfg.mapping.objSem.title||'Objetivo semanal',actual:actualSem,obj:objSem},{title:cfg.mapping.objMes.title||'Objetivo mensual',actual:actualMes,obj:objMes}];
-  const kpiData=[]; $('kpiGrid').innerHTML=''; ['totalTablas','tablasNegras','rendTablasNegras','m3Consumido','m3Producido','rendM3','p2Prod','p2Esp'].forEach(k=>{const m=cfg.mapping[k]; const shown=displayMetric(k); kpiData.push({title:m.title,value:shown,note:m.note||''}); const div=document.createElement('div'); div.className='card kpi'; div.innerHTML=`<div class="t">${esc(m.title)}</div><div class="v">${shown}</div><div class="n">${esc(m.note||'')}</div>`; $('kpiGrid').appendChild(div);});
-  const goalData=[]; $('goalGrid').innerHTML=''; goals.forEach(g=>{const pct=g.obj>0?(g.actual/g.obj)*100:0, falta=Math.max(g.obj-g.actual,0); goalData.push({title:g.title,actual:formatNum(g.actual,0),obj:formatNum(g.obj,0),falta:formatNum(falta,0),pct:formatPct(pct,1)}); const div=document.createElement('div'); div.className='goal'; div.innerHTML=`<div class="goal-top"><div class="goal-name">${esc(g.title)}</div><div class="goal-pct">${formatPct(pct,1)}</div></div><div class="bar"><div style="width:${Math.min(pct,100)}%"></div></div><div class="nums"><div>Actual<b>${formatNum(g.actual,0)}</b></div><div>Objetivo<b>${formatNum(g.obj,0)}</b></div><div>Falta<b>${formatNum(falta,0)}</b></div></div>`; $('goalGrid').appendChild(div);});
-  const weekData=[]; $('weekGrid').innerHTML=''; weeks.forEach((v,i)=>{const miss=v>0?Math.max(targetLine-v,0):0; weekData.push({title:weekTitles[i],value:formatNum(v,0),miss:v>0?formatNum(miss,0):'Semana inactiva'}); const div=document.createElement('div'); div.className='week-box'; div.innerHTML=`<div class="w-label">${esc(weekTitles[i])}</div><div class="w-value">${formatNum(v,0)}</div><div class="w-miss">${v>0?'Falta: '+formatNum(miss,0):'Semana inactiva'}</div>`; $('weekGrid').appendChild(div);});
-  saveRendered({fecha,fechaSub:$('fechaSub').textContent,rend:displayMetric('rendP2'),state:st,kpiData,goalData,weekData,faltSemana:formatNum(faltSemana,0),faltMes:formatNum(faltMes,0),faltActivo:formatNum(faltTotalActivo,0)});
-  if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:'Producción semanal',data:weeks,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:targetLine,yMax:targetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(targetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
+
+  const expectedWeek = getExpectedProgress('week');
+  const expectedMonth = getExpectedProgress('month');
+  const goalData=[];
+  const objectiveFields = remoteFieldsByGroup('objectives');
+  const goalBase = [
+    {title:objectiveFields[0]?.titulo || cfg.mapping.objDia.title || 'Objetivo diario',actual:actualDia,obj:objDia,key:'day'},
+    {title:objectiveFields[1]?.titulo || cfg.mapping.objSem.title || 'Objetivo semanal',actual:actualSem,obj:objSem,key:'week'},
+    {title:objectiveFields[2]?.titulo || cfg.mapping.objMes.title || 'Objetivo mensual',actual:actualMes,obj:objMes,key:'month'}
+  ];
+
+  $('kpiGrid').innerHTML='';
+  const indicatorFields = remoteFieldsByGroup('indicators');
+  const indicatorDefaults = ['totalTablas','tablasNegras','rendTablasNegras','m3Consumido','m3Producido','rendM3','p2Prod','p2Esp'].map(k=>{ const m=cfg.mapping[k]; return {title:m.title, value:displayMetric(k), note:m.note||''}; });
+  const kpiData = indicatorFields.length
+    ? indicatorFields.map(f=>({title:f.titulo||'', value:displayCellByFormat(f.celda, f.formato), note:f.subtitulo||''}))
+    : indicatorDefaults;
+  kpiData.forEach(k=>{
+    const div=document.createElement('div'); div.className='card kpi';
+    div.innerHTML=`<div class="t">${esc(k.title)}</div><div class="v">${k.value}</div><div class="n">${esc(k.note||'')}</div>`;
+    $('kpiGrid').appendChild(div);
+  });
+
+  $('goalGrid').innerHTML='';
+  goalBase.forEach(g=>{
+    const pct=g.obj>0?(g.actual/g.obj)*100:0, falta=Math.max(g.obj-g.actual,0);
+    const extra = { expectedPct:null, elapsed:null, total:null, gap:null, label:'' };
+    if(g.key==='week'){ extra.expectedPct = expectedWeek.pct; extra.elapsed=expectedWeek.elapsed; extra.total=expectedWeek.total; extra.gap = pct-expectedWeek.pct; extra.label='Avance semana'; }
+    if(g.key==='month'){ extra.expectedPct = expectedMonth.pct; extra.elapsed=expectedMonth.elapsed; extra.total=expectedMonth.total; extra.gap = pct-expectedMonth.pct; extra.label='Avance mes'; }
+    goalData.push({title:g.title,actual:formatNum(g.actual,0),obj:formatNum(g.obj,0),falta:formatNum(falta,0),pct:formatPct(pct,1), expectedPct:extra.expectedPct!=null?formatPct(extra.expectedPct,1):'', elapsed:extra.elapsed, total:extra.total, gap:extra.gap!=null?formatPct(extra.gap,1):'', label:extra.label});
+    const div=document.createElement('div'); div.className='goal';
+    div.innerHTML=`<div class="goal-top"><div class="goal-name">${esc(g.title)}</div><div class="goal-pct">${formatPct(pct,1)}</div></div>
+      <div class="bar"><div style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="nums"><div>Actual<b>${formatNum(g.actual,0)}</b></div><div>Objetivo<b>${formatNum(g.obj,0)}</b></div><div>Falta<b>${formatNum(falta,0)}</b></div></div>
+      ${extra.expectedPct!=null && cfg.showExpectedProgress ? `<div class="goal-extra">${esc(extra.label)} esperado: <b>${formatPct(extra.expectedPct,1)}</b> <span class="muted">(${extra.elapsed}/${extra.total})</span></div>` : ''}
+      ${extra.gap!=null && cfg.showProgressGap ? `<div class="goal-extra">Desvío vs avance esperado: <b>${formatPct(extra.gap,1)}</b></div>` : ''}`;
+    $('goalGrid').appendChild(div);
+  });
+
+  const weekData=[]; $('weekGrid').innerHTML=''; weekEntries.forEach((w)=>{const v=Number(w.value)||0; const miss=v>0?Math.max(targetLine-v,0):0; weekData.push({title:w.title,value:formatNum(v,0),miss:v>0?formatNum(miss,0):'Semana inactiva'}); const div=document.createElement('div'); div.className='week-box'; div.innerHTML=`<div class="w-label">${esc(w.title)}</div><div class="w-value">${formatNum(v,0)}</div><div class="w-miss">${v>0?'Falta: '+formatNum(miss,0):'Semana inactiva'}</div>`; $('weekGrid').appendChild(div);});
+
+  const missingFields = remoteFieldsByGroup('missing');
+  if(missingFields.length>=1) $('titleFaltaSemana').textContent = missingFields[0].titulo || $('titleFaltaSemana').textContent;
+  if(missingFields.length>=2) $('titleFaltaMes').textContent = missingFields[1].titulo || $('titleFaltaMes').textContent;
+
+  saveRendered({fecha,fechaSub:$('fechaSub').textContent,rend:featuredValue,state:st,kpiData,goalData,weekData,faltSemana:formatNum(faltSemana,0),faltMes:formatNum(faltMes,0),faltActivo:formatNum(faltTotalActivo,0),featuredTitle, expectedWeek, expectedMonth});
+  if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:cfg.titles.titleSemanal||'Producción semanal',data:weeks,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:targetLine,yMax:targetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(targetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
 }
 
 
@@ -979,7 +1132,7 @@ function buildStackedExport(mode="mobile"){
   top.appendChild(c1);
 
   const c2 = mkCard();
-  c2.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">Rendimiento en p2 destacado</div>
+  c2.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
     <div style="font-size:118px;font-weight:1000;line-height:1;text-align:center;color:#ffffff;margin:18px 0">${d.rend || '0,0%'}</div>
     <div style="display:flex;justify-content:center"><span style="padding:12px 22px;border-radius:999px;font-size:30px;font-weight:900;${pillStyle}">${(d.state?.name || 'Atención').toUpperCase()}</span></div>`;
   top.appendChild(c2);
@@ -1003,7 +1156,7 @@ function buildStackedExport(mode="mobile"){
   indicators.appendChild(ig);
 
   const objectives = mkCard();
-  objectives.innerHTML = `<div style="font-size:${preset.title}px;font-weight:900;margin-bottom:14px">Objetivos de producción</div>`;
+  objectives.innerHTML = `<div style="font-size:${preset.title}px;font-weight:900;margin-bottom:14px">${esc(cfg.titles.titleObjetivos || 'Objetivos de producción')}</div>`;
   const og = document.createElement('div');
   og.style.display = 'grid';
   og.style.gridTemplateColumns = '1fr';
@@ -1023,7 +1176,9 @@ function buildStackedExport(mode="mobile"){
       <div>Actual<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.actual}</b></div>
       <div>Objetivo<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.obj}</b></div>
       <div>Falta<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.falta}</b></div>
-    </div>`;
+    </div>
+    ${g.expectedPct ? `<div style="font-size:15px;color:#d7ecff;margin-top:10px">${g.label} esperado: <b style="color:#fff">${g.expectedPct}</b> <span style="opacity:.8">(${g.elapsed}/${g.total})</span></div>` : ''}
+    ${g.gap ? `<div style="font-size:15px;color:#d7ecff;margin-top:6px">Desvío vs avance esperado: <b style="color:#fff">${g.gap}</b></div>` : ''}`;
     og.appendChild(item);
   });
   objectives.appendChild(og);
