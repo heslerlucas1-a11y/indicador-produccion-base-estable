@@ -317,8 +317,43 @@ const DEFAULT_MAPPING={
   sem3:{label:'Producción semana 3',title:'Semana 3',cell:'P2',manual:'',note:'Acumulado',fmt:'num'},
   sem4:{label:'Producción semana 4',title:'Semana 4',cell:'Q2',manual:'',note:'Acumulado',fmt:'num'}
 };
-const DEFAULT_CFG={dashTitle:'Dashboard Industrial Excel PRO V30 Estable',exportBrandText:'LAHARRAGUE CHODORGE',selectedSheet:'',weeklyTargetLine:700000,bgColor:'#07131f',panelColor:'#0d2740',textColor:'#ecf6ff',kpiH:116,fontScale:.92,lastEditedCell:'sin cambios',titles:JSON.parse(JSON.stringify(DEFAULT_TITLES)),weekLabels:[...DEFAULT_WEEK_LABELS],weekLabelsAuto:true,weekLabelStartCell:'U2',useGoogleSheet:true,googleAutoLoad:true,googleSheetUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQUoK49ck4gNqNhLE6ezLfSViLNwseSfkur1jNX3TZcRRaXRM24_763yHbfQ9GoMglGBFCwWVCeoAy/pubhtml?gid=290863830&single=true',appScriptUrl:'https://script.google.com/macros/s/AKfycbxdLSz6K_2c3M2L0GqbNwHPXc1ClOa8Ctz7vt4xsDz9nM2xMR9wqAmLK2zbSEVyBLuj/exec',mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING))};
-function getWebAppUrl(){ return String((cfg && cfg.appScriptUrl) || DEFAULT_CFG.appScriptUrl || '').trim(); }
+const DEFAULT_CFG={
+  dashTitle:'Dashboard Industrial Excel PRO V30 Estable',
+  exportBrandText:'LAHARRAGUE CHODORGE',
+  selectedSheet:'',
+  weeklyTargetLine:700000,
+  bgColor:'#07131f',
+  panelColor:'#0d2740',
+  textColor:'#ecf6ff',
+  kpiH:116,
+  fontScale:.92,
+  lastEditedCell:'sin cambios',
+  titles:JSON.parse(JSON.stringify(DEFAULT_TITLES)),
+  weekLabels:[...DEFAULT_WEEK_LABELS],
+  weekLabelsAuto:true,
+  weekLabelStartCell:'U2',
+  useGoogleSheet:true,
+  googleAutoLoad:true,
+  googleSheetUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQUoK49ck4gNqNhLE6ezLfSViLNwseSfkur1jNX3TZcRRaXRM24_763yHbfQ9GoMglGBFCwWVCeoAy/pub?output=csv&gid=290863830&single=true',
+  appScriptUrl:'https://script.google.com/macros/s/AKfycbxdLSz6K_2c3M2L0GqbNwHPXc1ClOa8Ctz7vt4xsDz9nM2xMR9wqAmLK2zbSEVyBLuj/exec',
+  mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING))
+};
+
+function mergeCfgWithDefaults(source){
+  const s = source || {};
+  const merged = {
+    ...deep(DEFAULT_CFG),
+    ...s,
+    titles:{...DEFAULT_TITLES,...(s.titles||{})},
+    weekLabels:[...(s.weekLabels||DEFAULT_WEEK_LABELS)],
+    mapping:{...deep(DEFAULT_MAPPING),...(s.mapping||{})}
+  };
+  return normalizeCriticalMappings(merged);
+}
+
+function getWebAppUrl(){
+  return String((cfg && cfg.appScriptUrl) || DEFAULT_CFG.appScriptUrl || '').trim();
+}
 
 function jsonpRequest(params){
   return new Promise((resolve, reject) => {
@@ -368,6 +403,94 @@ function jsonpRequest(params){
   });
 }
 
+function applyRemoteConfigToCfg(remote){
+  if(!remote || typeof remote !== 'object') return;
+
+  cfg = mergeCfgWithDefaults(cfg);
+
+  cfg.dashTitle = remote.title_window || cfg.dashTitle;
+  cfg.exportBrandText = remote.brand_text_export || cfg.exportBrandText;
+  cfg.selectedSheet = remote.sheet_to_read || cfg.selectedSheet;
+
+  if(remote.use_google_sheets !== undefined) cfg.useGoogleSheet = !!remote.use_google_sheets;
+  if(remote.auto_load_google !== undefined) cfg.googleAutoLoad = !!remote.auto_load_google;
+
+  if(remote.google_sheet_url) cfg.googleSheetUrl = String(remote.google_sheet_url).trim();
+  if(remote.app_script_url) cfg.appScriptUrl = String(remote.app_script_url).trim();
+
+  if(remote.color_bg) cfg.bgColor = remote.color_bg;
+  if(remote.color_panel) cfg.panelColor = remote.color_panel;
+  if(remote.color_text) cfg.textColor = remote.color_text;
+
+  if(remote.kpi_height != null) cfg.kpiH = Number(remote.kpi_height) || cfg.kpiH;
+  if(remote.font_scale != null) cfg.fontScale = Number(remote.font_scale) || cfg.fontScale;
+  if(remote.weekly_target_line != null) cfg.weeklyTargetLine = Number(remote.weekly_target_line) || cfg.weeklyTargetLine;
+
+  if(remote.label_date) cfg.titles.fechaTitle = remote.label_date;
+  if(remote.label_featured_performance) cfg.titles.rendTitle = remote.label_featured_performance;
+  if(remote.label_performance_state) cfg.titles.stateTitle = remote.label_performance_state;
+  if(remote.label_indicators) cfg.titles.indTitle = remote.label_indicators;
+  if(remote.label_objectives) cfg.titles.objTitle = remote.label_objectives;
+  if(remote.label_weekly_prod) cfg.titles.weekTitle = remote.label_weekly_prod;
+  if(remote.label_missing) cfg.titles.closeTitle = remote.label_missing;
+  if(remote.label_missing_week) cfg.titles.faltaSemTitle = remote.label_missing_week;
+  if(remote.label_missing_month) cfg.titles.faltaMesTitle = remote.label_missing_month;
+
+  cfg.weekLabels = [
+    remote.week_label_1 || cfg.weekLabels[0],
+    remote.week_label_2 || cfg.weekLabels[1],
+    remote.week_label_3 || cfg.weekLabels[2],
+    remote.week_label_4 || cfg.weekLabels[3]
+  ];
+
+  const mapPairs = {
+    fecha:'map_date',
+    totalTablas:'map_total_tables',
+    tablasNegras:'map_black_tables',
+    rendTablasNegras:'map_black_performance',
+    m3Consumido:'map_m3_consumed',
+    m3Producido:'map_m3_produced',
+    rendM3:'map_m3_performance',
+    p2Prod:'map_p2_produced',
+    p2Esp:'map_p2_expected',
+    rendP2:'map_p2_performance',
+    objDia:'map_daily_target',
+    objSem:'map_weekly_target',
+    objMes:'map_monthly_target',
+    sem1:'map_week_prod_1',
+    sem2:'map_week_prod_2',
+    sem3:'map_week_prod_3',
+    sem4:'map_week_prod_4',
+    actualMes:'map_month_actual'
+  };
+
+  Object.entries(mapPairs).forEach(([localKey, remoteKey])=>{
+    if(remote[remoteKey] && cfg.mapping[localKey]){
+      cfg.mapping[localKey].cell = String(remote[remoteKey]).trim().toUpperCase();
+    }
+  });
+
+  cfg = normalizeCriticalMappings(cfg);
+}
+
+async function loadRemoteConfig(){
+  try{
+    const data = await jsonpRequest({ action:'getConfig' });
+
+    if(!data || data.status !== 'ok' || !data.config){
+      throw new Error((data && data.message) || 'Respuesta inválida de getConfig');
+    }
+
+    applyRemoteConfigToCfg(data.config);
+    window.remoteKpiFields = Array.isArray(data.kpiFields) ? data.kpiFields : [];
+    saveCfgLS();
+    return true;
+  }catch(err){
+    console.error('No se pudo cargar Config remota:', err);
+    return false;
+  }
+}
+
 let cfg=loadCfg(), workbook=null, weekChart=null, currentUser=null;
 let lastRendered=loadRendered();
 const $=id=>document.getElementById(id);
@@ -386,8 +509,24 @@ function normalizeCriticalMappings(target){
   if(up(target.mapping.actualSem.manual)==='' && up(target.mapping.actualSem.cell)!=='S2') target.mapping.actualSem.cell='S2';
   return target;
 }
-function loadCfg(){try{const raw=localStorage.getItem('dashboard_excel_pro_v30')||localStorage.getItem('dashboard_excel_pro_v29')||localStorage.getItem('dashboard_excel_pro_v27')||localStorage.getItem('dashboard_excel_pro_v26')||'null';const s=JSON.parse(raw);if(!s)return normalizeCriticalMappings(deep(DEFAULT_CFG));const merged={...deep(DEFAULT_CFG),...s,titles:{...DEFAULT_TITLES,...(s.titles||{})},weekLabels:[...(s.weekLabels||DEFAULT_WEEK_LABELS)],mapping:{...deep(DEFAULT_MAPPING),...(s.mapping||{})}}; return normalizeCriticalMappings(merged)}catch(e){return normalizeCriticalMappings(deep(DEFAULT_CFG))}}
-function saveCfgLS(){localStorage.setItem('dashboard_excel_pro_v30',JSON.stringify(cfg)); localStorage.setItem('dashboard_excel_pro_v29',JSON.stringify(cfg))}
+function loadCfg(){
+  try{
+    const raw =
+      localStorage.getItem('dashboard_excel_pro_v30') ||
+      localStorage.getItem('dashboard_excel_pro_v29') ||
+      localStorage.getItem('dashboard_excel_pro_v27') ||
+      localStorage.getItem('dashboard_excel_pro_v26') ||
+      'null';
+    const s = JSON.parse(raw);
+    return mergeCfgWithDefaults(s);
+  }catch(e){
+    return mergeCfgWithDefaults(null);
+  }
+}
+function saveCfgLS(){
+  localStorage.setItem('dashboard_excel_pro_v30',JSON.stringify(cfg));
+  localStorage.setItem('dashboard_excel_pro_v29',JSON.stringify(cfg));
+}
 function loadSession(){try{return JSON.parse(sessionStorage.getItem('dashboard_session_v30')||sessionStorage.getItem('dashboard_session_v29')||sessionStorage.getItem('dashboard_session_v27')||'null')}catch(e){return null}}
 function saveSession(){if(currentUser)sessionStorage.setItem('dashboard_session_v30',JSON.stringify(currentUser))}
 function clearSession(){sessionStorage.removeItem('dashboard_session_v30');sessionStorage.removeItem('dashboard_session_v29');sessionStorage.removeItem('dashboard_session_v27')}
@@ -413,10 +552,26 @@ function parseCellRef(ref){
 function normalizeGoogleUrl(url){
   const s = String(url || '').trim();
   if(!s) return '';
+
   if(s.includes('output=csv')) return s;
-  if(s.includes('/pubhtml')) return s.replace('/pubhtml','/pub?output=csv&single=true&gid=0');
-  if(s.includes('/pub?') && !s.includes('output=csv')) return s + '&output=csv';
-  return s;
+
+  try{
+    const u = new URL(s);
+
+    if(s.includes('/pubhtml')){
+      const gid = u.searchParams.get('gid');
+      const base = s.split('/pubhtml')[0] + '/pub';
+      return `${base}?output=csv${gid ? `&gid=${gid}` : ''}&single=true`;
+    }
+
+    if(s.includes('/pub?') && !s.includes('output=csv')){
+      return s + (s.includes('?') ? '&' : '?') + 'output=csv';
+    }
+
+    return s;
+  }catch(err){
+    return s;
+  }
 }
 function csvLineParse(line){
   const out=[]; let cur=''; let inQ=false;
@@ -623,13 +778,13 @@ async function refreshUsersFromBackend(){
   if(!currentUser || currentUser.role!=='admin') return;
   if(msg) msg.textContent='Cargando usuarios desde Apps Script...';
   try{
-    const data = await jsonpRequest({action:'listUsers', user: currentUser.username, pass: currentUser.password || ''});
+    const data = await jsonpRequest({action:'listUsers'});
     if(data && data.status==='ok' && Array.isArray(data.users)){
       window.userAdminRows = data.users.map(u=>({
-        username:String(u.username||''),
-        password:String(u.password||''),
-        role:String(u.role||'visor'),
-        active:String(u.active||'SI').toUpperCase()==='NO'?'NO':'SI',
+        username:String(u.usuario || ''),
+        password:String(u.password || ''),
+        role:String(u.rol || 'visor'),
+        active: u.activo ? 'SI' : 'NO',
         locked:true
       }));
       renderUsers();
@@ -930,7 +1085,16 @@ function renderFromStored(){
 $('openCfg').onclick=()=>openCfg(); $('closeCfg').onclick=()=>closeCfg(); $('cfgBackdrop').onclick=()=>closeCfg();
 $('saveCfg').onclick=async ()=>{ try{ applyConfigFromPanel(); if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); } renderDashboard(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50); }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola.'); } };
 $('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
-$('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const data = await jsonpRequest({action:'saveUsers', user: currentUser.username, pass: currentUser.password || '', users: JSON.stringify(users)}); if(data && data.status==='ok'){ $('usersMsg').textContent='Usuarios guardados correctamente.'; await refreshUsersFromBackend(); } else { $('usersMsg').textContent=(data&&data.message)||'No se pudieron guardar los usuarios.'; } }catch(err){ console.error(err); $('usersMsg').textContent='Error al guardar usuarios. Revisá Apps Script.'; } };
+$('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const payload = {
+      username: currentUser.username,
+      users: users.map(u => ({
+        usuario: u.username,
+        password: u.password,
+        rol: u.role,
+        activo: String(u.active || 'SI').toUpperCase() === 'SI'
+      }))
+    };
+    const data = await jsonpRequest({action:'saveUsers', payload: JSON.stringify(payload)}); if(data && data.status==='ok'){ $('usersMsg').textContent='Usuarios guardados correctamente.'; await refreshUsersFromBackend(); } else { $('usersMsg').textContent=(data&&data.message)||'No se pudieron guardar los usuarios.'; } }catch(err){ console.error(err); $('usersMsg').textContent='Error al guardar usuarios. Revisá Apps Script.'; } };
 $('restoreMappingBtn').onclick=()=>{
   if(!confirm('¿Restaurar el mapeo recomendado? Esto reemplaza solo las celdas, manuales y notas del bloque de mapeo.')) return;
   cfg.mapping = deep(DEFAULT_MAPPING);
@@ -1016,13 +1180,13 @@ $('loginBtn').onclick=async ()=>{
   if(!u || !p){ $('loginMsg').textContent='Ingrese usuario y contraseña'; return; }
   $('loginMsg').textContent='Validando acceso...';
   try{
-    const data = await jsonpRequest({action:'login',user:u,pass:p});
+    const data = await jsonpRequest({action:'login', username:u, password:p});
     if(data.status!=='ok'){
       $('loginMsg').textContent=data.message || 'Usuario o contraseña incorrectos';
       return;
     }
-    const role = String(data.role||'visor').toLowerCase()==='viewer' ? 'visor' : String(data.role||'visor').toLowerCase();
-    currentUser={username:String(data.user||u).trim(),role,password:p};
+    const role = String((data.user && data.user.role) || 'visor').toLowerCase();
+    currentUser={username:String((data.user && data.user.username) || u).trim(),role: role === 'viewer' ? 'visor' : role,password:p};
     saveSession();
     unlockApp(currentUser.username,currentUser.role);
     bumpSessionTimer();
@@ -1048,7 +1212,12 @@ $('saveAccountBtn').onclick=async ()=>{
   if(newPass !== newPass2){ $('accountMsg').textContent='La confirmación no coincide'; return; }
   $('accountMsg').textContent='Actualizando contraseña...';
   try{
-    const data = await jsonpRequest({action:'changePassword',user:currentUser.username,currentPass:currentPass,newPass:newPass});
+    const data = await jsonpRequest({
+      action:'changePassword',
+      username: currentUser.username,
+      oldPassword: currentPass,
+      newPassword: newPass
+    });
     if(data.status==='ok'){
       $('accountMsg').textContent=data.message || 'Contraseña actualizada correctamente';
       $('accountCurrentPass').value='';
@@ -1068,12 +1237,36 @@ function bumpSessionTimer(){ return; }
 
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); }});
 setInterval(()=>{ if(document.body.classList.contains('auth-ok') && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); } }, 60000);
-setVars(); renderConfig(); if(lastRendered) renderFromStored(); else renderDashboard();
-currentUser=loadSession();
-renderUserChip();
-updateRoleUi();
-setTimeout(()=>{ autoSyncGoogleOnAccess(false); }, 150);
-if(currentUser){ unlockApp(currentUser.username,currentUser.role); if(cfg.useGoogleSheet && cfg.googleAutoLoad){ setTimeout(()=>autoSyncGoogleOnAccess(false), 400); } } else { lockApp('Ingrese usuario y contraseña para visualizar el dashboard'); }
+
+(async function startApp(){
+  const sess = loadSession();
+  if(sess){
+    currentUser = sess;
+    renderUserChip();
+    updateRoleUi();
+  }
+
+  const remoteOk = await loadRemoteConfig();
+
+  setVars();
+  renderConfig();
+
+  if(lastRendered) renderFromStored();
+  else renderDashboard();
+
+  if(sess){
+    unlockApp(currentUser.username, currentUser.role);
+    if(cfg.useGoogleSheet && cfg.googleAutoLoad){
+      await autoSyncGoogleOnAccess(false);
+    }
+  }else{
+    lockApp('Ingrese usuario y contraseña para visualizar el dashboard');
+  }
+
+  if(!remoteOk){
+    console.warn('Config remota no disponible. Se usó localStorage/default.');
+  }
+})();
 </script>
 </body>
 </html>
