@@ -743,9 +743,23 @@ function normalizeKpiField(f){
   out.source_type = String(out.source_type || out.sourceType || '').trim().toLowerCase();
   out.source_key = String(out.source_key || out.sourceKey || '').trim().toLowerCase();
   const text = `${out.grupo} ${out.titulo} ${out.subtitulo}`.toLowerCase();
-  if(!out.source_type){
-    if(out.grupo==='missing') out.source_type='calculated';
-    else out.source_type = out.celda ? 'cell' : 'calculated';
+  // Compatibilidad heredada: si la tabla vieja no trae source_type/source_key,
+  // o si quedaron filas 'missing' apuntando a L2/M2, las forzamos a calculadas.
+  if(out.grupo==='missing'){
+    out.source_type='calculated';
+    if(!out.source_key){
+      if(text.includes('seman')) out.source_key='missing_week';
+      else if(text.includes('mes')) out.source_key='missing_month';
+      else out.source_key='total_missing_active';
+    }
+  }else if((out.grupo==='objectives') && !out.source_key && (text.includes('avance') || text.includes('desvío') || text.includes('desvio'))){
+    out.source_type='calculated';
+    if(text.includes('avance') && text.includes('seman')) out.source_key='progress_week_expected';
+    else if(text.includes('avance') && text.includes('mes')) out.source_key='progress_month_expected';
+    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('seman')) out.source_key='progress_gap_week';
+    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('mes')) out.source_key='progress_gap_month';
+  }else if(!out.source_type){
+    out.source_type = out.celda ? 'cell' : 'calculated';
   }
   if(out.source_type==='calculated' && !out.source_key){
     if(text.includes('falta') && text.includes('seman')) out.source_key='missing_week';
@@ -753,6 +767,8 @@ function normalizeKpiField(f){
     else if(text.includes('total') && text.includes('falt')) out.source_key='total_missing_active';
     else if(text.includes('avance') && text.includes('seman')) out.source_key='progress_week_expected';
     else if(text.includes('avance') && text.includes('mes')) out.source_key='progress_month_expected';
+    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('seman')) out.source_key='progress_gap_week';
+    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('mes')) out.source_key='progress_gap_month';
   }
   return out;
 }
