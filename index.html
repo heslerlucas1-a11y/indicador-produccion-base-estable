@@ -53,9 +53,9 @@
     .week-box{padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center} .week-box .w-label{font-size:calc(12px * var(--fontScale));text-transform:uppercase;color:var(--muted)} .week-box .w-value{font-size:calc(34px * var(--fontScale));font-weight:950;margin-top:7px}.week-box .w-miss{font-size:calc(13px * var(--fontScale));color:#ffcc99;margin-top:6px}
     .chart-wrap{padding:12px;height:100%;min-height:0}.chart-wrap canvas{width:100%!important;height:100%!important}
     .cfg-backdrop,.login-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;z-index:39;pointer-events:none} .login-backdrop.open{pointer-events:auto} .app-content{display:none} body.auth-ok .app-content{display:block} body.auth-ok{overflow:auto} body.auth-locked{overflow:hidden} body.auth-locked #verticalExport{display:none !important}
-    .cfg{position:fixed;top:0;right:0;width:min(920px,97vw);height:100vh;background:linear-gradient(180deg,#0b1e31,#071421);border-left:1px solid rgba(72,133,182,.35);z-index:40;transform:translateX(100%);transition:.25s ease;overflow-y:auto;overscroll-behavior:contain}.cfg.open{transform:translateX(0)} .cfg-backdrop.open,.login-backdrop.open{display:block}
+    .cfg{position:fixed;inset:0;width:100vw;height:100vh;background:linear-gradient(180deg,#0b1e31,#071421);z-index:40;transform:translateX(100%);transition:.25s ease;overflow-y:auto;overscroll-behavior:contain}.cfg.open{transform:translateX(0)} .cfg-backdrop.open,.login-backdrop.open{display:block}
     .cfg-head{position:sticky;top:0;background:rgba(7,20,33,.96);padding:16px;border-bottom:1px solid rgba(72,133,182,.25);display:flex;justify-content:space-between;align-items:center}
-    .cfg-body{padding:16px;display:grid;gap:18px}.cfg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:14px}.cfg-card h3{margin:0 0 12px;font-size:16px}
+    .cfg-body{padding:18px 22px;display:grid;gap:18px;max-width:1800px;margin:0 auto}.cfg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}.cfg-card h3{margin:0 0 12px;font-size:16px}
     .row2,.row3,.row4{display:grid;gap:10px}.row2{grid-template-columns:1fr 1fr}.row3{grid-template-columns:1fr 1fr 1fr}.row4{grid-template-columns:1fr 1fr 1fr 1fr}
     .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.field input,.field select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#07131f;color:#fff;outline:none}
     .map-row{display:grid;grid-template-columns:1.08fr .8fr .58fr .62fr .82fr;gap:8px;align-items:end;margin-bottom:8px}.m-name{font-size:13px;font-weight:700;color:#dcecff;padding-bottom:10px}.small{font-size:12px;color:var(--muted);line-height:1.35}
@@ -125,16 +125,18 @@
       html,body{overflow-y:auto}
     }
   
-.kpi-fields-head,.kpi-field-row{display:grid;grid-template-columns:70px 110px 1.2fr 1.1fr 110px 130px 90px 90px 90px 70px;gap:8px;align-items:center}
-.kpi-fields-head{margin:10px 0 8px 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9dc7ef}
+.kpi-fields-head,.kpi-field-row{display:grid;grid-template-columns:70px 120px minmax(180px,1.3fr) minmax(180px,1.3fr) 120px 160px 100px 100px 100px 80px 70px;gap:8px;align-items:center}
+.kpi-fields-head{margin:10px 0 8px 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9dc7ef;position:sticky;top:78px;background:#0b1e31;padding:8px 0;z-index:2}
 .kpi-field-row{margin-bottom:8px}
 .kpi-field-row .field{margin:0}
-.kpi-field-row .field input,.kpi-field-row .field select{width:100%}
+.kpi-field-row .field input,.kpi-field-row .field select{width:100%;min-width:0}
 .kpi-field-row .mini-btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#102d48;color:#fff;cursor:pointer}
 .kpi-field-row .mini-btn:hover{filter:brightness(1.1)}
 @media (max-width: 1400px){
-  .kpi-fields-head,.kpi-field-row{grid-template-columns:70px 100px 1fr 1fr 95px 120px 80px 80px 80px 64px}
+  .kpi-fields-head,.kpi-field-row{grid-template-columns:70px 110px minmax(140px,1fr) minmax(140px,1fr) 110px 140px 90px 90px 90px 80px 64px}
 }
+.kpi-fields-wrap{overflow:auto;padding-bottom:10px}
+.kpi-field-row .remove-col{text-align:right}
 
 </style>
 </head>
@@ -260,10 +262,10 @@
       <div class="cfg-card">
         <h3>Campos KPI dinámicos</h3>
         <div class="small" style="margin-bottom:10px">Desde acá podés editar el motor KPI. <b>source_type</b> puede ser <b>cell</b> o <b>calculated</b>. Para calculados usá claves como: <b>missing_week</b>, <b>missing_month</b>, <b>total_missing_active</b>, <b>progress_week_expected</b>, <b>progress_month_expected</b>, <b>progress_gap_week</b>, <b>progress_gap_month</b>, <b>daily_target</b>, <b>weekly_target</b>, <b>monthly_target</b>.</div>
-        <div class="kpi-fields-head">
-          <div>Activo</div><div>Grupo</div><div>Título</div><div>Subtítulo</div><div>Tipo fuente</div><div>Source key</div><div>Celda</div><div>Formato</div><div>Tamaño</div><div>Orden</div>
+        <div class="kpi-fields-wrap"><div class="kpi-fields-head">
+          <div>Activo</div><div>Grupo</div><div>Título</div><div>Subtítulo</div><div>Tipo fuente</div><div>Source key</div><div>Celda</div><div>Formato</div><div>Tamaño</div><div>Orden</div><div></div>
         </div>
-        <div id="kpiFieldsContainer"></div>
+        <div id="kpiFieldsContainer"></div></div>
         <div class="row2" style="margin-top:10px">
           <button class="btn green" id="addKpiFieldBtn">Agregar KPI</button>
           <div class="small">Los cambios se guardan junto con la Config en Apps Script. En V2.1 ya renderiza featured, indicators, objectives, missing y weekly con soporte <b>cell / calculated</b>.</div>
@@ -738,12 +740,39 @@ function normalizeKpiField(f){
   out.formato = String(out.formato||'').trim().toLowerCase();
   out.tamano = String(out.tamano||'medium').trim().toLowerCase();
   out.orden = Number(out.orden); if(!Number.isFinite(out.orden)) out.orden = 9999;
-  out.source_type = String(out.source_type || out.sourceType || (out.celda ? 'cell' : 'calculated')).trim().toLowerCase();
+  out.source_type = String(out.source_type || out.sourceType || '').trim().toLowerCase();
   out.source_key = String(out.source_key || out.sourceKey || '').trim().toLowerCase();
+  const text = `${out.grupo} ${out.titulo} ${out.subtitulo}`.toLowerCase();
+  if(!out.source_type){
+    if(out.grupo==='missing') out.source_type='calculated';
+    else out.source_type = out.celda ? 'cell' : 'calculated';
+  }
+  if(out.source_type==='calculated' && !out.source_key){
+    if(text.includes('falta') && text.includes('seman')) out.source_key='missing_week';
+    else if(text.includes('falta') && text.includes('mes')) out.source_key='missing_month';
+    else if(text.includes('total') && text.includes('falt')) out.source_key='total_missing_active';
+    else if(text.includes('avance') && text.includes('seman')) out.source_key='progress_week_expected';
+    else if(text.includes('avance') && text.includes('mes')) out.source_key='progress_month_expected';
+  }
   return out;
 }
 function getAllKpiFields(){
   return (window.remoteKpiFields||[]).map(normalizeKpiField).filter(f=>f.titulo);
+}
+
+function getAllKpiFieldsFromEditor(){
+  return [...document.querySelectorAll('#kpiFieldsContainer .kpi-field-row')].map(row=>normalizeKpiField({
+    activo: row.querySelector('[data-key="activo"]')?.value,
+    grupo: row.querySelector('[data-key="grupo"]')?.value,
+    titulo: row.querySelector('[data-key="titulo"]')?.value,
+    subtitulo: row.querySelector('[data-key="subtitulo"]')?.value,
+    source_type: row.querySelector('[data-key="source_type"]')?.value,
+    source_key: row.querySelector('[data-key="source_key"]')?.value,
+    celda: row.querySelector('[data-key="celda"]')?.value,
+    formato: row.querySelector('[data-key="formato"]')?.value,
+    tamano: row.querySelector('[data-key="tamano"]')?.value,
+    orden: row.querySelector('[data-key="orden"]')?.value
+  })).filter(f=>f.titulo);
 }
 function remoteFieldsByGroup(group){
   return getAllKpiFields().filter(f => f.activo && f.grupo===group).sort((a,b)=>a.orden-b.orden);
@@ -1026,28 +1055,33 @@ function collectKpiFieldsFromPanel(){
 }
 function renderKpiFieldsEditor(){
   const box = $('kpiFieldsContainer'); if(!box) return;
-  const rows = getAllKpiFields();
+  const fields = (window.remoteKpiFields && window.remoteKpiFields.length ? window.remoteKpiFields : []).map(normalizeKpiField);
   box.innerHTML = '';
-  rows.forEach((f, idx)=>{
+  fields.forEach((f, idx)=>{
     const row = document.createElement('div');
-    row.className='kpi-field-row';
+    row.className = 'kpi-field-row';
     row.innerHTML = `
       <div class="field"><select data-key="activo"><option value="true" ${f.activo?'selected':''}>Sí</option><option value="false" ${!f.activo?'selected':''}>No</option></select></div>
       <div class="field"><select data-key="grupo">
-        <option value="featured" ${f.grupo==='featured'?'selected':''}>featured</option>
-        <option value="indicators" ${f.grupo==='indicators'?'selected':''}>indicators</option>
-        <option value="objectives" ${f.grupo==='objectives'?'selected':''}>objectives</option>
-        <option value="missing" ${f.grupo==='missing'?'selected':''}>missing</option>
-        <option value="weekly" ${f.grupo==='weekly'?'selected':''}>weekly</option>
+        ${['featured','indicators','objectives','missing','weekly'].map(g=>`<option value="${g}" ${f.grupo===g?'selected':''}>${g}</option>`).join('')}
       </select></div>
-      <div class="field"><input data-key="titulo" value="${esc(f.titulo)}"></div>
-      <div class="field"><input data-key="subtitulo" value="${esc(f.subtitulo)}"></div>
-      <div class="field"><select data-key="source_type"><option value="cell" ${f.source_type==='cell'?'selected':''}>cell</option><option value="calculated" ${f.source_type==='calculated'?'selected':''}>calculated</option></select></div>
-      <div class="field"><input data-key="source_key" value="${esc(f.source_key||'')}" placeholder="missing_week"></div>
-      <div class="field"><input data-key="celda" value="${esc(f.celda||'')}" placeholder="B2"></div>
-      <div class="field"><select data-key="formato"><option value="integer" ${f.formato==='integer'?'selected':''}>integer</option><option value="percent" ${f.formato==='percent'?'selected':''}>percent</option><option value="decimal" ${f.formato==='decimal'?'selected':''}>decimal</option><option value="text" ${f.formato==='text'?'selected':''}>text</option><option value="date" ${f.formato==='date'?'selected':''}>date</option></select></div>
-      <div class="field"><select data-key="tamano"><option value="small" ${f.tamano==='small'?'selected':''}>small</option><option value="medium" ${f.tamano==='medium'?'selected':''}>medium</option><option value="large" ${f.tamano==='large'?'selected':''}>large</option></select></div>
-      <div style="display:flex;gap:6px;align-items:center"><div class="field" style="flex:1"><input data-key="orden" type="number" value="${esc(f.orden)}"></div><button class="mini-btn" type="button" data-remove-kpi="${idx}">✕</button></div>`;
+      <div class="field"><input data-key="titulo" value="${esc(f.titulo||'')}" placeholder="Título"></div>
+      <div class="field"><input data-key="subtitulo" value="${esc(f.subtitulo||'')}" placeholder="Subtítulo"></div>
+      <div class="field"><select data-key="source_type">
+        <option value="cell" ${f.source_type==='cell'?'selected':''}>cell</option>
+        <option value="calculated" ${f.source_type==='calculated'?'selected':''}>calculated</option>
+      </select></div>
+      <div class="field"><input data-key="source_key" value="${esc(f.source_key||'')}" placeholder="missing_week / progress_gap_month"></div>
+      <div class="field"><input data-key="celda" value="${esc(f.celda||'')}" placeholder="Ej: B2"></div>
+      <div class="field"><select data-key="formato">
+        ${['integer','percent','decimal','text','date'].map(x=>`<option value="${x}" ${f.formato===x?'selected':''}>${x}</option>`).join('')}
+      </select></div>
+      <div class="field"><select data-key="tamano">
+        ${['small','medium','large'].map(x=>`<option value="${x}" ${f.tamano===x?'selected':''}>${x}</option>`).join('')}
+      </select></div>
+      <div class="field"><input data-key="orden" type="number" value="${Number.isFinite(f.orden)?f.orden:''}" placeholder="1"></div>
+      <div class="remove-col"><button class="mini-btn" data-remove-kpi="${idx}" title="Eliminar">🗑</button></div>
+    `;
     box.appendChild(row);
   });
 }
@@ -1466,12 +1500,14 @@ $('saveCfg').onclick=async ()=>{
       show_expected_progress: !!cfg.showExpectedProgress,
       show_progress_gap: !!cfg.showProgressGap
     };
-    const payload = { username: currentUser?.username || 'system', config: remoteConfig, kpiFields: getAllKpiFields() };
+    const editorFields = (typeof getAllKpiFieldsFromEditor==='function' ? getAllKpiFieldsFromEditor() : getAllKpiFields());
+    window.remoteKpiFields = editorFields;
+    const payload = { username: currentUser?.username || 'system', config: remoteConfig, kpiFields: editorFields };
     const saved = await jsonpRequest({ action:'saveConfig', payload: JSON.stringify(payload) });
     if(saved && saved.status!=='ok') throw new Error(saved.message || 'No se pudo guardar Config remota');
     if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); }
     renderDashboard(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50);
-  }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola y Apps Script.'); }
+  }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola y confirmá que Apps Script soporte KPI_FIELDS con source_type y source_key.'); }
 };
 $('addKpiFieldBtn').onclick=()=>{
   if(!window.remoteKpiFields) window.remoteKpiFields=[];
@@ -1479,7 +1515,7 @@ $('addKpiFieldBtn').onclick=()=>{
   renderKpiFieldsEditor();
 };
 $('kpiFieldsContainer').addEventListener('click', (e)=>{
-  const idx = e.target?.dataset?.removeKpi;
+  const idx = e.target?.closest('[data-remove-kpi]')?.dataset?.removeKpi;
   if(idx===undefined) return;
   const rows = getAllKpiFields();
   rows.splice(Number(idx),1);
