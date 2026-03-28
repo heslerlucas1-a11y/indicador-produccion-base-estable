@@ -125,8 +125,8 @@
       html,body{overflow-y:auto}
     }
   
-.kpi-fields-head,.kpi-field-row{display:grid;grid-template-columns:70px 120px minmax(180px,1.3fr) minmax(180px,1.3fr) 120px 160px 100px 100px 100px 80px 70px;gap:8px;align-items:center}
-.kpi-fields-head{margin:10px 0 8px 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9dc7ef;position:sticky;top:78px;background:#0b1e31;padding:8px 0;z-index:2}
+.kpi-fields-head,.kpi-field-row{display:grid;grid-template-columns:70px 120px minmax(180px,1.3fr) minmax(180px,1.2fr) 120px 170px 100px 100px 100px 80px 130px 70px;gap:8px;align-items:center}
+.kpi-fields-head{margin:10px 0 8px 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9dc7ef;position:sticky;top:0;background:#0b1e31;padding:8px 0;z-index:3;border-bottom:1px solid rgba(255,255,255,.08)}
 .kpi-field-row{margin-bottom:8px}
 .kpi-field-row .field{margin:0}
 .kpi-field-row .field input,.kpi-field-row .field select{width:100%;min-width:0}
@@ -263,12 +263,12 @@
         <h3>Campos KPI dinámicos</h3>
         <div class="small" style="margin-bottom:10px">Desde acá podés editar el motor KPI. <b>source_type</b> puede ser <b>cell</b> o <b>calculated</b>. Para calculados usá claves como: <b>missing_week</b>, <b>missing_month</b>, <b>total_missing_active</b>, <b>progress_week_expected</b>, <b>progress_month_expected</b>, <b>progress_gap_week</b>, <b>progress_gap_month</b>, <b>daily_target</b>, <b>weekly_target</b>, <b>monthly_target</b>.</div>
         <div class="kpi-fields-wrap"><div class="kpi-fields-head">
-          <div>Activo</div><div>Grupo</div><div>Título</div><div>Subtítulo</div><div>Tipo fuente</div><div>Source key</div><div>Celda</div><div>Formato</div><div>Tamaño</div><div>Orden</div><div></div>
+          <div>Activo</div><div>Grupo</div><div>Título</div><div>Subtítulo</div><div>Tipo fuente</div><div>Source key</div><div>Celda</div><div>Formato</div><div>Tamaño</div><div>Orden</div><div>Valor leído</div><div></div>
         </div>
         <div id="kpiFieldsContainer"></div></div>
         <div class="row2" style="margin-top:10px">
           <button class="btn green" id="addKpiFieldBtn">Agregar KPI</button>
-          <div class="small">Los cambios se guardan junto con la Config en Apps Script. En V2.1 ya renderiza featured, indicators, objectives, missing y weekly con soporte <b>cell / calculated</b>.</div>
+          <div class="small">Los cambios se guardan directo en Google Sheets vía Apps Script (POST). En V2.1 ya renderiza featured, indicators, objectives, missing y weekly con soporte <b>cell / calculated</b>.</div>
         </div>
       </div>
 
@@ -441,6 +441,21 @@ function jsonpRequest(params){
   });
 }
 
+
+async function postJsonToBackend(action, payload){
+  const baseUrl = getWebAppUrl();
+  if(!baseUrl) throw new Error('No hay URL de Apps Script configurada');
+  const res = await fetch(baseUrl, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action, payload })
+  });
+  const text = await res.text();
+  let data;
+  try{ data = JSON.parse(text); }catch(err){ throw new Error('Respuesta inválida del backend: '+text.slice(0,200)); }
+  console.log('Respuesta backend POST:', data);
+  return data;
+}
 function applyRemoteConfigToCfg(remote){
   if(!remote || typeof remote !== 'object') return;
 
@@ -743,22 +758,8 @@ function normalizeKpiField(f){
   out.source_type = String(out.source_type || out.sourceType || '').trim().toLowerCase();
   out.source_key = String(out.source_key || out.sourceKey || '').trim().toLowerCase();
   const text = `${out.grupo} ${out.titulo} ${out.subtitulo}`.toLowerCase();
-  // Compatibilidad heredada: si la tabla vieja no trae source_type/source_key,
-  // o si quedaron filas 'missing' apuntando a L2/M2, las forzamos a calculadas.
-  if(out.grupo==='missing'){
-    out.source_type='calculated';
-    if(!out.source_key){
-      if(text.includes('seman')) out.source_key='missing_week';
-      else if(text.includes('mes')) out.source_key='missing_month';
-      else out.source_key='total_missing_active';
-    }
-  }else if((out.grupo==='objectives') && !out.source_key && (text.includes('avance') || text.includes('desvío') || text.includes('desvio'))){
-    out.source_type='calculated';
-    if(text.includes('avance') && text.includes('seman')) out.source_key='progress_week_expected';
-    else if(text.includes('avance') && text.includes('mes')) out.source_key='progress_month_expected';
-    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('seman')) out.source_key='progress_gap_week';
-    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('mes')) out.source_key='progress_gap_month';
-  }else if(!out.source_type){
+  if(out.grupo==='missing'){ out.source_type='calculated'; }
+  if(!out.source_type){
     out.source_type = out.celda ? 'cell' : 'calculated';
   }
   if(out.source_type==='calculated' && !out.source_key){
@@ -767,8 +768,6 @@ function normalizeKpiField(f){
     else if(text.includes('total') && text.includes('falt')) out.source_key='total_missing_active';
     else if(text.includes('avance') && text.includes('seman')) out.source_key='progress_week_expected';
     else if(text.includes('avance') && text.includes('mes')) out.source_key='progress_month_expected';
-    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('seman')) out.source_key='progress_gap_week';
-    else if((text.includes('desvío') || text.includes('desvio')) && text.includes('mes')) out.source_key='progress_gap_month';
   }
   return out;
 }
@@ -838,6 +837,26 @@ function resolveFieldRaw(field, ctx={}){
 function resolveFieldDisplay(field, ctx={}){
   const f = normalizeKpiField(field);
   return formatFieldValue(resolveFieldRaw(f, ctx), f.formato);
+}
+function buildDashboardContext(){
+  const actualDia=normalizeNumber(readSheetCell(cfg.mapping.objDia?.actualCell||cfg.mapping.actualDia?.cell||cfg.mapping.valorActualDia?.cell||'T2')) || normalizeNumber(readSheetCell('T2')) || 0;
+  const objDia=normalizeNumber(readMetric('objDia'))||0;
+  const objSem=normalizeNumber(readMetric('objSem'))||0;
+  const objMes=normalizeNumber(readMetric('objMes'))||0;
+  const sem1=normalizeNumber(readMetric('sem1'))||0;
+  const sem2=normalizeNumber(readMetric('sem2'))||0;
+  const sem3=normalizeNumber(readMetric('sem3'))||0;
+  const sem4=normalizeNumber(readMetric('sem4'))||0;
+  const actualSem=sem4||sem3||sem2||sem1||0;
+  const actualMes=normalizeNumber(readMetric('actualMes'))||0;
+  const faltSemana=Math.max(0,objSem-actualSem);
+  const faltMes=Math.max(0,objMes-actualMes);
+  const expectedWeek=getExpectedProgress('week');
+  const expectedMonth=getExpectedProgress('month');
+  const faltTotalActivo=faltSemana+Math.max(0, faltMes-faltSemana);
+  const rendP2=normalizePercent(readMetric('rendP2'));
+  const featuredStateValue=rendP2;
+  return {actualDia,objDia,objSem,objMes,sem1,sem2,sem3,sem4,actualSem,actualMes,faltSemana,faltMes,faltTotalActivo,expectedWeek,expectedMonth,targetLine:cfg.weeklyTargetLine||0,featuredStateValue};
 }
 function getBusinessDaysElapsedInWeek(now){
   const d = new Date(now);
@@ -1071,9 +1090,11 @@ function collectKpiFieldsFromPanel(){
 }
 function renderKpiFieldsEditor(){
   const box = $('kpiFieldsContainer'); if(!box) return;
+  const ctx = buildDashboardContext();
   const fields = (window.remoteKpiFields && window.remoteKpiFields.length ? window.remoteKpiFields : []).map(normalizeKpiField);
   box.innerHTML = '';
   fields.forEach((f, idx)=>{
+    const preview = resolveFieldDisplay(f, ctx) || '-';
     const row = document.createElement('div');
     row.className = 'kpi-field-row';
     row.innerHTML = `
@@ -1096,6 +1117,7 @@ function renderKpiFieldsEditor(){
         ${['small','medium','large'].map(x=>`<option value="${x}" ${f.tamano===x?'selected':''}>${x}</option>`).join('')}
       </select></div>
       <div class="field"><input data-key="orden" type="number" value="${Number.isFinite(f.orden)?f.orden:''}" placeholder="1"></div>
+      <div class="small" style="padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.03);min-height:38px;display:flex;align-items:center">${esc(String(preview))}</div>
       <div class="remove-col"><button class="mini-btn" data-remove-kpi="${idx}" title="Eliminar">🗑</button></div>
     `;
     box.appendChild(row);
@@ -1519,10 +1541,10 @@ $('saveCfg').onclick=async ()=>{
     const editorFields = (typeof getAllKpiFieldsFromEditor==='function' ? getAllKpiFieldsFromEditor() : getAllKpiFields());
     window.remoteKpiFields = editorFields;
     const payload = { username: currentUser?.username || 'system', config: remoteConfig, kpiFields: editorFields };
-    const saved = await jsonpRequest({ action:'saveConfig', payload: JSON.stringify(payload) });
+    const saved = await postJsonToBackend('saveConfig', payload);
     if(saved && saved.status!=='ok') throw new Error(saved.message || 'No se pudo guardar Config remota');
     if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); }
-    renderDashboard(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50);
+    renderDashboard(); renderKpiFieldsEditor(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50);
   }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola y confirmá que Apps Script soporte KPI_FIELDS con source_type y source_key.'); }
 };
 $('addKpiFieldBtn').onclick=()=>{
