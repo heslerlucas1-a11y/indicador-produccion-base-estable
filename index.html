@@ -124,7 +124,19 @@
       .topbar{height:auto;flex-wrap:wrap}
       html,body{overflow-y:auto}
     }
-  </style>
+  
+.kpi-fields-head,.kpi-field-row{display:grid;grid-template-columns:70px 110px 1.2fr 1.1fr 110px 130px 90px 90px 90px 70px;gap:8px;align-items:center}
+.kpi-fields-head{margin:10px 0 8px 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9dc7ef}
+.kpi-field-row{margin-bottom:8px}
+.kpi-field-row .field{margin:0}
+.kpi-field-row .field input,.kpi-field-row .field select{width:100%}
+.kpi-field-row .mini-btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#102d48;color:#fff;cursor:pointer}
+.kpi-field-row .mini-btn:hover{filter:brightness(1.1)}
+@media (max-width: 1400px){
+  .kpi-fields-head,.kpi-field-row{grid-template-columns:70px 100px 1fr 1fr 95px 120px 80px 80px 80px 64px}
+}
+
+</style>
 </head>
 <body class="auth-locked">
   <div id="appContent" class="app-content" aria-hidden="true">
@@ -243,6 +255,19 @@
         <div class="small" id="lastEditedCell">Última celda configurada: sin cambios</div>
         <div class="row2" style="margin:10px 0 12px 0"><button class="btn secondary" id="restoreMappingBtn">Restaurar mapeo recomendado</button><div class="small">Se cargan las celdas sugeridas: H2, I2, T2, S2, R2, etc. Después podés ajustarlas.</div></div>
         <div id="mappingContainer"></div>
+      </div>
+
+      <div class="cfg-card">
+        <h3>Campos KPI dinámicos</h3>
+        <div class="small" style="margin-bottom:10px">Desde acá podés editar el motor KPI. <b>source_type</b> puede ser <b>cell</b> o <b>calculated</b>. Para calculados usá claves como: <b>missing_week</b>, <b>missing_month</b>, <b>total_missing_active</b>, <b>progress_week_expected</b>, <b>progress_month_expected</b>, <b>progress_gap_week</b>, <b>progress_gap_month</b>, <b>daily_target</b>, <b>weekly_target</b>, <b>monthly_target</b>.</div>
+        <div class="kpi-fields-head">
+          <div>Activo</div><div>Grupo</div><div>Título</div><div>Subtítulo</div><div>Tipo fuente</div><div>Source key</div><div>Celda</div><div>Formato</div><div>Tamaño</div><div>Orden</div>
+        </div>
+        <div id="kpiFieldsContainer"></div>
+        <div class="row2" style="margin-top:10px">
+          <button class="btn green" id="addKpiFieldBtn">Agregar KPI</button>
+          <div class="small">Los cambios se guardan junto con la Config en Apps Script. En V2.1 ya renderiza featured, indicators, objectives, missing y weekly con soporte <b>cell / calculated</b>.</div>
+        </div>
       </div>
 
       <div class="cfg-card">
@@ -703,8 +728,71 @@ function displayCellByFormat(cell, formato){
   if(['decimal','number','float'].includes(fmt)) return formatNum(normalizeNumber(raw),1);
   return raw===undefined || raw===null ? '' : String(raw);
 }
+function normalizeKpiField(f){
+  const out = {...(f||{})};
+  out.activo = !['false','0','no'].includes(String(out.activo).trim().toLowerCase());
+  out.grupo = String(out.grupo||'').trim().toLowerCase();
+  out.titulo = String(out.titulo||'').trim();
+  out.subtitulo = String(out.subtitulo||'').trim();
+  out.celda = String(out.celda||'').trim().toUpperCase();
+  out.formato = String(out.formato||'').trim().toLowerCase();
+  out.tamano = String(out.tamano||'medium').trim().toLowerCase();
+  out.orden = Number(out.orden); if(!Number.isFinite(out.orden)) out.orden = 9999;
+  out.source_type = String(out.source_type || out.sourceType || (out.celda ? 'cell' : 'calculated')).trim().toLowerCase();
+  out.source_key = String(out.source_key || out.sourceKey || '').trim().toLowerCase();
+  return out;
+}
+function getAllKpiFields(){
+  return (window.remoteKpiFields||[]).map(normalizeKpiField).filter(f=>f.titulo);
+}
 function remoteFieldsByGroup(group){
-  return (window.remoteKpiFields||[]).filter(f => f && f.activo && String(f.grupo||'').trim().toLowerCase()===group);
+  return getAllKpiFields().filter(f => f.activo && f.grupo===group).sort((a,b)=>a.orden-b.orden);
+}
+function inferObjectiveKey(field){
+  const f = normalizeKpiField(field);
+  const t = `${f.titulo} ${f.subtitulo} ${f.source_key}`.toLowerCase();
+  if(['daily_target','daily_actual','day'].includes(f.source_key) || f.celda===String(cfg.mapping.objDia?.cell||'').toUpperCase() || t.includes('diario')) return 'day';
+  if(['weekly_target','weekly_actual','missing_week','progress_week_expected','progress_gap_week','week'].includes(f.source_key) || f.celda===String(cfg.mapping.objSem?.cell||'').toUpperCase() || t.includes('seman')) return 'week';
+  if(['monthly_target','monthly_actual','missing_month','progress_month_expected','progress_gap_month','month'].includes(f.source_key) || f.celda===String(cfg.mapping.objMes?.cell||'').toUpperCase() || t.includes('mens')) return 'month';
+  return 'custom';
+}
+function calcFieldValue(sourceKey, ctx){
+  const k = String(sourceKey||'').trim().toLowerCase();
+  switch(k){
+    case 'daily_actual': return ctx.actualDia;
+    case 'daily_target': return ctx.objDia;
+    case 'weekly_actual': return ctx.actualSem;
+    case 'weekly_target': return ctx.objSem;
+    case 'monthly_actual': return ctx.actualMes;
+    case 'monthly_target': return ctx.objMes;
+    case 'missing_week': return ctx.faltSemana;
+    case 'missing_month': return ctx.faltMes;
+    case 'total_missing_active': return ctx.faltTotalActivo;
+    case 'progress_week_expected': return ctx.expectedWeek.pct;
+    case 'progress_month_expected': return ctx.expectedMonth.pct;
+    case 'progress_gap_week': return (ctx.objSem>0?(ctx.actualSem/ctx.objSem)*100:0) - ctx.expectedWeek.pct;
+    case 'progress_gap_month': return (ctx.objMes>0?(ctx.actualMes/ctx.objMes)*100:0) - ctx.expectedMonth.pct;
+    case 'weekly_target_line': return ctx.targetLine;
+    case 'featured_state_value': return ctx.featuredStateValue;
+    default: return null;
+  }
+}
+function formatFieldValue(value, formato){
+  const fmt = String(formato||'').trim().toLowerCase();
+  if(['percent','pct','percentage'].includes(fmt)) return formatPct(normalizePercent(value),1);
+  if(['integer','int','entero'].includes(fmt)) return formatNum(normalizeNumber(value),0);
+  if(['decimal','number','float'].includes(fmt)) return formatNum(normalizeNumber(value),1);
+  if(fmt==='date') return formatDate(value);
+  return value==null ? '' : String(value);
+}
+function resolveFieldRaw(field, ctx={}){
+  const f = normalizeKpiField(field);
+  if(f.source_type==='calculated') return calcFieldValue(f.source_key, ctx);
+  return readSheetCell(f.celda);
+}
+function resolveFieldDisplay(field, ctx={}){
+  const f = normalizeKpiField(field);
+  return formatFieldValue(resolveFieldRaw(f, ctx), f.formato);
 }
 function getBusinessDaysElapsedInWeek(now){
   const d = new Date(now);
@@ -919,7 +1007,49 @@ function renderConfig(){
       <div class="field"><label>Valor leído</label><input value="${esc(metricRawPreview(key))}" readonly></div>`;
     box.appendChild(row);
   });
+  renderKpiFieldsEditor();
   renderUsers();
+}
+function collectKpiFieldsFromPanel(){
+  return [...document.querySelectorAll('#kpiFieldsContainer .kpi-field-row')].map(row=>({
+    activo: row.querySelector('[data-key="activo"]').value==='true',
+    grupo: row.querySelector('[data-key="grupo"]').value.trim().toLowerCase(),
+    titulo: row.querySelector('[data-key="titulo"]').value.trim(),
+    subtitulo: row.querySelector('[data-key="subtitulo"]').value.trim(),
+    source_type: row.querySelector('[data-key="source_type"]').value.trim().toLowerCase(),
+    source_key: row.querySelector('[data-key="source_key"]').value.trim(),
+    celda: row.querySelector('[data-key="celda"]').value.trim().toUpperCase(),
+    formato: row.querySelector('[data-key="formato"]').value.trim().toLowerCase(),
+    tamano: row.querySelector('[data-key="tamano"]').value.trim().toLowerCase(),
+    orden: Number(row.querySelector('[data-key="orden"]').value||9999)
+  })).filter(x=>x.titulo);
+}
+function renderKpiFieldsEditor(){
+  const box = $('kpiFieldsContainer'); if(!box) return;
+  const rows = getAllKpiFields();
+  box.innerHTML = '';
+  rows.forEach((f, idx)=>{
+    const row = document.createElement('div');
+    row.className='kpi-field-row';
+    row.innerHTML = `
+      <div class="field"><select data-key="activo"><option value="true" ${f.activo?'selected':''}>Sí</option><option value="false" ${!f.activo?'selected':''}>No</option></select></div>
+      <div class="field"><select data-key="grupo">
+        <option value="featured" ${f.grupo==='featured'?'selected':''}>featured</option>
+        <option value="indicators" ${f.grupo==='indicators'?'selected':''}>indicators</option>
+        <option value="objectives" ${f.grupo==='objectives'?'selected':''}>objectives</option>
+        <option value="missing" ${f.grupo==='missing'?'selected':''}>missing</option>
+        <option value="weekly" ${f.grupo==='weekly'?'selected':''}>weekly</option>
+      </select></div>
+      <div class="field"><input data-key="titulo" value="${esc(f.titulo)}"></div>
+      <div class="field"><input data-key="subtitulo" value="${esc(f.subtitulo)}"></div>
+      <div class="field"><select data-key="source_type"><option value="cell" ${f.source_type==='cell'?'selected':''}>cell</option><option value="calculated" ${f.source_type==='calculated'?'selected':''}>calculated</option></select></div>
+      <div class="field"><input data-key="source_key" value="${esc(f.source_key||'')}" placeholder="missing_week"></div>
+      <div class="field"><input data-key="celda" value="${esc(f.celda||'')}" placeholder="B2"></div>
+      <div class="field"><select data-key="formato"><option value="integer" ${f.formato==='integer'?'selected':''}>integer</option><option value="percent" ${f.formato==='percent'?'selected':''}>percent</option><option value="decimal" ${f.formato==='decimal'?'selected':''}>decimal</option><option value="text" ${f.formato==='text'?'selected':''}>text</option><option value="date" ${f.formato==='date'?'selected':''}>date</option></select></div>
+      <div class="field"><select data-key="tamano"><option value="small" ${f.tamano==='small'?'selected':''}>small</option><option value="medium" ${f.tamano==='medium'?'selected':''}>medium</option><option value="large" ${f.tamano==='large'?'selected':''}>large</option></select></div>
+      <div style="display:flex;gap:6px;align-items:center"><div class="field" style="flex:1"><input data-key="orden" type="number" value="${esc(f.orden)}"></div><button class="mini-btn" type="button" data-remove-kpi="${idx}">✕</button></div>`;
+    box.appendChild(row);
+  });
 }
 function applyConfigFromPanel(){
   cfg.dashTitle=$('dashTitle').value||DEFAULT_CFG.dashTitle;
@@ -947,6 +1077,7 @@ function applyConfigFromPanel(){
     cfg.mapping[inp.dataset.key][inp.dataset.prop]=inp.value;
     if(inp.dataset.prop==='cell' && inp.value.trim()!=='') cfg.lastEditedCell = `${cfg.mapping[inp.dataset.key].label}: ${inp.value.trim().toUpperCase()}`;
   });
+  window.remoteKpiFields = collectKpiFieldsFromPanel();
   normalizeCriticalMappings(cfg);
   saveCfgLS();
   setVars();
@@ -961,12 +1092,40 @@ function renderDashboard(){
   setVars(); renderTitles(); document.title=cfg.dashTitle;
   const fecha=displayMetric('fecha');
 
+  const weeklyFields = remoteFieldsByGroup('weekly');
+  const defaultWeeks=[
+    {title:getWeekTitles()[0], value:numMetric('sem1'), cell:cfg.mapping.sem1.cell},
+    {title:getWeekTitles()[1], value:numMetric('sem2'), cell:cfg.mapping.sem2.cell},
+    {title:getWeekTitles()[2], value:numMetric('sem3'), cell:cfg.mapping.sem3.cell},
+    {title:getWeekTitles()[3], value:numMetric('sem4'), cell:cfg.mapping.sem4.cell}
+  ];
+  const weekEntries = (weeklyFields.length ? weeklyFields.map((f,i)=>({field:f,title:f.titulo||getWeekTitles()[i]||`Semana ${i+1}`})) : defaultWeeks.map((x)=>({title:x.title, value:x.value, cell:x.cell})));
+
+  const weekTitles = [];
+  const weekValues = [];
+  const tempWeekEntries = weekEntries.map(w=>{
+    const v = w.field ? normalizeNumber(resolveFieldRaw(w.field, {})) : Number(w.value)||0;
+    const title = w.title;
+    weekTitles.push(title);
+    weekValues.push(v||0);
+    return {title, value:v||0, field:w.field||null, cell:w.cell||''};
+  });
+
+  const activeWeeks=getActiveWeeks(weekValues);
+  const actualDia=getActualDia(), actualSem=getActualSem(), actualMes=getActualMes(), objDia=numMetric('objDia'), objSem=numMetric('objSem'), objMes=numMetric('objMes');
+  const targetLine = objSem>0 ? objSem : cfg.weeklyTargetLine;
+  const faltSemana=Math.max(objSem-actualSem,0), faltMes=Math.max(objMes-actualMes,0), faltTotalActivo=activeWeeks.length?activeWeeks.reduce((a,b)=>a+Math.max(targetLine-b,0),0):0;
+  const expectedWeek = getExpectedProgress('week');
+  const expectedMonth = getExpectedProgress('month');
+  const baseCtx = {actualDia,actualSem,actualMes,objDia,objSem,objMes,targetLine,faltSemana,faltMes,faltTotalActivo,expectedWeek,expectedMonth};
+
   const featuredFields = remoteFieldsByGroup('featured');
   const featuredField = featuredFields[0] || null;
   const featuredTitle = featuredField?.titulo || cfg.titles.titleRendDest || 'Rendimiento en p2 destacado';
-  const featuredValue = featuredField ? displayCellByFormat(featuredField.celda, featuredField.formato) : displayMetric('rendP2');
-  const featuredStateValue = featuredField ? normalizePercent(readSheetCell(featuredField.celda)) : normalizePercent(readMetric('rendP2'));
+  const featuredValue = featuredField ? resolveFieldDisplay(featuredField, baseCtx) : displayMetric('rendP2');
+  const featuredStateValue = featuredField ? normalizePercent(resolveFieldRaw(featuredField, baseCtx)) : normalizePercent(readMetric('rendP2'));
   const st=stateInfo(featuredStateValue);
+  const ctx = {...baseCtx, featuredStateValue};
 
   $('titleRendDest').textContent = featuredTitle;
   $('fechaMain').textContent=fecha;
@@ -979,37 +1138,13 @@ function renderDashboard(){
   $('rendBand').classList.toggle('critical-glow', st.cls==='red');
   $('rendBand').classList.toggle('optimal-glow', st.cls==='green');
 
-  const weeklyFields = remoteFieldsByGroup('weekly');
-  const defaultWeeks=[
-    {title:getWeekTitles()[0], value:numMetric('sem1'), cell:cfg.mapping.sem1.cell},
-    {title:getWeekTitles()[1], value:numMetric('sem2'), cell:cfg.mapping.sem2.cell},
-    {title:getWeekTitles()[2], value:numMetric('sem3'), cell:cfg.mapping.sem3.cell},
-    {title:getWeekTitles()[3], value:numMetric('sem4'), cell:cfg.mapping.sem4.cell}
-  ];
-  const weekEntries = (weeklyFields.length ? weeklyFields.map((f,i)=>({title:f.titulo||getWeekTitles()[i]||`Semana ${i+1}`, value:normalizeNumber(readSheetCell(f.celda)), cell:f.celda})) : defaultWeeks);
-  const weeks = weekEntries.map(x=>Number(x.value)||0);
-  const weekTitles = weekEntries.map(x=>x.title);
-  const activeWeeks=getActiveWeeks(weeks);
-  const actualDia=getActualDia(), actualSem=getActualSem(), actualMes=getActualMes(), objDia=numMetric('objDia'), objSem=numMetric('objSem'), objMes=numMetric('objMes');
-  const targetLine = objSem>0 ? objSem : cfg.weeklyTargetLine;
-  const faltSemana=Math.max(objSem-actualSem,0), faltMes=Math.max(objMes-actualMes,0), faltTotalActivo=activeWeeks.length?activeWeeks.reduce((a,b)=>a+Math.max(targetLine-b,0),0):0;
   $('faltSemana').textContent=formatNum(faltSemana,0); $('faltMes').textContent=formatNum(faltMes,0); $('faltMetaProm').textContent=formatNum(faltTotalActivo,0);
-
-  const expectedWeek = getExpectedProgress('week');
-  const expectedMonth = getExpectedProgress('month');
-  const goalData=[];
-  const objectiveFields = remoteFieldsByGroup('objectives');
-  const goalBase = [
-    {title:objectiveFields[0]?.titulo || cfg.mapping.objDia.title || 'Objetivo diario',actual:actualDia,obj:objDia,key:'day'},
-    {title:objectiveFields[1]?.titulo || cfg.mapping.objSem.title || 'Objetivo semanal',actual:actualSem,obj:objSem,key:'week'},
-    {title:objectiveFields[2]?.titulo || cfg.mapping.objMes.title || 'Objetivo mensual',actual:actualMes,obj:objMes,key:'month'}
-  ];
 
   $('kpiGrid').innerHTML='';
   const indicatorFields = remoteFieldsByGroup('indicators');
   const indicatorDefaults = ['totalTablas','tablasNegras','rendTablasNegras','m3Consumido','m3Producido','rendM3','p2Prod','p2Esp'].map(k=>{ const m=cfg.mapping[k]; return {title:m.title, value:displayMetric(k), note:m.note||''}; });
   const kpiData = indicatorFields.length
-    ? indicatorFields.map(f=>({title:f.titulo||'', value:displayCellByFormat(f.celda, f.formato), note:f.subtitulo||''}))
+    ? indicatorFields.map(f=>({title:f.titulo||'', value:resolveFieldDisplay(f, ctx), note:f.subtitulo||''}))
     : indicatorDefaults;
   kpiData.forEach(k=>{
     const div=document.createElement('div'); div.className='card kpi';
@@ -1018,29 +1153,72 @@ function renderDashboard(){
   });
 
   $('goalGrid').innerHTML='';
-  goalBase.forEach(g=>{
-    const pct=g.obj>0?(g.actual/g.obj)*100:0, falta=Math.max(g.obj-g.actual,0);
+  const objectiveFields = remoteFieldsByGroup('objectives');
+  const fallbackObjectives = [
+    {title:cfg.mapping.objDia.title || 'Objetivo diario', key:'day', field:{formato:'integer', source_type:'calculated', source_key:'daily_target'}, subtitulo:'Meta diaria'},
+    {title:cfg.mapping.objSem.title || 'Objetivo semanal', key:'week', field:{formato:'integer', source_type:'calculated', source_key:'weekly_target'}, subtitulo:'Meta semanal'},
+    {title:cfg.mapping.objMes.title || 'Objetivo mensual', key:'month', field:{formato:'integer', source_type:'calculated', source_key:'monthly_target'}, subtitulo:'Meta mensual'}
+  ];
+  const objectiveEntries = (objectiveFields.length ? objectiveFields : fallbackObjectives).map((f,i)=>{
+    const field = f.field ? normalizeKpiField(f.field) : normalizeKpiField(f);
+    const key = inferObjectiveKey(field);
+    const title = field.titulo || f.title || `Objetivo ${i+1}`;
+    const objRaw = field.source_type==='calculated' ? calcFieldValue(field.source_key || `${key}_target`, ctx) : resolveFieldRaw(field, ctx);
+    const actual = key==='day' ? actualDia : key==='week' ? actualSem : key==='month' ? actualMes : normalizeNumber(resolveFieldRaw(field, ctx));
+    const obj = normalizeNumber(objRaw) || 0;
+    const pct = obj>0?(actual/obj)*100:0;
+    const falta = Math.max(obj-actual,0);
     const extra = { expectedPct:null, elapsed:null, total:null, gap:null, label:'' };
-    if(g.key==='week'){ extra.expectedPct = expectedWeek.pct; extra.elapsed=expectedWeek.elapsed; extra.total=expectedWeek.total; extra.gap = pct-expectedWeek.pct; extra.label='Avance semana'; }
-    if(g.key==='month'){ extra.expectedPct = expectedMonth.pct; extra.elapsed=expectedMonth.elapsed; extra.total=expectedMonth.total; extra.gap = pct-expectedMonth.pct; extra.label='Avance mes'; }
-    goalData.push({title:g.title,actual:formatNum(g.actual,0),obj:formatNum(g.obj,0),falta:formatNum(falta,0),pct:formatPct(pct,1), expectedPct:extra.expectedPct!=null?formatPct(extra.expectedPct,1):'', elapsed:extra.elapsed, total:extra.total, gap:extra.gap!=null?formatPct(extra.gap,1):'', label:extra.label});
+    if(key==='week'){ extra.expectedPct = expectedWeek.pct; extra.elapsed=expectedWeek.elapsed; extra.total=expectedWeek.total; extra.gap = pct-expectedWeek.pct; extra.label='Avance semana'; }
+    if(key==='month'){ extra.expectedPct = expectedMonth.pct; extra.elapsed=expectedMonth.elapsed; extra.total=expectedMonth.total; extra.gap = pct-expectedMonth.pct; extra.label='Avance mes'; }
+    return {
+      title,
+      actual:formatNum(actual,0),
+      obj:formatNum(obj,0),
+      falta:formatNum(falta,0),
+      pct:formatPct(pct,1),
+      expectedPct:extra.expectedPct!=null?formatPct(extra.expectedPct,1):'',
+      elapsed:extra.elapsed,
+      total:extra.total,
+      gap:extra.gap!=null?formatPct(extra.gap,1):'',
+      label:extra.label
+    };
+  });
+  const goalData = objectiveEntries;
+  goalData.forEach(g=>{
     const div=document.createElement('div'); div.className='goal';
-    div.innerHTML=`<div class="goal-top"><div class="goal-name">${esc(g.title)}</div><div class="goal-pct">${formatPct(pct,1)}</div></div>
-      <div class="bar"><div style="width:${Math.min(pct,100)}%"></div></div>
-      <div class="nums"><div>Actual<b>${formatNum(g.actual,0)}</b></div><div>Objetivo<b>${formatNum(g.obj,0)}</b></div><div>Falta<b>${formatNum(falta,0)}</b></div></div>
-      ${extra.expectedPct!=null && cfg.showExpectedProgress ? `<div class="goal-extra">${esc(extra.label)} esperado: <b>${formatPct(extra.expectedPct,1)}</b> <span class="muted">(${extra.elapsed}/${extra.total})</span></div>` : ''}
-      ${extra.gap!=null && cfg.showProgressGap ? `<div class="goal-extra">Desvío vs avance esperado: <b>${formatPct(extra.gap,1)}</b></div>` : ''}`;
+    div.innerHTML=`<div class="goal-top"><div class="goal-name">${esc(g.title)}</div><div class="goal-pct">${g.pct}</div></div>
+      <div class="bar"><div style="width:${Math.min(parseFloat(String(g.pct).replace(',','.')),100)}%"></div></div>
+      <div class="nums"><div>Actual<b>${g.actual}</b></div><div>Objetivo<b>${g.obj}</b></div><div>Falta<b>${g.falta}</b></div></div>
+      ${g.expectedPct && cfg.showExpectedProgress ? `<div class="goal-extra">${esc(g.label)} esperado: <b>${g.expectedPct}</b> <span class="muted">(${g.elapsed}/${g.total})</span></div>` : ''}
+      ${g.gap && cfg.showProgressGap ? `<div class="goal-extra">Desvío vs avance esperado: <b>${g.gap}</b></div>` : ''}`;
     $('goalGrid').appendChild(div);
   });
 
-  const weekData=[]; $('weekGrid').innerHTML=''; weekEntries.forEach((w)=>{const v=Number(w.value)||0; const miss=v>0?Math.max(targetLine-v,0):0; weekData.push({title:w.title,value:formatNum(v,0),miss:v>0?formatNum(miss,0):'Semana inactiva'}); const div=document.createElement('div'); div.className='week-box'; div.innerHTML=`<div class="w-label">${esc(w.title)}</div><div class="w-value">${formatNum(v,0)}</div><div class="w-miss">${v>0?'Falta: '+formatNum(miss,0):'Semana inactiva'}</div>`; $('weekGrid').appendChild(div);});
+  const weekData=[]; $('weekGrid').innerHTML=''; tempWeekEntries.forEach((w)=>{const v=Number(w.value)||0; const miss=v>0?Math.max(targetLine-v,0):0; weekData.push({title:w.title,value:formatNum(v,0),miss:v>0?formatNum(miss,0):'Semana inactiva'}); const div=document.createElement('div'); div.className='week-box'; div.innerHTML=`<div class="w-label">${esc(w.title)}</div><div class="w-value">${formatNum(v,0)}</div><div class="w-miss">${v>0?'Falta: '+formatNum(miss,0):'Semana inactiva'}</div>`; $('weekGrid').appendChild(div);});
 
   const missingFields = remoteFieldsByGroup('missing');
-  if(missingFields.length>=1) $('titleFaltaSemana').textContent = missingFields[0].titulo || $('titleFaltaSemana').textContent;
-  if(missingFields.length>=2) $('titleFaltaMes').textContent = missingFields[1].titulo || $('titleFaltaMes').textContent;
+  const missingEntries = (missingFields.length ? missingFields : [
+    {titulo:cfg.titles.titleFaltaSemana || 'Falta para cerrar semana', subtitulo:'Objetivo semanal menos actual semanal', formato:'integer', source_type:'calculated', source_key:'missing_week'},
+    {titulo:cfg.titles.titleFaltaMes || 'Falta para cerrar mes', subtitulo:'Objetivo mensual menos actual mensual', formato:'integer', source_type:'calculated', source_key:'missing_month'},
+    {titulo:'Total faltante a meta activa', subtitulo:'Suma faltante solo con semanas activas', formato:'integer', source_type:'calculated', source_key:'total_missing_active'}
+  ]).map(normalizeKpiField);
 
-  saveRendered({fecha,fechaSub:$('fechaSub').textContent,rend:featuredValue,state:st,kpiData,goalData,weekData,faltSemana:formatNum(faltSemana,0),faltMes:formatNum(faltMes,0),faltActivo:formatNum(faltTotalActivo,0),featuredTitle, expectedWeek, expectedMonth});
-  if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:cfg.titles.titleSemanal||'Producción semanal',data:weeks,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:targetLine,yMax:targetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(targetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
+  const missingTargets = [
+    {titleEl:'titleFaltaSemana', valEl:'faltSemana', note:'Objetivo semanal menos actual semanal'},
+    {titleEl:'titleFaltaMes', valEl:'faltMes', note:'Objetivo mensual menos actual mensual'},
+    {titleEl:'titleFaltaMetaSemanal', valEl:'faltMetaProm', note:'Suma faltante solo con semanas activas'}
+  ];
+  missingEntries.slice(0,3).forEach((f,i)=>{
+    const target = missingTargets[i]; if(!target) return;
+    $(target.titleEl).textContent = f.titulo || $(target.titleEl).textContent;
+    $(target.valEl).textContent = resolveFieldDisplay(f, ctx);
+    const noteEl = $(target.valEl).parentElement.querySelector('.note');
+    if(noteEl) noteEl.textContent = f.subtitulo || target.note;
+  });
+
+  saveRendered({fecha,fechaSub:$('fechaSub').textContent,rend:featuredValue,state:st,kpiData,goalData,weekData,faltSemana:missingEntries[0]?resolveFieldDisplay(missingEntries[0],ctx):formatNum(faltSemana,0),faltMes:missingEntries[1]?resolveFieldDisplay(missingEntries[1],ctx):formatNum(faltMes,0),faltActivo:missingEntries[2]?resolveFieldDisplay(missingEntries[2],ctx):formatNum(faltTotalActivo,0),featuredTitle, expectedWeek, expectedMonth});
+  if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:cfg.titles.titleSemanal||'Producción semanal',data:weekValues,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:targetLine,yMax:targetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(targetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
 }
 
 
@@ -1238,7 +1416,76 @@ function renderFromStored(){
 }
 
 $('openCfg').onclick=()=>openCfg(); $('closeCfg').onclick=()=>closeCfg(); $('cfgBackdrop').onclick=()=>closeCfg();
-$('saveCfg').onclick=async ()=>{ try{ applyConfigFromPanel(); if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); } renderDashboard(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50); }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola.'); } };
+$('saveCfg').onclick=async ()=>{
+  try{
+    applyConfigFromPanel();
+    const remoteConfig = {
+      title_window: cfg.dashTitle,
+      sheet_to_read: cfg.selectedSheet,
+      use_google_sheets: !!cfg.useGoogleSheet,
+      auto_load_google: !!cfg.googleAutoLoad,
+      font_scale: cfg.fontScale,
+      kpi_height: cfg.kpiH,
+      brand_text_export: cfg.exportBrandText,
+      google_sheet_url: cfg.googleSheetUrl,
+      app_script_url: cfg.appScriptUrl,
+      color_bg: cfg.bgColor,
+      color_panel: cfg.panelColor,
+      color_text: cfg.textColor,
+      label_date: cfg.titles.titleFecha,
+      label_featured_performance: cfg.titles.titleRendDest,
+      label_performance_state: cfg.titles.titleEstado,
+      label_indicators: cfg.titles.titleIndicadores,
+      label_objectives: cfg.titles.titleObjetivos,
+      label_weekly_prod: cfg.titles.titleSemanal,
+      label_missing: cfg.titles.titleFaltantes,
+      label_missing_week: cfg.titles.titleFaltaSemana,
+      label_missing_month: cfg.titles.titleFaltaMes,
+      week_label_1: cfg.weekLabels[0],
+      week_label_2: cfg.weekLabels[1],
+      week_label_3: cfg.weekLabels[2],
+      week_label_4: cfg.weekLabels[3],
+      map_date: cfg.mapping.fecha.cell,
+      map_total_tables: cfg.mapping.totalTablas.cell,
+      map_black_tables: cfg.mapping.tablasNegras.cell,
+      map_black_performance: cfg.mapping.rendTablasNegras.cell,
+      map_m3_consumed: cfg.mapping.m3Consumido.cell,
+      map_m3_produced: cfg.mapping.m3Producido.cell,
+      map_m3_performance: cfg.mapping.rendM3.cell,
+      map_p2_produced: cfg.mapping.p2Prod.cell,
+      map_p2_expected: cfg.mapping.p2Esp.cell,
+      map_p2_performance: cfg.mapping.rendP2.cell,
+      map_daily_target: cfg.mapping.objDia.cell,
+      map_weekly_target: cfg.mapping.objSem.cell,
+      map_monthly_target: cfg.mapping.objMes.cell,
+      map_week_prod_1: cfg.mapping.sem1.cell,
+      map_week_prod_2: cfg.mapping.sem2.cell,
+      map_week_prod_3: cfg.mapping.sem3.cell,
+      map_week_prod_4: cfg.mapping.sem4.cell,
+      map_month_actual: cfg.mapping.actualMes.cell,
+      show_expected_progress: !!cfg.showExpectedProgress,
+      show_progress_gap: !!cfg.showProgressGap
+    };
+    const payload = { username: currentUser?.username || 'system', config: remoteConfig, kpiFields: getAllKpiFields() };
+    const saved = await jsonpRequest({ action:'saveConfig', payload: JSON.stringify(payload) });
+    if(saved && saved.status!=='ok') throw new Error(saved.message || 'No se pudo guardar Config remota');
+    if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); }
+    renderDashboard(); $('usersMsg').textContent=''; closeCfg(); setTimeout(()=>{ alert('Configuración guardada correctamente.'); }, 50);
+  }catch(err){ console.error(err); alert('No se pudo guardar la configuración. Revisá la consola y Apps Script.'); }
+};
+$('addKpiFieldBtn').onclick=()=>{
+  if(!window.remoteKpiFields) window.remoteKpiFields=[];
+  window.remoteKpiFields.push({activo:true,grupo:'indicators',titulo:'Nuevo KPI',subtitulo:'',source_type:'cell',source_key:'',celda:'',formato:'integer',tamano:'medium',orden:(window.remoteKpiFields.length+1)});
+  renderKpiFieldsEditor();
+};
+$('kpiFieldsContainer').addEventListener('click', (e)=>{
+  const idx = e.target?.dataset?.removeKpi;
+  if(idx===undefined) return;
+  const rows = getAllKpiFields();
+  rows.splice(Number(idx),1);
+  window.remoteKpiFields = rows;
+  renderKpiFieldsEditor();
+});
 $('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
 $('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const payload = {
       username: currentUser.username,
