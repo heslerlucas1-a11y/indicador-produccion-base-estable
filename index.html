@@ -1045,7 +1045,7 @@ function closeAccount(){ $('accountBackdrop').classList.remove('open'); $('accou
 function openCfg(){ if(!currentUser || currentUser.role!=='admin'){ alert('Solo el usuario administrador puede entrar a configuración.'); return; } $('cfgBackdrop').classList.add('open'); $('cfgPanel').classList.add('open'); refreshUsersFromBackend(); }
 function closeCfg(){ $('cfgBackdrop').classList.remove('open'); $('cfgPanel').classList.remove('open'); }
 function renderUsers(){
-  const box=$('usersContainer');
+  const box=$('usersContainer'); if(!box) return;
   const msg=$('usersMsg');
   const isAdmin = !!(currentUser && currentUser.role==='admin');
   $('addUserBtn').style.display = isAdmin ? 'inline-block' : 'none';
@@ -1114,25 +1114,49 @@ function collectUsersFromPanel(){
   })).filter(u=>u.username);
 }
 function renderConfig(){
-  $('dashTitle').value=cfg.dashTitle; $('weeklyTargetLine').value=cfg.weeklyTargetLine; $('exportBrandText').value=cfg.exportBrandText||'LAHARRAGUE CHODORGE'; $('bgColor').value=cfg.bgColor; $('panelColor').value=cfg.panelColor; $('textColor').value=cfg.textColor; $('kpiH').value=cfg.kpiH; $('fontScale').value=cfg.fontScale; $('useGoogleSheet').value=String(!!cfg.useGoogleSheet); $('googleAutoLoad').value=String(!!cfg.googleAutoLoad); $('googleSheetUrl').value=cfg.googleSheetUrl || ''; $('appScriptUrl').value=cfg.appScriptUrl || DEFAULT_CFG.appScriptUrl; if($('supportEmail1')) $('supportEmail1').value = cfg.supportEmail1 || ''; if($('supportEmail2')) $('supportEmail2').value = cfg.supportEmail2 || ''; if($('supportMsg')) $('supportMsg').textContent='';
-  Object.keys(DEFAULT_TITLES).forEach(k=>{const el=document.getElementById(k+'_in'); if(el) el.value=cfg.titles[k]||DEFAULT_TITLES[k]});
-  $('weekLabel1').value=cfg.weekLabels[0]||'Semana 1'; $('weekLabel2').value=cfg.weekLabels[1]||'Semana 2'; $('weekLabel3').value=cfg.weekLabels[2]||'Semana 3'; $('weekLabel4').value=cfg.weekLabels[3]||'Semana 4'; $('weekLabelsAuto').value=String(!!cfg.weekLabelsAuto); $('weekLabelStartCell').value=cfg.weekLabelStartCell||''; $('weekLabelPreview').value=weekLabelPreviewText();
-  $('sheetSelect').innerHTML=''; if(workbook){workbook.SheetNames.forEach(n=>{const op=document.createElement('option'); op.value=n; op.textContent=n; if(n===cfg.selectedSheet) op.selected=true; $('sheetSelect').appendChild(op);});} else {const op=document.createElement('option'); op.value=''; op.textContent='Sin libro cargado'; $('sheetSelect').appendChild(op);}
-  $('lastEditedCell').textContent = `Última celda configurada: ${cfg.lastEditedCell || 'sin cambios'}`;
-  const box=$('mappingContainer'); box.innerHTML='';
-  Object.entries(cfg.mapping).forEach(([key,m])=>{
-    const row=document.createElement('div');
-    row.className='map-row';
-    row.innerHTML=`<div class="m-name">${esc(m.label)}</div>
-      <div class="field"><label>Título</label><input data-key="${key}" data-prop="title" value="${esc(m.title||'')}"></div>
-      <div class="field"><label>Celda</label><input data-key="${key}" data-prop="cell" value="${esc(m.cell||'')}" placeholder="Ej: S2"></div>
-      <div class="field"><label>Manual</label><input data-key="${key}" data-prop="manual" value="${esc(m.manual||'')}" placeholder="Opcional"></div>
-      <div class="field"><label>Nota</label><input data-key="${key}" data-prop="note" value="${esc(m.note||'')}"></div>
-      <div class="field"><label>Fuente activa</label><input value="${esc(metricSourceLabel(key))}" readonly></div>
-      <div class="field"><label>Valor leído</label><input value="${esc(metricRawPreview(key))}" readonly></div>`;
-    box.appendChild(row);
+  $('dashTitle').value=cfg.dashTitle;
+  $('weeklyTargetLine').value=cfg.weeklyTargetLine;
+  $('exportBrandText').value=cfg.exportBrandText||'LAHARRAGUE CHODORGE';
+  $('bgColor').value=cfg.bgColor;
+  $('panelColor').value=cfg.panelColor;
+  $('textColor').value=cfg.textColor;
+  $('kpiH').value=cfg.kpiH;
+  $('fontScale').value=cfg.fontScale;
+  $('useGoogleSheet').value=String(!!cfg.useGoogleSheet);
+  $('googleAutoLoad').value=String(!!cfg.googleAutoLoad);
+  $('googleSheetUrl').value=cfg.googleSheetUrl || '';
+  $('appScriptUrl').value=cfg.appScriptUrl || DEFAULT_CFG.appScriptUrl;
+  if($('supportEmail1')) $('supportEmail1').value = cfg.supportEmail1 || '';
+  if($('supportEmail2')) $('supportEmail2').value = cfg.supportEmail2 || '';
+  if($('supportMsg')) $('supportMsg').textContent='';
+  Object.keys(DEFAULT_TITLES).forEach(k=>{
+    const el=document.getElementById(k+'_in');
+    if(el) el.value=cfg.titles[k]||DEFAULT_TITLES[k];
   });
-  renderKpiFieldsEditor();
+  $('weekLabel1').value=cfg.weekLabels[0]||'Semana 1';
+  $('weekLabel2').value=cfg.weekLabels[1]||'Semana 2';
+  $('weekLabel3').value=cfg.weekLabels[2]||'Semana 3';
+  $('weekLabel4').value=cfg.weekLabels[3]||'Semana 4';
+  $('weekLabelsAuto').value=String(!!cfg.weekLabelsAuto);
+  $('weekLabelStartCell').value=cfg.weekLabelStartCell||'';
+  $('weekLabelPreview').value=weekLabelPreviewText();
+  $('sheetSelect').innerHTML='';
+  if(workbook){
+    workbook.SheetNames.forEach(n=>{
+      const op=document.createElement('option');
+      op.value=n; op.textContent=n;
+      if(n===cfg.selectedSheet) op.selected=true;
+      $('sheetSelect').appendChild(op);
+    });
+  } else {
+    const op=document.createElement('option');
+    op.value=''; op.textContent='Sin libro cargado';
+    $('sheetSelect').appendChild(op);
+  }
+  const lastCellEl = $('lastEditedCell');
+  if(lastCellEl) lastCellEl.textContent = `Última celda configurada: ${cfg.lastEditedCell || 'administrado desde Google Sheets'}`;
+  const mapCard = $('mappingCard'); if(mapCard) mapCard.style.display='none';
+  const kpiCard = $('kpiCard'); if(kpiCard) kpiCard.style.display='none';
   renderUsers();
 }
 function collectKpiFieldsFromPanel(){
@@ -1643,7 +1667,7 @@ $('addKpiFieldBtn').onclick=()=>{
   renderKpiFieldsEditor();
   scheduleAutoSave('nuevo KPI');
 };
-$('kpiFieldsContainer').addEventListener('click', (e)=>{
+if($('kpiFieldsContainer')) $('kpiFieldsContainer').addEventListener('click', (e)=>{
   const idx = e.target?.closest('[data-remove-kpi]')?.dataset?.removeKpi;
   if(idx===undefined) return;
   const rows = getAllKpiFields();
@@ -1653,17 +1677,17 @@ $('kpiFieldsContainer').addEventListener('click', (e)=>{
   scheduleAutoSave('KPI eliminado');
 });
 
-$('kpiFieldsContainer').addEventListener('input', (e)=>{
+if($('kpiFieldsContainer')) $('kpiFieldsContainer').addEventListener('input', (e)=>{
   if(e.target && e.target.matches('input,select')) scheduleAutoSave('edición KPI');
 });
-$('mappingContainer').addEventListener('input', ()=>scheduleAutoSave('mapeo'));
+if($('mappingContainer')) $('mappingContainer').addEventListener('input', ()=>scheduleAutoSave('mapeo'));
 $('cfgPanel').addEventListener('change', (e)=>{
   if(e.target && !e.target.closest('#usersContainer') && e.target.id!=='accountPass' && e.target.id!=='accountPass2' && e.target.id!=='accountCurrentPass'){
     scheduleAutoSave('configuración');
   }
 });
-$('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
-$('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const payload = {
+if($('addUserBtn')) $('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
+if($('saveUsersBtn')) $('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const payload = {
       username: currentUser.username,
       users: users.map(u => ({
         usuario: u.username,
