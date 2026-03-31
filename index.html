@@ -138,6 +138,11 @@
 .kpi-fields-wrap{overflow:auto;padding-bottom:10px}
 .kpi-field-row .remove-col{text-align:right}
 
+
+/* simplificado: KPI y mapeo se administran desde Google Sheets */
+.cfg-card[data-section="mapping"], .cfg-card[data-section="kpi-editor"]{display:none !important;}
+.login-box{display:flex;align-items:center;justify-content:center;padding:24px}.login-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)}.login-logo-wrap{text-align:center;margin-bottom:14px}.login-logo-wrap img{max-width:min(360px,70vw);height:auto;display:inline-block;background:#fff;border-radius:12px;padding:8px}.login-title{text-align:center;font-size:34px;font-weight:900;margin:8px 0 6px}.login-subtitle{text-align:center;color:var(--muted);margin:0 0 16px 0}.login-links{display:flex;justify-content:center;gap:22px;margin-top:12px;flex-wrap:wrap}.link-btn{background:none;border:none;color:#8fd3ff;padding:0;cursor:pointer;font-weight:700}.link-btn:hover{text-decoration:underline}.modal-box{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(0,0,0,.66)}.modal-box.open{display:flex}.modal-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+
 </style>
 </head>
 <body class="auth-locked">
@@ -218,6 +223,7 @@
         <div class="field"><label>URL publicada</label><input id="googleSheetUrl" placeholder="Pegá acá la URL pubhtml o CSV"></div>
         <div class="field"><label>URL Apps Script</label><input id="appScriptUrl" placeholder="Pegá acá la URL /exec del Apps Script"></div>
         <div class="small">Acepta el link publicado tipo <b>pubhtml</b> y lo convierte automáticamente a CSV. Se leen la fila 1 como encabezados y la fila 2 como valores, manteniendo tus celdas A2, B2, C2, etc. La URL Apps Script te permite cambiar backend sin tocar el código HTML.</div>
+        <div class="small" style="margin-top:8px;color:#9dc7ef"><b>Nota:</b> el mapeo de celdas y los KPI dinámicos ahora se administran directamente desde la hoja <b>Config</b> de Google Sheets.</div>
       </div>
 
       <div class="cfg-card">
@@ -251,7 +257,7 @@
         <div class="small" style="margin-top:8px">Se leen 4 celdas consecutivas hacia la derecha a partir de la celda inicial. Si alguna viene vacía, se usa el texto manual.</div>
       </div>
 
-      <div class="cfg-card">
+      <div class="cfg-card" data-section="mapping">
         <h3>Mapeo de datos</h3>
         <div class="small" style="margin-bottom:10px">Agregado: se guarda la última celda modificada para tenerla visible en configuración.</div>
         <div class="small" id="lastEditedCell">Última celda configurada: sin cambios</div>
@@ -259,7 +265,7 @@
         <div id="mappingContainer"></div>
       </div>
 
-      <div class="cfg-card">
+      <div class="cfg-card" data-section="kpi-editor">
         <h3>Campos KPI dinámicos</h3>
         <div class="small" style="margin-bottom:10px">Desde acá podés editar el motor KPI. <b>source_type</b> puede ser <b>cell</b> o <b>calculated</b>. Para calculados usá claves como: <b>missing_week</b>, <b>missing_month</b>, <b>total_missing_active</b>, <b>progress_week_expected</b>, <b>progress_month_expected</b>, <b>progress_gap_week</b>, <b>progress_gap_month</b>, <b>daily_target</b>, <b>weekly_target</b>, <b>monthly_target</b>.</div>
         <div class="kpi-fields-wrap"><div class="kpi-fields-head">
@@ -272,7 +278,18 @@
         </div>
       </div>
 
-      <div class="cfg-card">
+      
+      <div class="cfg-card" data-section="support">
+        <h3>Correos de soporte</h3>
+        <div class="small" style="margin-bottom:10px">Estos correos reciben el aviso cuando un usuario usa <b>Olvidé mi contraseña</b>. También podés cambiarlos directo en la hoja <b>Config</b>.</div>
+        <div class="row2">
+          <div class="field"><label>Correo soporte 1</label><input id="supportEmail1" placeholder="correo1@empresa.com"></div>
+          <div class="field"><label>Correo soporte 2</label><input id="supportEmail2" placeholder="correo2@empresa.com"></div>
+        </div>
+        <div class="small" id="supportMsg" style="margin-top:8px"></div>
+      </div>
+
+<div class="cfg-card">
         <h3>Usuarios</h3>
         <div class="small warn" style="margin-bottom:10px">Esta versión usa login real contra Google Apps Script. Los usuarios ya no se guardan en este navegador.</div>
         <div class="small" style="margin-bottom:10px">Administración centralizada de usuarios desde Apps Script. Desde acá podés agregar usuarios, cambiar rol, activar/desactivar y definir contraseña inicial.</div>
@@ -291,13 +308,32 @@
   <div class="login-backdrop open" id="loginBackdrop"></div>
   <div class="login-box" id="loginBox">
     <div class="login-card">
-      <h3 style="margin-top:0">Ingreso al dashboard</h3><div class="small" style="margin:0 0 10px 0">El tablero queda totalmente oculto hasta validar usuario y contraseña contra Apps Script.</div>
-      <div class="field"><label>Usuario</label><input id="loginUser"></div>
-      <div class="field"><label>Contraseña</label><input id="loginPass" type="password"></div>
+      <div class="login-logo-wrap"><img src="data:image/png;base64,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" alt="Laharrague Chodorge"></div>
+      <div class="login-title">Acceso de Usuarios</div>
+      <div class="login-subtitle">Ingreso centralizado al dashboard de producción</div>
+      <div class="field"><label>Usuario o correo</label><input id="loginUser" placeholder="Ingrese su usuario o correo"></div>
+      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Ingrese su contraseña"></div>
       <div class="row2">
-        <button class="btn green" id="loginBtn">Ingresar</button>
+        <button class="btn green" id="loginBtn">Acceder</button>
       </div>
-      <div class="small" id="loginMsg" style="margin-top:10px">Login centralizado con Google Apps Script. Usá los usuarios cargados en la hoja Usuarios.</div>
+      <div class="login-links">
+        <button class="link-btn" id="forgotPassBtn" type="button">Olvidé mi contraseña</button>
+      </div>
+      <div class="small" id="loginMsg" style="margin-top:12px;text-align:center">Usá los usuarios cargados en la hoja <b>Usuarios</b>.</div>
+    </div>
+  </div>
+
+  <div class="modal-box" id="forgotModal">
+    <div class="modal-card">
+      <h3 style="margin-top:0">Solicitud de restablecimiento</h3>
+      <div class="small" style="margin-bottom:10px">El sistema enviará un aviso al administrador para que revise y restablezca la contraseña del usuario.</div>
+      <div class="field"><label>Usuario o correo</label><input id="forgotUser" placeholder="Ej: Lucas o correo@empresa.com"></div>
+      <div class="field"><label>Detalle opcional</label><input id="forgotNote" placeholder="Ej: olvidé la contraseña / cambié de teléfono"></div>
+      <div class="row2">
+        <button class="btn green" id="sendForgotBtn" type="button">Solicitar restablecimiento</button>
+        <button class="btn secondary" id="closeForgotBtn" type="button">Cerrar</button>
+      </div>
+      <div class="small" id="forgotMsg" style="margin-top:10px"></div>
     </div>
   </div>
 
@@ -374,7 +410,9 @@ const DEFAULT_CFG={
   monthBusinessDays:22,
   showExpectedProgress:true,
   showProgressGap:true,
-  mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING))
+  mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING)),
+  supportEmail1:'Heslerlucas1@gmail.com',
+  supportEmail2:'lhesler@victoriamaderas.com.ar'
 };
 
 function mergeCfgWithDefaults(source){
@@ -507,6 +545,8 @@ function applyRemoteConfigToCfg(remote){
   if(remote.month_business_days != null) cfg.monthBusinessDays = Number(remote.month_business_days) || cfg.monthBusinessDays;
   if(remote.show_expected_progress !== undefined) cfg.showExpectedProgress = !!remote.show_expected_progress;
   if(remote.show_progress_gap !== undefined) cfg.showProgressGap = !!remote.show_progress_gap;
+  if(remote.support_email_1) cfg.supportEmail1 = String(remote.support_email_1).trim();
+  if(remote.support_email_2) cfg.supportEmail2 = String(remote.support_email_2).trim();
 
   const mapPairs = {
     fecha:'map_date',
@@ -1074,7 +1114,7 @@ function collectUsersFromPanel(){
   })).filter(u=>u.username);
 }
 function renderConfig(){
-  $('dashTitle').value=cfg.dashTitle; $('weeklyTargetLine').value=cfg.weeklyTargetLine; $('exportBrandText').value=cfg.exportBrandText||'LAHARRAGUE CHODORGE'; $('bgColor').value=cfg.bgColor; $('panelColor').value=cfg.panelColor; $('textColor').value=cfg.textColor; $('kpiH').value=cfg.kpiH; $('fontScale').value=cfg.fontScale; $('useGoogleSheet').value=String(!!cfg.useGoogleSheet); $('googleAutoLoad').value=String(!!cfg.googleAutoLoad); $('googleSheetUrl').value=cfg.googleSheetUrl || ''; $('appScriptUrl').value=cfg.appScriptUrl || DEFAULT_CFG.appScriptUrl;
+  $('dashTitle').value=cfg.dashTitle; $('weeklyTargetLine').value=cfg.weeklyTargetLine; $('exportBrandText').value=cfg.exportBrandText||'LAHARRAGUE CHODORGE'; $('bgColor').value=cfg.bgColor; $('panelColor').value=cfg.panelColor; $('textColor').value=cfg.textColor; $('kpiH').value=cfg.kpiH; $('fontScale').value=cfg.fontScale; $('useGoogleSheet').value=String(!!cfg.useGoogleSheet); $('googleAutoLoad').value=String(!!cfg.googleAutoLoad); $('googleSheetUrl').value=cfg.googleSheetUrl || ''; $('appScriptUrl').value=cfg.appScriptUrl || DEFAULT_CFG.appScriptUrl; if($('supportEmail1')) $('supportEmail1').value = cfg.supportEmail1 || ''; if($('supportEmail2')) $('supportEmail2').value = cfg.supportEmail2 || ''; if($('supportMsg')) $('supportMsg').textContent='';
   Object.keys(DEFAULT_TITLES).forEach(k=>{const el=document.getElementById(k+'_in'); if(el) el.value=cfg.titles[k]||DEFAULT_TITLES[k]});
   $('weekLabel1').value=cfg.weekLabels[0]||'Semana 1'; $('weekLabel2').value=cfg.weekLabels[1]||'Semana 2'; $('weekLabel3').value=cfg.weekLabels[2]||'Semana 3'; $('weekLabel4').value=cfg.weekLabels[3]||'Semana 4'; $('weekLabelsAuto').value=String(!!cfg.weekLabelsAuto); $('weekLabelStartCell').value=cfg.weekLabelStartCell||''; $('weekLabelPreview').value=weekLabelPreviewText();
   $('sheetSelect').innerHTML=''; if(workbook){workbook.SheetNames.forEach(n=>{const op=document.createElement('option'); op.value=n; op.textContent=n; if(n===cfg.selectedSheet) op.selected=true; $('sheetSelect').appendChild(op);});} else {const op=document.createElement('option'); op.value=''; op.textContent='Sin libro cargado'; $('sheetSelect').appendChild(op);}
@@ -1159,6 +1199,8 @@ function applyConfigFromPanel(){
   cfg.googleAutoLoad=$('googleAutoLoad').value==='true';
   cfg.googleSheetUrl=$('googleSheetUrl').value.trim();
   cfg.appScriptUrl=$('appScriptUrl').value.trim() || DEFAULT_CFG.appScriptUrl;
+  cfg.supportEmail1 = ($('supportEmail1')?.value || '').trim();
+  cfg.supportEmail2 = ($('supportEmail2')?.value || '').trim();
   Object.keys(DEFAULT_TITLES).forEach(k=>{const el=document.getElementById(k+'_in'); if(el) cfg.titles[k]=el.value||DEFAULT_TITLES[k]});
   cfg.weekLabels=[$('weekLabel1').value||'Semana 1',$('weekLabel2').value||'Semana 2',$('weekLabel3').value||'Semana 3',$('weekLabel4').value||'Semana 4'];
   cfg.weekLabelsAuto=$('weekLabelsAuto').value==='true';
@@ -1558,47 +1600,34 @@ function buildRemoteConfigPayload(){
     map_week_prod_4: cfg.mapping.sem4.cell,
     map_month_actual: cfg.mapping.actualMes.cell,
     show_expected_progress: !!cfg.showExpectedProgress,
-    show_progress_gap: !!cfg.showProgressGap
+    show_progress_gap: !!cfg.showProgressGap,
+    support_email_1: cfg.supportEmail1 || '',
+    support_email_2: cfg.supportEmail2 || ''
   };
 }
 async function performSaveCfg(mode='manual', reason=''){
-  if(autoSaveInFlight){ autoSaveQueued = true; return; }
-  autoSaveInFlight = true;
   try{
     setSaveStatus(mode==='auto' ? `Guardando automáticamente… ${reason||''}` : 'Guardando cambios…', 'saving');
-    const previousFields = (window.remoteKpiFields||[]).map(normalizeKpiField);
-    const editorFields = (typeof getAllKpiFieldsFromEditor==='function' ? getAllKpiFieldsFromEditor() : getAllKpiFields()).map(normalizeKpiField);
-    const invalid = editorFields.filter(f=>f.source_type!=='calculated' && !isValidCellRef(f.celda));
-    if(invalid.length){
-      setSaveStatus(`Revisá ${invalid.length} celda(s) inválida(s)`, 'error');
-      throw new Error('Hay celdas inválidas en KPI dinámicos. Ejemplo válido: B2');
-    }
-    window.remoteKpiFields = editorFields;
     const remoteConfig = buildRemoteConfigPayload();
     const payload = {
       username: currentUser?.username || 'system',
-      reason: reason || (mode==='auto' ? 'auto-save' : 'manual-save'),
       config: remoteConfig,
-      kpiFields: editorFields,
-      diffSummary: summarizeKpiDiff(previousFields, editorFields)
+      reason: reason || (mode==='auto' ? 'auto-save-general' : 'manual-save-general')
     };
-    const saved = await postJsonToBackend('saveConfig', payload);
-    if(saved && saved.status!=='ok') throw new Error(saved.message || 'No se pudo guardar Config remota');
-    if(cfg.useGoogleSheet && cfg.googleAutoLoad){ await autoSyncGoogleOnAccess(true); }
-    renderDashboard(); renderKpiFieldsEditor(); renderConfig();
+    const saved = await jsonpRequest({ action:'saveGeneralConfig', payload: JSON.stringify(payload) });
+    if(!saved || saved.status!=='ok') throw new Error((saved&&saved.message) || 'No se pudo guardar la configuración general');
+    saveCfgLS();
+    renderConfig();
+    renderDashboard();
     setSaveStatus(`Guardado ${mode==='auto' ? 'automático' : 'manual'} · ${new Date().toLocaleTimeString()}`, 'ok');
+    if($('supportMsg')) $('supportMsg').textContent = 'Correos de soporte guardados correctamente.';
     return true;
   }catch(err){
     console.error(err);
     setSaveStatus(err.message || 'No se pudo guardar', 'error');
+    if($('supportMsg')) $('supportMsg').textContent = err.message || 'No se pudo guardar.';
     if(mode==='manual') alert('No se pudo guardar la configuración. ' + (err.message||''));
     return false;
-  }finally{
-    autoSaveInFlight = false;
-    if(autoSaveQueued){
-      autoSaveQueued = false;
-      scheduleAutoSave('cambios pendientes');
-    }
   }
 }
 function scheduleAutoSave(reason='cambio'){
@@ -1747,10 +1776,31 @@ $('loginBtn').onclick=async ()=>{
 };
 $('loginUser').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
 $('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
+
+$('forgotPassBtn').onclick=()=>{ $('forgotModal').classList.add('open'); $('forgotUser').value=$('loginUser').value||''; $('forgotNote').value=''; $('forgotMsg').textContent=''; };
+$('closeForgotBtn').onclick=()=>{ $('forgotModal').classList.remove('open'); };
+$('sendForgotBtn').onclick=async ()=>{
+  const userOrEmail = ($('forgotUser').value||'').trim();
+  const note = ($('forgotNote').value||'').trim();
+  if(!userOrEmail){ $('forgotMsg').textContent='Ingresá usuario o correo.'; return; }
+  $('forgotMsg').textContent='Enviando aviso al administrador...';
+  try{
+    const data = await jsonpRequest({ action:'requestPasswordHelp', user_or_email:userOrEmail, note });
+    if(data && data.status==='ok'){
+      $('forgotMsg').textContent = data.message || 'Solicitud enviada correctamente.';
+      setTimeout(()=>{$('forgotModal').classList.remove('open');}, 1200);
+    }else{
+      $('forgotMsg').textContent = (data && data.message) || 'No se pudo enviar la solicitud.';
+    }
+  }catch(err){
+    console.error(err);
+    $('forgotMsg').textContent='No se pudo enviar la solicitud.';
+  }
+};
 $('accountBtn').onclick=()=>openAccount();
 $('closeAccountBtn').onclick=()=>closeAccount();
 $('accountBackdrop').onclick=()=>closeAccount();
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeAccount(); closeCfg(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeAccount(); closeCfg(); $('forgotModal')?.classList.remove('open'); } });
 $('saveAccountBtn').onclick=async ()=>{
   if(!currentUser){ $('accountMsg').textContent='No hay sesión activa'; return; }
   const currentPass=$('accountCurrentPass').value;
