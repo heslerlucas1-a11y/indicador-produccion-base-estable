@@ -1385,14 +1385,15 @@ function renderDashboard(){
 function buildStackedExport(mode="mobile"){
   const box = $('verticalExport');
   box.innerHTML = '';
+  box.style.overflow = 'visible';
 
   const d = lastRendered || {};
   const stateCls = d.state?.cls || 'yellow';
   const preset = mode==='desktop'
-    ? {width:1600, minHeight:1500, title:26, metric:54, note:18, topCols:'1fr 1.1fr 1fr', kpiCols:'repeat(4, minmax(0, 1fr))', closeCols:'repeat(3, 1fr)', weekCols:'repeat(4, 1fr)', pad:'22px', gap:'16px', targetName:'pc'}
+    ? {width:1680, minHeight:1600, title:28, metric:58, note:19, topCols:'1fr 1.08fr 1fr', kpiCols:'repeat(4, minmax(0, 1fr))', closeCols:'repeat(3, 1fr)', weekCols:'repeat(4, 1fr)', pad:'24px', gap:'18px', targetName:'pc', outerPad:'34px'}
     : mode==='presentation'
-    ? {width:1400, minHeight:1800, title:24, metric:50, note:17, topCols:'1fr 1.1fr 1fr', kpiCols:'repeat(4, minmax(0, 1fr))', closeCols:'repeat(3, 1fr)', weekCols:'repeat(4, 1fr)', pad:'20px', gap:'14px', targetName:'presentacion'}
-    : {width:1200, minHeight:2200, title:22, metric:44, note:15, topCols:'1fr 1.15fr 1fr', kpiCols:'repeat(2, minmax(0, 1fr))', closeCols:'repeat(3, 1fr)', weekCols:'repeat(4, 1fr)', pad:'18px', gap:'10px', targetName:'celular'};
+    ? {width:1480, minHeight:1900, title:26, metric:54, note:18, topCols:'1fr 1.08fr 1fr', kpiCols:'repeat(4, minmax(0, 1fr))', closeCols:'repeat(3, 1fr)', weekCols:'repeat(4, 1fr)', pad:'22px', gap:'16px', targetName:'presentacion', outerPad:'30px'}
+    : {width:1320, minHeight:2400, title:26, metric:52, note:19, topCols:'1fr', kpiCols:'repeat(2, minmax(0, 1fr))', closeCols:'1fr', weekCols:'repeat(2, minmax(0, 1fr))', pad:'24px', gap:'16px', targetName:'celular_v2', outerPad:'36px'};
   const pillStyle = stateCls==='green'
     ? 'background:rgba(34,197,94,.18);color:#b9ffd0;border:1px solid rgba(34,197,94,.40);'
     : stateCls==='red'
@@ -1400,11 +1401,13 @@ function buildStackedExport(mode="mobile"){
       : 'background:rgba(245,158,11,.18);color:#ffe5a5;border:1px solid rgba(245,158,11,.40);';
 
   const wrap = document.createElement('div');
-  wrap.style.width = '1200px';
+  wrap.style.width = preset.width + 'px';
   wrap.style.margin = '0 auto';
+  wrap.style.padding = preset.outerPad;
+  wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = '20px';
+  wrap.style.gap = '24px';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
   wrap.style.color = '#f8fbff';
 
@@ -1413,7 +1416,7 @@ function buildStackedExport(mode="mobile"){
     c.style.background = 'linear-gradient(180deg,rgba(18,58,92,1),rgba(10,36,58,1))';
     c.style.border = '1px solid rgba(90,155,210,.45)';
     c.style.borderRadius = '20px';
-    c.style.padding = '22px';
+    c.style.padding = preset.pad;
     c.style.boxShadow = '0 0 18px rgba(56,189,248,.12)'; c.style.backdropFilter='none';
     return c;
   };
@@ -1423,10 +1426,10 @@ function buildStackedExport(mode="mobile"){
     d.style.background = 'linear-gradient(180deg,rgba(30,73,108,.96),rgba(18,52,80,.96))';
     d.style.border = '1px solid rgba(120,180,228,.22)';
     d.style.borderRadius = '16px';
-    d.style.padding = '14px';
-    d.innerHTML = `<div style="font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:#bfe2ff;font-weight:700">${label}</div>
-      <div style="font-size:40px;font-weight:900;color:#ffffff;margin-top:10px;line-height:1.04;text-align:center;display:flex;justify-content:center;align-items:center;min-height:44px">${value}</div>
-      ${note ? `<div style="font-size:15px;color:#d4ecff;margin-top:8px;line-height:1.2;text-align:center;display:flex;justify-content:center;align-items:center">${note}</div>` : ''}`;
+    d.style.padding = mode==='mobile' ? '18px' : '16px';
+    d.innerHTML = `<div style="font-size:${mode==='mobile' ? 18 : 15}px;letter-spacing:.07em;text-transform:uppercase;color:#bfe2ff;font-weight:800;line-height:1.2;text-align:center">${label}</div>
+      <div style="font-size:${mode==='mobile' ? 56 : 44}px;font-weight:900;color:#ffffff;margin-top:12px;line-height:1.04;text-align:center;display:flex;justify-content:center;align-items:center;min-height:${mode==='mobile' ? 60 : 48}px">${value}</div>
+      ${note ? `<div style="font-size:${mode==='mobile' ? 22 : 17}px;color:#d4ecff;margin-top:10px;line-height:1.25;text-align:center;display:flex;justify-content:center;align-items:center">${note}</div>` : ''}`;
     return d;
   };
 
@@ -1446,7 +1449,7 @@ function buildStackedExport(mode="mobile"){
   hright.style.borderRadius = '14px';
   hright.style.border = '1px solid rgba(120,180,228,.28)';
   hright.style.background = 'rgba(255,255,255,.03)';
-  hright.style.fontSize = '18px';
+  hright.style.fontSize = mode==='mobile' ? '22px' : '18px';
   hright.style.fontWeight = '900';
   hright.style.letterSpacing = '.08em';
   hright.style.textAlign = 'right';
@@ -1465,23 +1468,23 @@ function buildStackedExport(mode="mobile"){
   top.style.gap = preset.gap;
 
   const c1 = mkCard();
-  c1.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">Fecha de proceso</div>
-    <div style="font-size:68px;font-weight:950;line-height:1.05;margin-top:12px;text-align:center;display:flex;justify-content:center;align-items:center;min-height:80px">${d.fecha || '--/--/----'}</div>`;
+  c1.innerHTML = `<div style="font-size:${mode==='mobile' ? 20 : 16}px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">Fecha de proceso</div>
+    <div style="font-size:${mode==='mobile' ? 76 : 68}px;font-weight:950;line-height:1.05;margin-top:12px;text-align:center;display:flex;justify-content:center;align-items:center;min-height:${mode==='mobile' ? 96 : 80}px">${d.fecha || '--/--/----'}</div>`;
   top.appendChild(c1);
 
   const c2 = mkCard();
-  c2.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
-    <div style="font-size:118px;font-weight:1000;line-height:1;text-align:center;color:#ffffff;margin:18px 0">${d.rend || '0,0%'}</div>
-    <div style="display:flex;justify-content:center"><span style="padding:12px 22px;border-radius:999px;font-size:30px;font-weight:900;${pillStyle}">${(d.state?.name || 'Atención').toUpperCase()}</span></div>`;
+  c2.innerHTML = `<div style="font-size:${mode==='mobile' ? 20 : 16}px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
+    <div style="font-size:${mode==='mobile' ? 126 : 118}px;font-weight:1000;line-height:1;text-align:center;color:#ffffff;margin:18px 0">${d.rend || '0,0%'}</div>
+    <div style="display:flex;justify-content:center"><span style="padding:${mode==='mobile' ? '14px 24px' : '12px 22px'};border-radius:999px;font-size:${mode==='mobile' ? 34 : 30}px;font-weight:900;${pillStyle}">${(d.state?.name || 'Atención').toUpperCase()}</span></div>`;
   top.appendChild(c2);
 
   const c3 = mkCard();
-  c3.innerHTML = `<div style="font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff">Estado del rendimiento</div>
-    <div style="margin-top:18px;display:inline-flex;gap:10px;align-items:center;padding:12px 18px;border-radius:999px;${pillStyle}">
-      <span style="width:14px;height:14px;border-radius:50%;display:inline-block;background:${stateCls==='green'?'#22c55e':stateCls==='red'?'#ef4444':'#f59e0b'}"></span>
-      <strong style="font-size:28px">${d.state?.name || 'Atención'}</strong>
+  c3.innerHTML = `<div style="font-size:${mode==='mobile' ? 20 : 16}px;letter-spacing:.12em;text-transform:uppercase;color:#bfe2ff">Estado del rendimiento</div>
+    <div style="margin-top:18px;display:inline-flex;gap:10px;align-items:center;padding:${mode==='mobile' ? '14px 20px' : '12px 18px'};border-radius:999px;${pillStyle}">
+      <span style="width:${mode==='mobile' ? 16 : 14}px;height:${mode==='mobile' ? 16 : 14}px;border-radius:50%;display:inline-block;background:${stateCls==='green'?'#22c55e':stateCls==='red'?'#ef4444':'#f59e0b'}"></span>
+      <strong style="font-size:${mode==='mobile' ? 34 : 28}px">${d.state?.name || 'Atención'}</strong>
     </div>
-    <div style="font-size:22px;color:#d4ecff;margin-top:16px;line-height:1.3">${d.state?.text || ''}</div>`;
+    <div style="font-size:${mode==='mobile' ? 28 : 22}px;color:#d4ecff;margin-top:16px;line-height:1.3">${d.state?.text || ''}</div>`;
   top.appendChild(c3);
 
   const indicators = mkCard();
@@ -1506,17 +1509,17 @@ function buildStackedExport(mode="mobile"){
     item.style.borderRadius = '16px';
     item.style.padding = preset.pad;
     item.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end">
-      <div style="font-size:${preset.note}px;font-weight:800;text-transform:uppercase;color:#bfe2ff">${g.title}</div>
-      <div style="font-size:${preset.metric}px;font-weight:900;color:#ffffff">${g.pct}</div>
+      <div style="font-size:${mode==='mobile' ? preset.note + 3 : preset.note}px;font-weight:800;text-transform:uppercase;color:#bfe2ff">${g.title}</div>
+      <div style="font-size:${mode==='mobile' ? preset.metric + 6 : preset.metric}px;font-weight:900;color:#ffffff">${g.pct}</div>
     </div>
     <div style="height:16px;border-radius:999px;background:#05111c;margin-top:12px;overflow:hidden"><div style="height:100%;width:${Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')))}%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#22c55e)"></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;font-size:14px;color:#cde8ff;text-align:center">
-      <div>Actual<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.actual}</b></div>
-      <div>Objetivo<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.obj}</b></div>
-      <div>Falta<br><b style="font-size:26px;color:#fff;display:block;margin-top:4px">${g.falta}</b></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;font-size:${mode==='mobile' ? 18 : 14}px;color:#cde8ff;text-align:center">
+      <div>Actual<br><b style="font-size:${mode==='mobile' ? 32 : 26}px;color:#fff;display:block;margin-top:4px">${g.actual}</b></div>
+      <div>Objetivo<br><b style="font-size:${mode==='mobile' ? 32 : 26}px;color:#fff;display:block;margin-top:4px">${g.obj}</b></div>
+      <div>Falta<br><b style="font-size:${mode==='mobile' ? 32 : 26}px;color:#fff;display:block;margin-top:4px">${g.falta}</b></div>
     </div>
-    ${g.expectedPct ? `<div style="font-size:15px;color:#d7ecff;margin-top:10px">${g.label} esperado: <b style="color:#fff">${g.expectedPct}</b> <span style="opacity:.8">(${g.elapsed}/${g.total})</span></div>` : ''}
-    ${g.gap ? `<div style="font-size:15px;color:#d7ecff;margin-top:6px">Desvío vs avance esperado: <b style="color:#fff">${g.gap}</b></div>` : ''}`;
+    ${g.expectedPct ? `<div style="font-size:${mode==='mobile' ? 19 : 15}px;color:#d7ecff;margin-top:10px">${g.label} esperado: <b style="color:#fff">${g.expectedPct}</b> <span style="opacity:.8">(${g.elapsed}/${g.total})</span></div>` : ''}
+    ${g.gap ? `<div style="font-size:${mode==='mobile' ? 19 : 15}px;color:#d7ecff;margin-top:6px">Desvío vs avance esperado: <b style="color:#fff">${g.gap}</b></div>` : ''}`;
     og.appendChild(item);
   });
   objectives.appendChild(og);
@@ -1717,9 +1720,9 @@ $('exportBtn').onclick=async ()=>{
   try{
     const mode = ($('exportMode')?.value || 'mobile');
     const target = buildStackedExport(mode);
-    const exportWidth = mode==='desktop' ? 1600 : mode==='presentation' ? 1400 : 1200;
-    const minHeight = mode==='desktop' ? 1500 : mode==='presentation' ? 1800 : 2200;
-    const maxHeight = mode==='desktop' ? 3400 : mode==='presentation' ? 4200 : 5200;
+    const exportWidth = mode==='desktop' ? 1680 : mode==='presentation' ? 1480 : 1320;
+    const minHeight = mode==='desktop' ? 1600 : mode==='presentation' ? 1900 : 2400;
+    const maxHeight = mode==='desktop' ? 3800 : mode==='presentation' ? 4600 : 5800;
 
     target.style.left = '-2000px';
     target.style.top = '0';
@@ -1738,19 +1741,23 @@ $('exportBtn').onclick=async ()=>{
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
     }
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 700));
 
-    const exportHeight = Math.min(Math.max(target.scrollHeight, minHeight), maxHeight);
+    const exportHeight = Math.min(Math.max(target.scrollHeight + 48, minHeight), maxHeight);
 
     const canvas = await html2canvas(target,{
       backgroundColor:'#07131f',
-      scale:2,
+      scale: mode==='mobile' ? 2.4 : 2.2,
       useCORS:true,
       allowTaint:true,
       width:exportWidth,
       height:exportHeight,
-      windowWidth:exportWidth,
-      windowHeight:exportHeight,
+      windowWidth:exportWidth + 60,
+      windowHeight:exportHeight + 60,
+      scrollX:0,
+      scrollY:0,
+      x:0,
+      y:0,
       logging:false
     });
 
@@ -1764,7 +1771,7 @@ $('exportBtn').onclick=async ()=>{
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dashboard_${mode}_v29.png`;
+      a.download = `dashboard_${mode}_v20_3.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
