@@ -1406,16 +1406,25 @@ function buildStackedExport(){
   const box = $('verticalExport');
   box.innerHTML = '';
   box.style.overflow = 'visible';
+  box.style.background = '#f4f7fb';
 
   const d = lastRendered || {};
   const stateCls = d.state?.cls || 'yellow';
-  const preset = {width:1080, minHeight:1920, maxHeight:2300, outerPad:28, gap:14, pad:16, sectionTitle:22, label:13, value:46, note:16};
-  const pillStyle = stateCls==='green'
-    ? 'background:rgba(34,197,94,.18);color:#b9ffd0;border:1px solid rgba(34,197,94,.40);'
-    : stateCls==='red'
-      ? 'background:rgba(239,68,68,.18);color:#ffd2d2;border:1px solid rgba(239,68,68,.40);'
-      : 'background:rgba(245,158,11,.18);color:#ffe5a5;border:1px solid rgba(245,158,11,.40);';
+  const preset = {
+    width: 720,
+    outerPad: 26,
+    gap: 12,
+    pad: 14,
+    sectionTitle: 24,
+    label: 13,
+    value: 44,
+    note: 16,
+    cardRadius: 18
+  };
 
+  const stateColor = stateCls==='green' ? '#22c55e' : stateCls==='red' ? '#ef4444' : '#f59e0b';
+  const pillBg = stateCls==='green' ? '#eafaf0' : stateCls==='red' ? '#fdecec' : '#fff3d8';
+  const pillText = stateCls==='green' ? '#166534' : stateCls==='red' ? '#991b1b' : '#8a5a00';
   const wrap = document.createElement('div');
   wrap.style.width = preset.width + 'px';
   wrap.style.margin = '0 auto';
@@ -1423,108 +1432,110 @@ function buildStackedExport(){
   wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = '14px';
+  wrap.style.gap = preset.gap + 'px';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
-  wrap.style.color = '#f8fbff';
-  wrap.style.background = 'linear-gradient(180deg,#07131f,#0d2744)';
+  wrap.style.color = '#14324b';
+  wrap.style.background = 'linear-gradient(180deg,#f7fbff 0%, #edf4fb 100%)';
 
-  const mkCard = (pad=preset.pad) => {
+  const mkCard = (pad=preset.pad, bg='#ffffff', border='rgba(177,198,219,.95)', shadow='0 8px 18px rgba(15,35,55,.06)') => {
     const c = document.createElement('div');
-    c.style.background = 'linear-gradient(180deg,rgba(18,58,92,1),rgba(10,36,58,1))';
-    c.style.border = '1px solid rgba(90,155,210,.40)';
-    c.style.borderRadius = '18px';
+    c.style.background = bg;
+    c.style.border = '1px solid ' + border;
+    c.style.borderRadius = preset.cardRadius + 'px';
     c.style.padding = pad + 'px';
-    c.style.boxShadow = '0 0 14px rgba(56,189,248,.10)';
+    c.style.boxShadow = shadow;
+    c.style.overflow = 'hidden';
     return c;
   };
 
   const mkMetric = (label, value, note='') => {
-    const d = document.createElement('div');
-    d.style.background = 'linear-gradient(180deg,rgba(30,73,108,.96),rgba(18,52,80,.96))';
-    d.style.border = '1px solid rgba(120,180,228,.18)';
-    d.style.borderRadius = '14px';
-    d.style.padding = '14px 12px';
-    d.style.textAlign = 'center';
-    d.innerHTML = `<div style="font-size:${preset.label}px;letter-spacing:.06em;text-transform:uppercase;color:#bfe2ff;line-height:1.15">${label}</div>
-      <div style="font-size:${preset.value}px;font-weight:800;color:#ffffff;margin-top:8px;line-height:1.04">${value}</div>
-      ${note ? `<div style="font-size:${preset.note}px;color:#d4ecff;margin-top:6px;line-height:1.2">${note}</div>` : ''}`;
-    return d;
+    const card = document.createElement('div');
+    card.style.background = '#ffffff';
+    card.style.border = '1px solid rgba(188,206,224,.95)';
+    card.style.borderRadius = '16px';
+    card.style.padding = '12px';
+    card.style.textAlign = 'center';
+    card.innerHTML = `
+      <div style="font-size:${preset.label}px;letter-spacing:.04em;text-transform:uppercase;color:#5d7891;line-height:1.18;font-weight:600">${label}</div>
+      <div style="font-size:${preset.value}px;font-weight:700;color:#14324b;margin-top:6px;line-height:1.02">${value}</div>
+      ${note ? `<div style="font-size:${preset.note}px;color:#57728a;margin-top:4px;line-height:1.18">${note}</div>` : ''}`;
+    return card;
   };
 
-  const header = mkCard(14);
-  header.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
-    <div>
-      <div style="font-size:16px;font-weight:700;letter-spacing:.08em;color:#d8ecff;text-transform:uppercase">Indicador de producción</div>
-      <div style="font-size:12px;color:#b7d8f6;margin-top:4px">${esc(d.fechaSub || '')}</div>
+  const titleBar = mkCard(14, '#163e63', 'rgba(21,61,96,.95)', '0 8px 20px rgba(8,26,44,.14)');
+  titleBar.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="min-width:0">
+        <div style="font-size:14px;font-weight:700;letter-spacing:.10em;color:#f2f8ff;text-transform:uppercase">Indicador de producción</div>
+        <div style="font-size:11px;color:#c7dbef;margin-top:4px;line-height:1.2">${esc(d.fechaSub || '')}</div>
+      </div>
+      <div style="text-align:right;min-width:150px">
+        <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#bdd3e8">Fecha reporte</div>
+        <div style="font-size:22px;font-weight:700;color:#ffffff;margin-top:2px">${esc(d.fecha || '--/--/----')}</div>
+      </div>
+    </div>`;
+
+  const featured = mkCard(16);
+  featured.innerHTML = `
+    <div style="font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:#57728a;text-align:center;font-weight:600">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
+    <div style="font-size:82px;font-weight:700;line-height:1;text-align:center;color:#14324b;margin:8px 0 8px 0">${d.rend || '0,0%'}</div>
+    <div style="display:flex;justify-content:center"><span style="padding:9px 16px;border-radius:999px;font-size:22px;font-weight:700;background:${pillBg};color:${pillText};border:1px solid rgba(177,198,219,.9)">${(d.state?.name || 'Atención').toUpperCase()}</span></div>`;
+
+  const state = mkCard(14);
+  state.innerHTML = `
+    <div style="font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:#57728a;font-weight:600">Estado del rendimiento</div>
+    <div style="margin-top:10px;display:inline-flex;gap:8px;align-items:center;padding:8px 14px;border-radius:999px;background:${pillBg};color:${pillText};border:1px solid rgba(177,198,219,.9)">
+      <span style="width:12px;height:12px;border-radius:50%;display:inline-block;background:${stateColor}"></span>
+      <strong style="font-size:20px;font-weight:700">${d.state?.name || 'Atención'}</strong>
     </div>
-    <div style="text-align:right">
-      <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9fc2e3">Fecha reporte</div>
-      <div style="font-size:26px;font-weight:800;color:#fff;margin-top:2px">${esc(d.fecha || '--/--/----')}</div>
-    </div>
-  </div>`;
+    <div style="font-size:17px;color:#48627a;margin-top:10px;line-height:1.25">${d.state?.text || ''}</div>`;
 
-  const featured = mkCard(18);
-  featured.innerHTML = `<div style="font-size:14px;letter-spacing:.10em;text-transform:uppercase;color:#bfe2ff;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
-    <div style="font-size:94px;font-weight:900;line-height:1;text-align:center;color:#ffffff;margin:10px 0 8px 0">${d.rend || '0,0%'}</div>
-    <div style="display:flex;justify-content:center"><span style="padding:10px 18px;border-radius:999px;font-size:22px;font-weight:800;${pillStyle}">${(d.state?.name || 'Atención').toUpperCase()}</span></div>`;
-
-  const state = mkCard(16);
-  state.innerHTML = `<div style="font-size:14px;letter-spacing:.10em;text-transform:uppercase;color:#bfe2ff">Estado del rendimiento</div>
-    <div style="margin-top:10px;display:inline-flex;gap:8px;align-items:center;padding:8px 14px;border-radius:999px;${pillStyle}">
-      <span style="width:12px;height:12px;border-radius:50%;display:inline-block;background:${stateCls==='green'?'#22c55e':stateCls==='red'?'#ef4444':'#f59e0b'}"></span>
-      <strong style="font-size:20px">${d.state?.name || 'Atención'}</strong>
-    </div>
-    <div style="font-size:18px;color:#d4ecff;margin-top:10px;line-height:1.28">${d.state?.text || ''}</div>`;
-
-  const topGrid = document.createElement('div');
-  topGrid.style.display = 'grid';
-  topGrid.style.gridTemplateColumns = '1.25fr .95fr';
-  topGrid.style.gap = '14px';
-  topGrid.appendChild(featured);
-  topGrid.appendChild(state);
-
-  const indicators = mkCard(16);
-  indicators.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:800;margin-bottom:10px">Indicadores principales</div>`;
+  const indicators = mkCard(14, '#eef5fb');
+  indicators.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">Indicadores principales</div>`;
   const ig = document.createElement('div');
   ig.style.display = 'grid';
   ig.style.gridTemplateColumns = '1fr 1fr';
-  ig.style.gap = '10px';
+  ig.style.gap = '8px';
   (d.kpiData || []).forEach(k => ig.appendChild(mkMetric(k.title, k.value, k.note || '')));
   indicators.appendChild(ig);
 
-  const objectives = mkCard(16);
-  objectives.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:800;margin-bottom:10px">${esc(cfg.titles.titleObjetivos || 'Objetivos de producción')}</div>`;
+  const compactGoal = (g) => {
+    const pctVal = Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')) || 0);
+    const item = document.createElement('div');
+    item.style.background = '#ffffff';
+    item.style.border = '1px solid rgba(188,206,224,.95)';
+    item.style.borderRadius = '16px';
+    item.style.padding = '12px';
+    item.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px">
+        <div style="font-size:15px;font-weight:700;text-transform:uppercase;color:#57728a">${g.title}</div>
+        <div style="font-size:34px;font-weight:700;color:#14324b">${g.pct}</div>
+      </div>
+      <div style="height:10px;border-radius:999px;background:#dbe7f2;margin-top:8px;overflow:hidden"><div style="height:100%;width:${pctVal}%;border-radius:999px;background:linear-gradient(90deg,#38bdf8,#22c55e)"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:9px;font-size:12px;color:#5d7891;text-align:center">
+        <div>Actual<br><span style="font-size:22px;font-weight:700;color:#14324b;display:block;margin-top:3px">${g.actual}</span></div>
+        <div>Objetivo<br><span style="font-size:22px;font-weight:700;color:#14324b;display:block;margin-top:3px">${g.obj}</span></div>
+        <div>Falta<br><span style="font-size:22px;font-weight:700;color:#14324b;display:block;margin-top:3px">${g.falta}</span></div>
+      </div>
+      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:14px;color:#57728a">${g.expectedPct ? `<div>Esperado: <b style="color:#14324b">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#14324b">${g.gap}</b></div>` : ''}</div>` : ''}`;
+    return item;
+  };
+
+  const objectives = mkCard(14, '#eef5fb');
+  objectives.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">${esc(cfg.titles.titleObjetivos || 'Objetivos de producción')}</div>`;
   const og = document.createElement('div');
   og.style.display = 'grid';
   og.style.gridTemplateColumns = '1fr';
-  og.style.gap = '10px';
-  (d.goalData || []).forEach(g => {
-    const item = document.createElement('div');
-    item.style.background = 'rgba(4,22,36,.38)';
-    item.style.border = '1px solid rgba(85,138,179,.22)';
-    item.style.borderRadius = '14px';
-    item.style.padding = '14px';
-    item.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px">
-      <div style="font-size:15px;font-weight:700;text-transform:uppercase;color:#bfe2ff">${g.title}</div>
-      <div style="font-size:34px;font-weight:800;color:#ffffff">${g.pct}</div>
-    </div>
-    <div style="height:12px;border-radius:999px;background:#05111c;margin-top:8px;overflow:hidden"><div style="height:100%;width:${Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')))}%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#22c55e)"></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;font-size:13px;color:#cde8ff;text-align:center">
-      <div>Actual<br><span style="font-size:26px;font-weight:700;color:#fff;display:block;margin-top:4px">${g.actual}</span></div>
-      <div>Objetivo<br><span style="font-size:26px;font-weight:700;color:#fff;display:block;margin-top:4px">${g.obj}</span></div>
-      <div>Falta<br><span style="font-size:26px;font-weight:700;color:#fff;display:block;margin-top:4px">${g.falta}</span></div>
-    </div>
-    ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:14px;color:#d7ecff">${g.expectedPct ? `<div>Esperado: <b style="color:#fff">${g.expectedPct}</b> <span style="opacity:.82">(${g.elapsed}/${g.total})</span></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#fff">${g.gap}</b></div>` : ''}</div>` : ''}`;
-    og.appendChild(item);
-  });
+  og.style.gap = '8px';
+  (d.goalData || []).forEach(g => og.appendChild(compactGoal(g)));
   objectives.appendChild(og);
 
-  const closings = mkCard(16);
-  closings.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:800;margin-bottom:10px">Faltantes para cierre</div>`;
+  const closings = mkCard(14, '#eef5fb');
+  closings.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">Faltantes para cierre</div>`;
   const cg = document.createElement('div');
   cg.style.display = 'grid';
   cg.style.gridTemplateColumns = '1fr';
-  cg.style.gap = '10px';
+  cg.style.gap = '8px';
   [
     ['Falta para cerrar semana', d.faltSemana || '0', 'Objetivo semanal menos actual semanal'],
     ['Falta para cerrar mes', d.faltMes || '0', 'Objetivo mensual menos actual mensual'],
@@ -1532,25 +1543,27 @@ function buildStackedExport(){
   ].forEach(x => cg.appendChild(mkMetric(x[0], x[1], x[2])));
   closings.appendChild(cg);
 
-  const weeks = mkCard(16);
-  weeks.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:800;margin-bottom:10px">Producción semanal</div>`;
+  const weeks = mkCard(14, '#eef5fb');
+  weeks.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">Producción semanal</div>`;
   const wg = document.createElement('div');
   wg.style.display = 'grid';
   wg.style.gridTemplateColumns = '1fr 1fr';
-  wg.style.gap = '10px';
+  wg.style.gap = '8px';
   (d.weekData || []).forEach(w => wg.appendChild(mkMetric(w.title, w.value, w.miss==='Semana inactiva' ? w.miss : 'Falta: ' + w.miss)));
   weeks.appendChild(wg);
 
-  wrap.appendChild(header);
-  wrap.appendChild(topGrid);
+  wrap.appendChild(titleBar);
+  wrap.appendChild(featured);
+  wrap.appendChild(state);
   wrap.appendChild(indicators);
   wrap.appendChild(objectives);
   wrap.appendChild(closings);
   wrap.appendChild(weeks);
 
   box.appendChild(wrap);
-  return box;
+  return wrap;
 }
+
 
 function renderFromStored(){
   if(!lastRendered) return;
@@ -1714,49 +1727,47 @@ $('reloadBtn').onclick=()=>$('fileInput').click(); $('googleSyncBtn').onclick=()
 $('exportBtn').onclick=async ()=>{
   try{
     const target = buildStackedExport();
-    const mode = 'telefono_premium';
-    const exportWidth = 1080;
-    const minHeight = 1920;
-    const maxHeight = 2300;
+    const mode = 'telefono_compacto_blanco';
 
-    target.style.left = '-2000px';
-    target.style.top = '0';
-    target.style.opacity = '1';
-    target.style.pointerEvents = 'none';
-    target.style.zIndex = '9999';
+    const host = $('verticalExport');
+    host.style.position = 'fixed';
+    host.style.left = '-10000px';
+    host.style.top = '0';
+    host.style.opacity = '1';
+    host.style.pointerEvents = 'none';
+    host.style.zIndex = '9999';
 
     target.querySelectorAll('*').forEach(el=>{
       el.style.animation='none';
       el.style.transition='none';
       el.style.caretColor='transparent';
       el.style.filter='none';
-      el.style.transform = el.style.transform || 'none';
+      if(!el.style.transform) el.style.transform = 'none';
     });
 
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
     }
-    await new Promise(r => setTimeout(r, 650));
+    await new Promise(r => setTimeout(r, 850));
 
-    const exportHeight = Math.min(Math.max(target.scrollHeight + 28, minHeight), maxHeight);
+    const exportWidth = Math.ceil(host.scrollWidth + 24);
+    const exportHeight = Math.ceil(host.scrollHeight + 24);
 
-    const canvas = await html2canvas(target,{
-      backgroundColor:'#07131f',
-      scale:2.35,
+    const canvas = await html2canvas(host,{
+      backgroundColor:'#f4f7fb',
+      scale:2.4,
       useCORS:true,
       allowTaint:true,
       width:exportWidth,
       height:exportHeight,
-      windowWidth:exportWidth + 40,
-      windowHeight:exportHeight + 40,
+      windowWidth:exportWidth,
+      windowHeight:exportHeight,
       scrollX:0,
       scrollY:0,
-      x:0,
-      y:0,
       logging:false
     });
 
-    target.style.zIndex = '-1';
+    host.style.zIndex = '-1';
 
     canvas.toBlob(blob=>{
       if(!blob){
