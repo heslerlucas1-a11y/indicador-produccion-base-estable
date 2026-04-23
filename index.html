@@ -1406,21 +1406,27 @@ function renderDashboard(){
 function buildStackedExport(){
   const box = $('verticalExport');
   box.innerHTML = '';
-  box.style.overflow = 'visible';
+  box.style.overflow = 'hidden';
   box.style.background = '#001d3a';
+  box.style.width = '1080px';
+  box.style.height = '1920px';
+  box.style.padding = '0';
+  box.style.margin = '0';
 
   const d = lastRendered || {};
   const stateCls = d.state?.cls || 'yellow';
   const stateColor = stateCls==='green' ? '#17a34a' : stateCls==='red' ? '#dc2626' : '#d4a017';
   const stateText = d.state?.name || 'Seguimiento';
   const wrap = document.createElement('div');
-  wrap.style.width = '1000px';
+  wrap.style.width = '1080px';
+  wrap.style.height = '1920px';
   wrap.style.margin = '0 auto';
-  wrap.style.padding = '18px';
+  wrap.style.padding = '34px';
   wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = '12px';
+  wrap.style.gap = '0';
+  wrap.style.justifyContent = 'space-between';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
   wrap.style.color = '#ffffff';
   wrap.style.background = '#001d3a';
@@ -1453,31 +1459,31 @@ function buildStackedExport(){
     return el;
   };
 
-  const sectionTitle = (txt) => `<div style="font-size:22px;font-weight:800;color:#ffffff;margin-bottom:10px">${esc(txt)}</div>`;
+  const sectionTitle = (txt) => `<div style="font-size:20px;font-weight:800;color:#ffffff;margin-bottom:8px">${esc(txt)}</div>`;
 
   const titleBar = panel('14px 18px', '#0a3763');
   titleBar.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
       <div style="min-width:0">
-        <div style="font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#f4f9ff">Indicador de producción</div>
-        <div style="font-size:12px;color:#cddff1;margin-top:5px;line-height:1.2">${esc(d.fechaSub || '')}</div>
+        <div style="font-size:22px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#f4f9ff">Indicador de producción</div>
+        <div style="font-size:14px;color:#cddff1;margin-top:6px;line-height:1.2">${esc(d.fechaSub || '')}</div>
       </div>
       <div style="text-align:right;min-width:210px">
-        <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#dbe8f6">Fecha reporte</div>
-        <div style="font-size:34px;font-weight:800;color:#ffffff;line-height:1.05;margin-top:4px">${esc(d.fecha || '--/--/----')}</div>
+        <div style="font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#dbe8f6">Fecha reporte</div>
+        <div style="font-size:42px;font-weight:900;color:#ffffff;line-height:1.05;margin-top:4px">${esc(d.fecha || '--/--/----')}</div>
       </div>
     </div>`;
 
   const topGrid = document.createElement('div');
   topGrid.style.display = 'grid';
   topGrid.style.gridTemplateColumns = '1fr 0.55fr';
-  topGrid.style.gap = '12px';
+  topGrid.style.gap = '16px';
 
   const featured = panel('14px 18px', '#032b57');
   featured.innerHTML = `
-    <div style="font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1f6fc;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
-    <div style="font-size:110px;font-weight:900;line-height:1;text-align:center;color:#ffffff;margin:12px 0 8px 0">${d.rend || '0,0%'}</div>
-    <div style="display:flex;justify-content:center"><span style="padding:10px 18px;border-radius:999px;font-size:24px;font-weight:800;background:#e4b11c;color:#0c2a4a">${esc(stateText.toUpperCase())}</span></div>`;
+    <div style="font-size:17px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1f6fc;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
+    <div style="font-size:140px;font-weight:900;line-height:1;text-align:center;color:#ffffff;margin:8px 0 8px 0">${d.rend || '0,0%'}</div>
+    <div style="display:flex;justify-content:center"><span style="padding:12px 24px;border-radius:999px;font-size:30px;font-weight:800;background:#e4b11c;color:#0c2a4a">${esc(stateText.toUpperCase())}</span></div>`;
 
   const state = panel('16px', '#0a3763');
   state.innerHTML = `
@@ -1506,7 +1512,7 @@ function buildStackedExport(){
   const ig = document.createElement('div');
   ig.style.display = 'grid';
   ig.style.gridTemplateColumns = '1fr 1fr 1fr';
-  ig.style.gap = '2px';
+  ig.style.gap = '6px';
   (d.kpiData || []).forEach(k => {
     const key = String(k.title || '').trim().toLowerCase();
     ig.appendChild(whiteMetric(k.title, k.value, k.note || '', iconMap[key] || ''));
@@ -1518,7 +1524,7 @@ function buildStackedExport(){
   const gg = document.createElement('div');
   gg.style.display = 'grid';
   gg.style.gridTemplateColumns = '1fr 1fr 1fr';
-  gg.style.gap = '2px';
+  gg.style.gap = '6px';
   const goalColors = ['#16a34a','#6d28d9','#2563eb'];
   (d.goalData || []).forEach((g,idx) => {
     const pctVal = Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')) || 0);
@@ -1548,7 +1554,7 @@ function buildStackedExport(){
   const wg = document.createElement('div');
   wg.style.display = 'grid';
   wg.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
-  wg.style.gap = '2px';
+  wg.style.gap = '6px';
   (d.weekData || []).forEach(w => {
     const item = document.createElement('div');
     item.style.background = '#f7f7f8';
@@ -1769,12 +1775,12 @@ $('exportBtn').onclick=async ()=>{
     }
     await new Promise(r => setTimeout(r, 850));
 
-    const exportWidth = Math.ceil(host.scrollWidth + 24);
-    const exportHeight = Math.ceil(host.scrollHeight + 24);
+    const exportWidth = 1080;
+    const exportHeight = 1920;
 
     const canvas = await html2canvas(host,{
-      backgroundColor:'#f4f7fb',
-      scale:2.4,
+      backgroundColor:'#001d3a',
+      scale:2,
       useCORS:true,
       allowTaint:true,
       width:exportWidth,
