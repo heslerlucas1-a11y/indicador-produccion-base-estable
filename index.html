@@ -286,6 +286,8 @@
           <div class="field"><label>Correo soporte 1</label><input id="supportEmail1" placeholder="correo1@empresa.com"></div>
           <div class="field"><label>Correo soporte 2</label><input id="supportEmail2" placeholder="correo2@empresa.com"></div>
         </div>
+        <div class="field" style="margin-top:10px"><label>Comentario exportación PNG</label><input id="exportComment" placeholder="Ej: Producción en seguimiento, buen avance semanal."></div>
+        <div class="small">Este comentario se muestra en la parte inferior de la imagen exportada.</div>
         <div class="small" id="supportMsg" style="margin-top:8px"></div>
       </div>
 
@@ -412,7 +414,8 @@ const DEFAULT_CFG={
   showProgressGap:true,
   mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING)),
   supportEmail1:'Heslerlucas1@gmail.com',
-  supportEmail2:'lhesler@victoriamaderas.com.ar'
+  supportEmail2:'lhesler@victoriamaderas.com.ar',
+  exportComment:'Comentario del reporte'
 };
 
 function mergeCfgWithDefaults(source){
@@ -547,6 +550,7 @@ function applyRemoteConfigToCfg(remote){
   if(remote.show_progress_gap !== undefined) cfg.showProgressGap = !!remote.show_progress_gap;
   if(remote.support_email_1) cfg.supportEmail1 = String(remote.support_email_1).trim();
   if(remote.support_email_2) cfg.supportEmail2 = String(remote.support_email_2).trim();
+  if(remote.export_comment) cfg.exportComment = String(remote.export_comment).trim();
 
   const mapPairs = {
     fecha:'map_date',
@@ -1147,6 +1151,7 @@ function renderConfig(){
   $('appScriptUrl').value=cfg.appScriptUrl || DEFAULT_CFG.appScriptUrl;
   if($('supportEmail1')) $('supportEmail1').value = cfg.supportEmail1 || '';
   if($('supportEmail2')) $('supportEmail2').value = cfg.supportEmail2 || '';
+  if($('exportComment')) $('exportComment').value = cfg.exportComment || '';
   if($('supportMsg')) $('supportMsg').textContent='';
   Object.keys(DEFAULT_TITLES).forEach(k=>{
     const el=document.getElementById(k+'_in');
@@ -1244,6 +1249,7 @@ function applyConfigFromPanel(){
   cfg.appScriptUrl=$('appScriptUrl').value.trim() || DEFAULT_CFG.appScriptUrl;
   cfg.supportEmail1 = ($('supportEmail1')?.value || '').trim();
   cfg.supportEmail2 = ($('supportEmail2')?.value || '').trim();
+  cfg.exportComment = ($('exportComment')?.value || '').trim();
   Object.keys(DEFAULT_TITLES).forEach(k=>{const el=document.getElementById(k+'_in'); if(el) cfg.titles[k]=el.value||DEFAULT_TITLES[k]});
   cfg.weekLabels=[$('weekLabel1').value||'Semana 1',$('weekLabel2').value||'Semana 2',$('weekLabel3').value||'Semana 3',$('weekLabel4').value||'Semana 4'];
   cfg.weekLabelsAuto=$('weekLabelsAuto').value==='true';
@@ -1426,7 +1432,7 @@ function buildStackedExport(){
   wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = '14px';
+  wrap.style.gap = '12px';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
   wrap.style.color = '#ffffff';
   wrap.style.background = '#001d3a';
@@ -1492,7 +1498,6 @@ function buildStackedExport(){
   };
 
   const indicators = panel('12px', '#0a3763');
-  indicators.style.flex = '1 1 auto';
   indicators.innerHTML = sectionTitle('Indicadores principales');
   const ig = document.createElement('div');
   ig.style.display = 'grid';
@@ -1563,23 +1568,30 @@ function buildStackedExport(){
   weeks.innerHTML = sectionTitle('Producción semanal');
   const wg = document.createElement('div');
   wg.style.display = 'grid';
-  wg.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
-  wg.style.gap = '6px';
+  wg.style.gridTemplateColumns = '1fr';
+  wg.style.gap = '8px';
   (d.weekData || []).forEach(w => {
     const item = document.createElement('div');
     item.style.background = '#f7f7f8';
     item.style.border = '1px solid rgba(11,54,99,.20)';
     item.style.borderRadius = '14px';
-    item.style.padding = '14px 12px';
+    item.style.padding = '12px 14px';
     item.style.textAlign = 'center';
+    item.style.minHeight = '84px';
     item.style.color = '#0b2242';
     item.innerHTML = `
       <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#18355a">${esc(w.title)}</div>
-      <div style="font-size:32px;font-weight:900;color:#0b2242;margin-top:12px;line-height:1">${w.value}</div>
-      <div style="font-size:14px;color:#435b7c;margin-top:8px">${w.miss==='Semana inactiva' ? esc(w.miss) : 'Falta: ' + esc(w.miss)}</div>`;
+      <div style="font-size:34px;font-weight:900;color:#0b2242;margin-top:10px;line-height:1">${w.value}</div>
+      <div style="font-size:15px;color:#435b7c;margin-top:6px">${w.miss==='Semana inactiva' ? esc(w.miss) : 'Falta: ' + esc(w.miss)}</div>`;
     wg.appendChild(item);
   });
   weeks.appendChild(wg);
+
+
+  const commentBox = panel('14px 16px', '#0a3763');
+  commentBox.innerHTML = `
+    <div style="font-size:18px;font-weight:800;color:#ffffff;margin-bottom:8px">Comentario del reporte</div>
+    <div style="background:#f7f7f8;border:1px solid rgba(11,54,99,.20);border-radius:14px;padding:16px 18px;color:#0b2242;font-size:22px;line-height:1.28;min-height:130px;display:flex;align-items:center">${esc(cfg.exportComment || 'Sin comentario cargado')}</div>`;
 
   const footer = document.createElement('div');
   footer.style.textAlign = 'center';
@@ -1592,6 +1604,7 @@ function buildStackedExport(){
   wrap.appendChild(indicators);
   wrap.appendChild(goals);
   wrap.appendChild(weeks);
+  wrap.appendChild(commentBox);
   wrap.appendChild(footer);
 
   box.appendChild(wrap);
@@ -1671,7 +1684,8 @@ function buildRemoteConfigPayload(){
     show_expected_progress: !!cfg.showExpectedProgress,
     show_progress_gap: !!cfg.showProgressGap,
     support_email_1: cfg.supportEmail1 || '',
-    support_email_2: cfg.supportEmail2 || ''
+    support_email_2: cfg.supportEmail2 || '',
+    export_comment: cfg.exportComment || ''
   };
 }
 async function performSaveCfg(mode='manual', reason=''){
