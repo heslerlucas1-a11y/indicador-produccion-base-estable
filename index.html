@@ -1402,163 +1402,182 @@ function renderDashboard(){
 }
 
 
+
 function buildStackedExport(){
   const box = $('verticalExport');
   box.innerHTML = '';
   box.style.overflow = 'visible';
-  box.style.background = '#f4f7fb';
+  box.style.background = '#001d3a';
 
   const d = lastRendered || {};
   const stateCls = d.state?.cls || 'yellow';
-  const preset = {
-    width: 720,
-    outerPad: 26,
-    gap: 12,
-    pad: 14,
-    sectionTitle: 24,
-    label: 13,
-    value: 44,
-    note: 16,
-    cardRadius: 18
-  };
-
-  const stateColor = stateCls==='green' ? '#22c55e' : stateCls==='red' ? '#ef4444' : '#f59e0b';
-  const pillBg = stateCls==='green' ? '#eafaf0' : stateCls==='red' ? '#fdecec' : '#fff3d8';
-  const pillText = stateCls==='green' ? '#166534' : stateCls==='red' ? '#991b1b' : '#8a5a00';
+  const stateColor = stateCls==='green' ? '#17a34a' : stateCls==='red' ? '#dc2626' : '#d4a017';
+  const stateText = d.state?.name || 'Seguimiento';
   const wrap = document.createElement('div');
-  wrap.style.width = preset.width + 'px';
+  wrap.style.width = '1000px';
   wrap.style.margin = '0 auto';
-  wrap.style.padding = preset.outerPad + 'px';
+  wrap.style.padding = '18px';
   wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = preset.gap + 'px';
+  wrap.style.gap = '12px';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
-  wrap.style.color = '#14324b';
-  wrap.style.background = 'linear-gradient(180deg,#f7fbff 0%, #edf4fb 100%)';
+  wrap.style.color = '#ffffff';
+  wrap.style.background = '#001d3a';
 
-  const mkCard = (pad=preset.pad, bg='#ffffff', border='rgba(177,198,219,.95)', shadow='0 8px 18px rgba(15,35,55,.06)') => {
-    const c = document.createElement('div');
-    c.style.background = bg;
-    c.style.border = '1px solid ' + border;
-    c.style.borderRadius = preset.cardRadius + 'px';
-    c.style.padding = pad + 'px';
-    c.style.boxShadow = shadow;
-    c.style.overflow = 'hidden';
-    return c;
+  const panel = (pad='16px', bg='#0a3763', border='rgba(95,143,191,.55)', radius='18px') => {
+    const el = document.createElement('div');
+    el.style.background = bg;
+    el.style.border = `1px solid ${border}`;
+    el.style.borderRadius = radius;
+    el.style.padding = pad;
+    el.style.boxSizing = 'border-box';
+    return el;
   };
 
-  const mkMetric = (label, value, note='') => {
-    const card = document.createElement('div');
-    card.style.background = '#ffffff';
-    card.style.border = '1px solid rgba(188,206,224,.95)';
-    card.style.borderRadius = '16px';
-    card.style.padding = '12px';
-    card.style.textAlign = 'center';
-    card.innerHTML = `
-      <div style="font-size:${preset.label}px;letter-spacing:.04em;text-transform:uppercase;color:#5d7891;line-height:1.18;font-weight:600">${label}</div>
-      <div style="font-size:${preset.value}px;font-weight:700;color:#14324b;margin-top:6px;line-height:1.02">${value}</div>
-      ${note ? `<div style="font-size:${preset.note}px;color:#57728a;margin-top:4px;line-height:1.18">${note}</div>` : ''}`;
-    return card;
-  };
-
-  const titleBar = mkCard(14, '#163e63', 'rgba(21,61,96,.95)', '0 8px 20px rgba(8,26,44,.14)');
-  titleBar.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div style="min-width:0">
-        <div style="font-size:14px;font-weight:700;letter-spacing:.10em;color:#f2f8ff;text-transform:uppercase">Indicador de producción</div>
-        <div style="font-size:11px;color:#c7dbef;margin-top:4px;line-height:1.2">${esc(d.fechaSub || '')}</div>
+  const whiteMetric = (label, value, note='', icon='') => {
+    const el = document.createElement('div');
+    el.style.background = '#f7f7f8';
+    el.style.border = '1px solid rgba(11,54,99,.20)';
+    el.style.borderRadius = '14px';
+    el.style.padding = '16px 14px';
+    el.style.color = '#0b2242';
+    el.style.textAlign = 'center';
+    el.innerHTML = `
+      <div style="font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1f3558;line-height:1.18">${esc(label)}</div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:10px">
+        ${icon ? `<div style="font-size:42px;line-height:1">${icon}</div>` : ''}
+        <div style="font-size:58px;font-weight:800;line-height:1;color:#06275a">${value}</div>
       </div>
-      <div style="text-align:right;min-width:150px">
-        <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#bdd3e8">Fecha reporte</div>
-        <div style="font-size:22px;font-weight:700;color:#ffffff;margin-top:2px">${esc(d.fecha || '--/--/----')}</div>
+      ${note ? `<div style="font-size:16px;color:#304869;margin-top:10px;line-height:1.15">${esc(note)}</div>` : ''}`;
+    return el;
+  };
+
+  const sectionTitle = (txt) => `<div style="font-size:22px;font-weight:800;color:#ffffff;margin-bottom:10px">${esc(txt)}</div>`;
+
+  const titleBar = panel('14px 18px', '#0a3763');
+  titleBar.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+      <div style="min-width:0">
+        <div style="font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#f4f9ff">Indicador de producción</div>
+        <div style="font-size:12px;color:#cddff1;margin-top:5px;line-height:1.2">${esc(d.fechaSub || '')}</div>
+      </div>
+      <div style="text-align:right;min-width:210px">
+        <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#dbe8f6">Fecha reporte</div>
+        <div style="font-size:34px;font-weight:800;color:#ffffff;line-height:1.05;margin-top:4px">${esc(d.fecha || '--/--/----')}</div>
       </div>
     </div>`;
 
-  const featured = mkCard(16);
+  const topGrid = document.createElement('div');
+  topGrid.style.display = 'grid';
+  topGrid.style.gridTemplateColumns = '1fr 0.55fr';
+  topGrid.style.gap = '12px';
+
+  const featured = panel('14px 18px', '#032b57');
   featured.innerHTML = `
-    <div style="font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:#57728a;text-align:center;font-weight:600">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
-    <div style="font-size:82px;font-weight:700;line-height:1;text-align:center;color:#14324b;margin:8px 0 8px 0">${d.rend || '0,0%'}</div>
-    <div style="display:flex;justify-content:center"><span style="padding:9px 16px;border-radius:999px;font-size:22px;font-weight:700;background:${pillBg};color:${pillText};border:1px solid rgba(177,198,219,.9)">${(d.state?.name || 'Atención').toUpperCase()}</span></div>`;
+    <div style="font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1f6fc;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
+    <div style="font-size:110px;font-weight:900;line-height:1;text-align:center;color:#ffffff;margin:12px 0 8px 0">${d.rend || '0,0%'}</div>
+    <div style="display:flex;justify-content:center"><span style="padding:10px 18px;border-radius:999px;font-size:24px;font-weight:800;background:#e4b11c;color:#0c2a4a">${esc(stateText.toUpperCase())}</span></div>`;
 
-  const state = mkCard(14);
+  const state = panel('16px', '#0a3763');
   state.innerHTML = `
-    <div style="font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:#57728a;font-weight:600">Estado del rendimiento</div>
-    <div style="margin-top:10px;display:inline-flex;gap:8px;align-items:center;padding:8px 14px;border-radius:999px;background:${pillBg};color:${pillText};border:1px solid rgba(177,198,219,.9)">
+    <div style="font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1f6fc">Estado del rendimiento</div>
+    <div style="margin-top:14px;display:inline-flex;gap:8px;align-items:center;padding:10px 16px;border-radius:999px;background:rgba(255,196,0,.12);border:1px solid rgba(255,196,0,.35);color:#ffd25d">
       <span style="width:12px;height:12px;border-radius:50%;display:inline-block;background:${stateColor}"></span>
-      <strong style="font-size:20px;font-weight:700">${d.state?.name || 'Atención'}</strong>
+      <strong style="font-size:18px;font-weight:800">${esc(stateText)}</strong>
     </div>
-    <div style="font-size:17px;color:#48627a;margin-top:10px;line-height:1.25">${d.state?.text || ''}</div>`;
+    <div style="font-size:18px;color:#f1f6fc;margin-top:16px;line-height:1.25">${esc(d.state?.text || '')}</div>`;
+  topGrid.appendChild(featured);
+  topGrid.appendChild(state);
 
-  const indicators = mkCard(14, '#eef5fb');
-  indicators.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">Indicadores principales</div>`;
-  const ig = document.createElement('div');
-  ig.style.display = 'grid';
-  ig.style.gridTemplateColumns = '1fr 1fr';
-  ig.style.gap = '8px';
-  (d.kpiData || []).forEach(k => ig.appendChild(mkMetric(k.title, k.value, k.note || '')));
-  indicators.appendChild(ig);
-
-  const compactGoal = (g) => {
-    const pctVal = Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')) || 0);
-    const item = document.createElement('div');
-    item.style.background = '#ffffff';
-    item.style.border = '1px solid rgba(188,206,224,.95)';
-    item.style.borderRadius = '16px';
-    item.style.padding = '12px';
-    item.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px">
-        <div style="font-size:15px;font-weight:700;text-transform:uppercase;color:#57728a">${g.title}</div>
-        <div style="font-size:34px;font-weight:700;color:#14324b">${g.pct}</div>
-      </div>
-      <div style="height:10px;border-radius:999px;background:#dbe7f2;margin-top:8px;overflow:hidden"><div style="height:100%;width:${pctVal}%;border-radius:999px;background:linear-gradient(90deg,#38bdf8,#22c55e)"></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:9px;font-size:12px;color:#5d7891;text-align:center">
-        <div>Actual<br><span style="font-size:22px;font-weight:700;color:#14324b;display:block;margin-top:3px">${g.actual}</span></div>
-        <div>Objetivo<br><span style="font-size:22px;font-weight:700;color:#14324b;display:block;margin-top:3px">${g.obj}</span></div>
-        <div>Falta<br><span style="font-size:22px;font-weight:700;color:#14324b;display:block;margin-top:3px">${g.falta}</span></div>
-      </div>
-      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:14px;color:#57728a">${g.expectedPct ? `<div>Esperado: <b style="color:#14324b">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#14324b">${g.gap}</b></div>` : ''}</div>` : ''}`;
-    return item;
+  const iconMap = {
+    'total tablas producidas':'📚',
+    'tablas negras':'🎯',
+    'rend. tablas negras':'％',
+    'm3 consumido diario':'🪵',
+    'm3 producido diario':'🏭',
+    'rendimiento m3':'📈',
+    'p2/tn producido':'⚖️',
+    'p2/tn esperado':'🎯'
   };
 
-  const objectives = mkCard(14, '#eef5fb');
-  objectives.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">${esc(cfg.titles.titleObjetivos || 'Objetivos de producción')}</div>`;
-  const og = document.createElement('div');
-  og.style.display = 'grid';
-  og.style.gridTemplateColumns = '1fr';
-  og.style.gap = '8px';
-  (d.goalData || []).forEach(g => og.appendChild(compactGoal(g)));
-  objectives.appendChild(og);
+  const indicators = panel('12px', '#0a3763');
+  indicators.innerHTML = sectionTitle('Indicadores principales');
+  const ig = document.createElement('div');
+  ig.style.display = 'grid';
+  ig.style.gridTemplateColumns = '1fr 1fr 1fr';
+  ig.style.gap = '2px';
+  (d.kpiData || []).forEach(k => {
+    const key = String(k.title || '').trim().toLowerCase();
+    ig.appendChild(whiteMetric(k.title, k.value, k.note || '', iconMap[key] || ''));
+  });
+  indicators.appendChild(ig);
 
-  const closings = mkCard(14, '#eef5fb');
-  closings.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">Faltantes para cierre</div>`;
-  const cg = document.createElement('div');
-  cg.style.display = 'grid';
-  cg.style.gridTemplateColumns = '1fr';
-  cg.style.gap = '8px';
-  [
-    ['Falta para cerrar semana', d.faltSemana || '0', 'Objetivo semanal menos actual semanal'],
-    ['Falta para cerrar mes', d.faltMes || '0', 'Objetivo mensual menos actual mensual'],
-    ['Total faltante a meta activa', d.faltActivo || '0', 'Suma faltante solo con semanas activas']
-  ].forEach(x => cg.appendChild(mkMetric(x[0], x[1], x[2])));
-  closings.appendChild(cg);
+  const goals = panel('12px', '#0a3763');
+  goals.innerHTML = sectionTitle(cfg.titles.titleObjetivos || 'Objetivos de producción');
+  const gg = document.createElement('div');
+  gg.style.display = 'grid';
+  gg.style.gridTemplateColumns = '1fr 1fr 1fr';
+  gg.style.gap = '2px';
+  const goalColors = ['#16a34a','#6d28d9','#2563eb'];
+  (d.goalData || []).forEach((g,idx) => {
+    const pctVal = Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')) || 0);
+    const color = goalColors[idx] || '#2563eb';
+    const item = document.createElement('div');
+    item.style.background = '#f7f7f8';
+    item.style.border = '1px solid rgba(11,54,99,.20)';
+    item.style.borderRadius = '14px';
+    item.style.padding = '14px';
+    item.style.color = '#0b2242';
+    item.innerHTML = `
+      <div style="font-size:15px;font-weight:800;text-transform:uppercase;color:#18355a">${esc(g.title)}</div>
+      <div style="font-size:26px;font-weight:900;color:${color};margin-top:10px;text-align:center">${g.pct}</div>
+      <div style="height:10px;border-radius:999px;background:#d4d8df;margin-top:10px;overflow:hidden"><div style="height:100%;width:${pctVal}%;background:${color};border-radius:999px"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;text-align:center;font-size:11px;color:#4d6484">
+        <div>Actual<br><span style="font-size:18px;font-weight:800;color:${color};display:block;margin-top:3px">${g.actual}</span></div>
+        <div>Objetivo<br><span style="font-size:18px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.obj}</span></div>
+        <div>Falta<br><span style="font-size:18px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.falta}</span></div>
+      </div>
+      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#435b7c">${g.expectedPct ? `<div>Esperado: <b style="color:#0b2242">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#0b2242">${g.gap}</b></div>` : ''}</div>` : ''}`;
+    gg.appendChild(item);
+  });
+  goals.appendChild(gg);
 
-  const weeks = mkCard(14, '#eef5fb');
-  weeks.innerHTML = `<div style="font-size:${preset.sectionTitle}px;font-weight:700;margin-bottom:10px;color:#17324a">Producción semanal</div>`;
+  const weeks = panel('12px', '#0a3763');
+  weeks.innerHTML = sectionTitle('Producción semanal');
   const wg = document.createElement('div');
   wg.style.display = 'grid';
-  wg.style.gridTemplateColumns = '1fr 1fr';
-  wg.style.gap = '8px';
-  (d.weekData || []).forEach(w => wg.appendChild(mkMetric(w.title, w.value, w.miss==='Semana inactiva' ? w.miss : 'Falta: ' + w.miss)));
+  wg.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+  wg.style.gap = '2px';
+  (d.weekData || []).forEach(w => {
+    const item = document.createElement('div');
+    item.style.background = '#f7f7f8';
+    item.style.border = '1px solid rgba(11,54,99,.20)';
+    item.style.borderRadius = '14px';
+    item.style.padding = '14px 12px';
+    item.style.textAlign = 'center';
+    item.style.color = '#0b2242';
+    item.innerHTML = `
+      <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#18355a">${esc(w.title)}</div>
+      <div style="font-size:32px;font-weight:900;color:#0b2242;margin-top:12px;line-height:1">${w.value}</div>
+      <div style="font-size:14px;color:#435b7c;margin-top:8px">${w.miss==='Semana inactiva' ? esc(w.miss) : 'Falta: ' + esc(w.miss)}</div>`;
+    wg.appendChild(item);
+  });
   weeks.appendChild(wg);
 
+  const footer = document.createElement('div');
+  footer.style.textAlign = 'center';
+  footer.style.color = '#d9e6f4';
+  footer.style.fontSize = '12px';
+  footer.style.padding = '2px 0 6px 0';
+  footer.textContent = `${d.fechaSub || ''}`;
+
   wrap.appendChild(titleBar);
-  wrap.appendChild(featured);
-  wrap.appendChild(state);
+  wrap.appendChild(topGrid);
   wrap.appendChild(indicators);
-  wrap.appendChild(objectives);
-  wrap.appendChild(closings);
+  wrap.appendChild(goals);
   wrap.appendChild(weeks);
+  wrap.appendChild(footer);
 
   box.appendChild(wrap);
   return wrap;
