@@ -1432,7 +1432,7 @@ function buildStackedExport(){
   wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = '12px';
+  wrap.style.gap = '10px';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
   wrap.style.color = '#ffffff';
   wrap.style.background = '#001d3a';
@@ -1461,28 +1461,28 @@ function buildStackedExport(){
     el.style.justifyContent = 'center';
     const pill = opts.pill ? `<div style="display:flex;justify-content:center;margin-top:10px"><span style="padding:8px 16px;border-radius:999px;font-size:18px;font-weight:800;background:#e4b11c;color:#0c2a4a">${esc(opts.pill)}</span></div>` : '';
     el.innerHTML = `
-      <div style="font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1f3558;line-height:1.18">${esc(label)}</div>
-      <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px">
+      <div style="font-size:15px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#18355a;line-height:1.16">${esc(label)}</div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:12px">
         ${icon ? `<div style="font-size:${opts.iconSize || '36px'};line-height:1">${icon}</div>` : ''}
-        <div style="font-size:${opts.valueSize || '52px'};font-weight:800;line-height:1;color:${opts.valueColor || '#06275a'}">${value}</div>
+        <div style="font-size:${opts.valueSize || '56px'};font-weight:900;line-height:1;color:${opts.valueColor || '#06275a'}">${value}</div>
       </div>
       ${pill}
-      ${note ? `<div style="font-size:${opts.noteSize || '15px'};color:#304869;margin-top:10px;line-height:1.15">${esc(note)}</div>` : ''}`;
+      ${note ? `<div style="font-size:${opts.noteSize || '19px'};color:#304869;margin-top:12px;line-height:1.2;font-weight:500">${esc(note)}</div>` : ''}`;
     return el;
   };
 
-  const sectionTitle = (txt) => `<div style="font-size:20px;font-weight:800;color:#ffffff;margin-bottom:8px">${esc(txt)}</div>`;
+  const sectionTitle = (txt) => `<div style="font-size:26px;font-weight:900;color:#ffffff;margin-bottom:10px">${esc(txt)}</div>`;
 
   const titleBar = panel('14px 18px', '#0a3763');
   titleBar.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
       <div style="min-width:0">
-        <div style="font-size:22px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#f4f9ff">Indicador de producción</div>
-        <div style="font-size:14px;color:#cddff1;margin-top:6px;line-height:1.2">${esc(d.fechaSub || '')}</div>
+        <div style="font-size:28px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#f4f9ff">Indicador de producción</div>
+        <div style="font-size:17px;color:#cddff1;margin-top:8px;line-height:1.25">${esc(d.fechaSub || '')}</div>
       </div>
       <div style="text-align:right;min-width:210px">
-        <div style="font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#dbe8f6">Fecha reporte</div>
-        <div style="font-size:42px;font-weight:900;color:#ffffff;line-height:1.05;margin-top:4px">${esc(d.fecha || '--/--/----')}</div>
+        <div style="font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:#dbe8f6">Fecha reporte</div>
+        <div style="font-size:48px;font-weight:900;color:#ffffff;line-height:1.05;margin-top:4px">${esc(d.fecha || '--/--/----')}</div>
       </div>
     </div>`;
 
@@ -1502,7 +1502,7 @@ function buildStackedExport(){
   const ig = document.createElement('div');
   ig.style.display = 'grid';
   ig.style.gridTemplateColumns = '1fr 1fr 1fr';
-  ig.style.gap = '6px';
+  ig.style.gap = '8px';
 
   const kpiItems = [...(d.kpiData || [])];
   const p2Expected = kpiItems.find(k => String(k.title || '').trim().toLowerCase() === 'p2/tn esperado');
@@ -1525,11 +1525,11 @@ function buildStackedExport(){
       isFeatured ? '' : (iconMap[key] || ''),
       isFeatured ? {
         minHeight: '175px',
-        valueSize: '66px',
+        valueSize: '72px',
         valueColor: stateCls==='red' ? '#dc2626' : stateCls==='green' ? '#17a34a' : '#06275a',
         pill: stateText.toUpperCase(),
         noteSize: '0px'
-      } : (isExpected ? { minHeight:'175px', valueSize:'54px', iconSize:'34px' } : { minHeight:'175px' })
+      } : (isExpected ? { minHeight:'175px', valueSize:'58px', iconSize:'38px' } : { minHeight:'175px' })
     ));
   });
   indicators.appendChild(ig);
@@ -1539,7 +1539,7 @@ function buildStackedExport(){
   const gg = document.createElement('div');
   gg.style.display = 'grid';
   gg.style.gridTemplateColumns = '1fr 1fr 1fr';
-  gg.style.gap = '6px';
+  gg.style.gap = '8px';
   const goalColors = ['#16a34a','#6d28d9','#2563eb'];
   (d.goalData || []).forEach((g,idx) => {
     const pctVal = Math.min(100, parseFloat(String(g.pct).replace(',','.').replace('%','')) || 0);
@@ -1551,15 +1551,15 @@ function buildStackedExport(){
     item.style.padding = '12px';
     item.style.color = '#0b2242';
     item.innerHTML = `
-      <div style="font-size:15px;font-weight:800;text-transform:uppercase;color:#18355a">${esc(g.title)}</div>
-      <div style="font-size:24px;font-weight:900;color:${color};margin-top:8px;text-align:center">${g.pct}</div>
+      <div style="font-size:17px;font-weight:900;text-transform:uppercase;color:#18355a">${esc(g.title)}</div>
+      <div style="font-size:30px;font-weight:900;color:${color};margin-top:8px;text-align:center">${g.pct}</div>
       <div style="height:9px;border-radius:999px;background:#d4d8df;margin-top:8px;overflow:hidden"><div style="height:100%;width:${pctVal}%;background:${color};border-radius:999px"></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;text-align:center;font-size:11px;color:#4d6484">
-        <div>Actual<br><span style="font-size:16px;font-weight:800;color:${color};display:block;margin-top:3px">${g.actual}</span></div>
-        <div>Objetivo<br><span style="font-size:16px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.obj}</span></div>
-        <div>Falta<br><span style="font-size:16px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.falta}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;text-align:center;font-size:14px;color:#4d6484">
+        <div>Actual<br><span style="font-size:20px;font-weight:900;color:${color};display:block;margin-top:3px">${g.actual}</span></div>
+        <div>Objetivo<br><span style="font-size:20px;font-weight:900;color:#0b2242;display:block;margin-top:3px">${g.obj}</span></div>
+        <div>Falta<br><span style="font-size:20px;font-weight:900;color:#0b2242;display:block;margin-top:3px">${g.falta}</span></div>
       </div>
-      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#435b7c">${g.expectedPct ? `<div>Esperado: <b style="color:#0b2242">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#0b2242">${g.gap}</b></div>` : ''}</div>` : ''}`;
+      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:15px;color:#435b7c">${g.expectedPct ? `<div>Esperado: <b style="color:#0b2242">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#0b2242">${g.gap}</b></div>` : ''}</div>` : ''}`;
     gg.appendChild(item);
   });
   goals.appendChild(gg);
@@ -1569,20 +1569,20 @@ function buildStackedExport(){
   const wg = document.createElement('div');
   wg.style.display = 'grid';
   wg.style.gridTemplateColumns = 'repeat(4, 1fr)';
-  wg.style.gap = '8px';
+  wg.style.gap = '10px';
   (d.weekData || []).forEach(w => {
     const item = document.createElement('div');
     item.style.background = '#f7f7f8';
     item.style.border = '1px solid rgba(11,54,99,.20)';
     item.style.borderRadius = '14px';
-    item.style.padding = '12px 10px';
+    item.style.padding = '16px 10px';
     item.style.textAlign = 'center';
-    item.style.minHeight = '112px';
+    item.style.minHeight = '126px';
     item.style.color = '#0b2242';
     item.innerHTML = `
-      <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#18355a">${esc(w.title)}</div>
-      <div style="font-size:28px;font-weight:900;color:#0b2242;margin-top:10px;line-height:1">${w.value}</div>
-      <div style="font-size:14px;color:#435b7c;margin-top:6px">${w.miss==='Semana inactiva' ? esc(w.miss) : 'Falta: ' + esc(w.miss)}</div>`;
+      <div style="font-size:16px;font-weight:900;text-transform:uppercase;color:#18355a">${esc(w.title)}</div>
+      <div style="font-size:34px;font-weight:900;color:#0b2242;margin-top:12px;line-height:1">${w.value}</div>
+      <div style="font-size:18px;color:#435b7c;margin-top:8px;font-weight:500">${w.miss==='Semana inactiva' ? esc(w.miss) : 'Falta: ' + esc(w.miss)}</div>`;
     wg.appendChild(item);
   });
   weeks.appendChild(wg);
@@ -1591,13 +1591,13 @@ function buildStackedExport(){
   const commentBox = panel('12px 16px', '#0a3763');
   commentBox.style.flex = '1 1 auto';
   commentBox.innerHTML = `
-    <div style="font-size:18px;font-weight:800;color:#ffffff;margin-bottom:8px">Comentario del reporte</div>
-    <div style="background:#f7f7f8;border:1px solid rgba(11,54,99,.20);border-radius:14px;padding:18px 20px;color:#0b2242;font-size:24px;line-height:1.35;min-height:220px;display:flex;align-items:flex-start">${esc(cfg.exportComment || 'Comentario del reporte')}</div>`;
+    <div style="font-size:24px;font-weight:900;color:#ffffff;margin-bottom:10px">Comentario del reporte</div>
+    <div style="background:#f7f7f8;border:1px solid rgba(11,54,99,.20);border-radius:14px;padding:22px 24px;color:#0b2242;font-size:26px;line-height:1.38;min-height:260px;display:flex;align-items:flex-start;font-weight:500">${esc(cfg.exportComment || 'Comentario del reporte')}</div>`;
 
   const footer = document.createElement('div');
   footer.style.textAlign = 'center';
   footer.style.color = '#d9e6f4';
-  footer.style.fontSize = '12px';
+  footer.style.fontSize = '16px';
   footer.style.padding = '2px 0 0 0';
   footer.textContent = `${d.fechaSub || ''}`;
 
