@@ -1417,21 +1417,21 @@ function buildStackedExport(){
   const stateCls = d.state?.cls || 'yellow';
   const stateColor = stateCls==='green' ? '#17a34a' : stateCls==='red' ? '#dc2626' : '#d4a017';
   const stateText = d.state?.name || 'Seguimiento';
+
   const wrap = document.createElement('div');
   wrap.style.width = '1080px';
   wrap.style.height = '1920px';
   wrap.style.margin = '0 auto';
-  wrap.style.padding = '34px';
+  wrap.style.padding = '28px 28px 24px 28px';
   wrap.style.boxSizing = 'border-box';
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
-  wrap.style.gap = '0';
-  wrap.style.justifyContent = 'space-between';
+  wrap.style.gap = '14px';
   wrap.style.fontFamily = 'Segoe UI, Arial, sans-serif';
   wrap.style.color = '#ffffff';
   wrap.style.background = '#001d3a';
 
-  const panel = (pad='16px', bg='#0a3763', border='rgba(95,143,191,.55)', radius='18px') => {
+  const panel = (pad='14px', bg='#0a3763', border='rgba(95,143,191,.55)', radius='18px') => {
     const el = document.createElement('div');
     el.style.background = bg;
     el.style.border = `1px solid ${border}`;
@@ -1441,21 +1441,27 @@ function buildStackedExport(){
     return el;
   };
 
-  const whiteMetric = (label, value, note='', icon='') => {
+  const whiteMetric = (label, value, note='', icon='', opts={}) => {
     const el = document.createElement('div');
     el.style.background = '#f7f7f8';
     el.style.border = '1px solid rgba(11,54,99,.20)';
     el.style.borderRadius = '14px';
-    el.style.padding = '16px 14px';
+    el.style.padding = opts.pad || '14px 12px';
     el.style.color = '#0b2242';
     el.style.textAlign = 'center';
+    el.style.minHeight = opts.minHeight || '175px';
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    el.style.justifyContent = 'center';
+    const pill = opts.pill ? `<div style="display:flex;justify-content:center;margin-top:10px"><span style="padding:8px 16px;border-radius:999px;font-size:18px;font-weight:800;background:#e4b11c;color:#0c2a4a">${esc(opts.pill)}</span></div>` : '';
     el.innerHTML = `
       <div style="font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1f3558;line-height:1.18">${esc(label)}</div>
-      <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:10px">
-        ${icon ? `<div style="font-size:42px;line-height:1">${icon}</div>` : ''}
-        <div style="font-size:58px;font-weight:800;line-height:1;color:#06275a">${value}</div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px">
+        ${icon ? `<div style="font-size:${opts.iconSize || '36px'};line-height:1">${icon}</div>` : ''}
+        <div style="font-size:${opts.valueSize || '52px'};font-weight:800;line-height:1;color:${opts.valueColor || '#06275a'}">${value}</div>
       </div>
-      ${note ? `<div style="font-size:16px;color:#304869;margin-top:10px;line-height:1.15">${esc(note)}</div>` : ''}`;
+      ${pill}
+      ${note ? `<div style="font-size:${opts.noteSize || '15px'};color:#304869;margin-top:10px;line-height:1.15">${esc(note)}</div>` : ''}`;
     return el;
   };
 
@@ -1474,28 +1480,6 @@ function buildStackedExport(){
       </div>
     </div>`;
 
-  const topGrid = document.createElement('div');
-  topGrid.style.display = 'grid';
-  topGrid.style.gridTemplateColumns = '1fr 0.55fr';
-  topGrid.style.gap = '16px';
-
-  const featured = panel('14px 18px', '#032b57');
-  featured.innerHTML = `
-    <div style="font-size:17px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1f6fc;text-align:center">${esc(d.featuredTitle || 'Rendimiento en p2 destacado')}</div>
-    <div style="font-size:140px;font-weight:900;line-height:1;text-align:center;color:#ffffff;margin:8px 0 8px 0">${d.rend || '0,0%'}</div>
-    <div style="display:flex;justify-content:center"><span style="padding:12px 24px;border-radius:999px;font-size:30px;font-weight:800;background:#e4b11c;color:#0c2a4a">${esc(stateText.toUpperCase())}</span></div>`;
-
-  const state = panel('16px', '#0a3763');
-  state.innerHTML = `
-    <div style="font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1f6fc">Estado del rendimiento</div>
-    <div style="margin-top:14px;display:inline-flex;gap:8px;align-items:center;padding:10px 16px;border-radius:999px;background:rgba(255,196,0,.12);border:1px solid rgba(255,196,0,.35);color:#ffd25d">
-      <span style="width:12px;height:12px;border-radius:50%;display:inline-block;background:${stateColor}"></span>
-      <strong style="font-size:18px;font-weight:800">${esc(stateText)}</strong>
-    </div>
-    <div style="font-size:18px;color:#f1f6fc;margin-top:16px;line-height:1.25">${esc(d.state?.text || '')}</div>`;
-  topGrid.appendChild(featured);
-  topGrid.appendChild(state);
-
   const iconMap = {
     'total tablas producidas':'📚',
     'tablas negras':'🎯',
@@ -1508,14 +1492,40 @@ function buildStackedExport(){
   };
 
   const indicators = panel('12px', '#0a3763');
+  indicators.style.flex = '1 1 auto';
   indicators.innerHTML = sectionTitle('Indicadores principales');
   const ig = document.createElement('div');
   ig.style.display = 'grid';
   ig.style.gridTemplateColumns = '1fr 1fr 1fr';
   ig.style.gap = '6px';
-  (d.kpiData || []).forEach(k => {
+
+  const kpiItems = [...(d.kpiData || [])];
+  const p2Expected = kpiItems.find(k => String(k.title || '').trim().toLowerCase() === 'p2/tn esperado');
+  const featuredCardData = {
+    title: 'Rendimiento en p2 destacado',
+    value: d.rend || '0,0%',
+    note: '',
+    icon: ''
+  };
+  kpiItems.push(featuredCardData);
+
+  kpiItems.forEach(k => {
     const key = String(k.title || '').trim().toLowerCase();
-    ig.appendChild(whiteMetric(k.title, k.value, k.note || '', iconMap[key] || ''));
+    const isFeatured = key === 'rendimiento en p2 destacado';
+    const isExpected = key === 'p2/tn esperado';
+    ig.appendChild(whiteMetric(
+      k.title,
+      k.value,
+      isFeatured ? '' : (k.note || ''),
+      isFeatured ? '' : (iconMap[key] || ''),
+      isFeatured ? {
+        minHeight: '175px',
+        valueSize: '66px',
+        valueColor: stateCls==='red' ? '#dc2626' : stateCls==='green' ? '#17a34a' : '#06275a',
+        pill: stateText.toUpperCase(),
+        noteSize: '0px'
+      } : (isExpected ? { minHeight:'175px', valueSize:'54px', iconSize:'34px' } : { minHeight:'175px' })
+    ));
   });
   indicators.appendChild(ig);
 
@@ -1533,18 +1543,18 @@ function buildStackedExport(){
     item.style.background = '#f7f7f8';
     item.style.border = '1px solid rgba(11,54,99,.20)';
     item.style.borderRadius = '14px';
-    item.style.padding = '14px';
+    item.style.padding = '12px';
     item.style.color = '#0b2242';
     item.innerHTML = `
       <div style="font-size:15px;font-weight:800;text-transform:uppercase;color:#18355a">${esc(g.title)}</div>
-      <div style="font-size:26px;font-weight:900;color:${color};margin-top:10px;text-align:center">${g.pct}</div>
-      <div style="height:10px;border-radius:999px;background:#d4d8df;margin-top:10px;overflow:hidden"><div style="height:100%;width:${pctVal}%;background:${color};border-radius:999px"></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;text-align:center;font-size:11px;color:#4d6484">
-        <div>Actual<br><span style="font-size:18px;font-weight:800;color:${color};display:block;margin-top:3px">${g.actual}</span></div>
-        <div>Objetivo<br><span style="font-size:18px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.obj}</span></div>
-        <div>Falta<br><span style="font-size:18px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.falta}</span></div>
+      <div style="font-size:24px;font-weight:900;color:${color};margin-top:8px;text-align:center">${g.pct}</div>
+      <div style="height:9px;border-radius:999px;background:#d4d8df;margin-top:8px;overflow:hidden"><div style="height:100%;width:${pctVal}%;background:${color};border-radius:999px"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;text-align:center;font-size:11px;color:#4d6484">
+        <div>Actual<br><span style="font-size:16px;font-weight:800;color:${color};display:block;margin-top:3px">${g.actual}</span></div>
+        <div>Objetivo<br><span style="font-size:16px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.obj}</span></div>
+        <div>Falta<br><span style="font-size:16px;font-weight:800;color:#0b2242;display:block;margin-top:3px">${g.falta}</span></div>
       </div>
-      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#435b7c">${g.expectedPct ? `<div>Esperado: <b style="color:#0b2242">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#0b2242">${g.gap}</b></div>` : ''}</div>` : ''}`;
+      ${(g.expectedPct || g.gap) ? `<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#435b7c">${g.expectedPct ? `<div>Esperado: <b style="color:#0b2242">${g.expectedPct}</b></div>` : '<div></div>'}${g.gap ? `<div>Desvío: <b style="color:#0b2242">${g.gap}</b></div>` : ''}</div>` : ''}`;
     gg.appendChild(item);
   });
   goals.appendChild(gg);
@@ -1575,11 +1585,10 @@ function buildStackedExport(){
   footer.style.textAlign = 'center';
   footer.style.color = '#d9e6f4';
   footer.style.fontSize = '12px';
-  footer.style.padding = '2px 0 6px 0';
+  footer.style.padding = '2px 0 0 0';
   footer.textContent = `${d.fechaSub || ''}`;
 
   wrap.appendChild(titleBar);
-  wrap.appendChild(topGrid);
   wrap.appendChild(indicators);
   wrap.appendChild(goals);
   wrap.appendChild(weeks);
