@@ -57,7 +57,7 @@
     .cfg-head{position:sticky;top:0;background:rgba(7,20,33,.96);padding:16px;border-bottom:1px solid rgba(72,133,182,.25);display:flex;justify-content:space-between;align-items:center}
     .cfg-body{padding:18px 22px;display:grid;gap:18px;max-width:1800px;margin:0 auto}.cfg-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}.cfg-card h3{margin:0 0 12px;font-size:16px}
     .row2,.row3,.row4{display:grid;gap:10px}.row2{grid-template-columns:1fr 1fr}.row3{grid-template-columns:1fr 1fr 1fr}.row4{grid-template-columns:1fr 1fr 1fr 1fr}
-    .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.field input,.field select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#07131f;color:#fff;outline:none}
+    .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.field input,.field select,.field textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#07131f;color:#fff;outline:none}.field textarea{min-height:96px;resize:vertical;line-height:1.45;font:inherit}
     .map-row{display:grid;grid-template-columns:1.08fr .8fr .58fr .62fr .82fr;gap:8px;align-items:end;margin-bottom:8px}.m-name{font-size:13px;font-weight:700;color:#dcecff;padding-bottom:10px}.small{font-size:12px;color:var(--muted);line-height:1.35}
     .login-box{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;pointer-events:none}
     .login-card{width:min(420px,92vw);background:linear-gradient(180deg,#0b1e31,#071421);border:1px solid rgba(72,133,182,.35);border-radius:18px;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,.45);pointer-events:auto}
@@ -211,7 +211,7 @@
           <div class="field"><label>Texto marca exportación</label><input id="exportBrandText" value="LAHARRAGUE CHODORGE"></div>
           <div class="small" style="display:flex;align-items:end">Se usa en el PNG exportado para reemplazar el logo defectuoso y sale limpio en la imagen.</div>
         </div>
-        <div class="field" style="margin-top:10px"><label>Comentario exportación PNG</label><input id="exportComment" placeholder="Ej: Producción estable, continuar controlando tablas negras y rendimiento." /></div>
+        <div class="field" style="margin-top:10px"><label>Comentario exportación PNG</label><textarea id="exportComment" rows="4" placeholder="Ej: Producción estable, continuar controlando tablas negras y rendimiento."></textarea></div>
         <div class="small">Este comentario se muestra al final de la imagen exportada. Si no cargás nada, se usa el texto guardado.</div>
         <div class="small">El total faltante activo ahora suma faltantes reales de semanas activas, sin promediar.</div>
       </div>
