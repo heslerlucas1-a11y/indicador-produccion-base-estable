@@ -138,6 +138,26 @@
 .kpi-fields-wrap{overflow:auto;padding-bottom:10px}
 .kpi-field-row .remove-col{text-align:right}
 
+.view-switch{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:rgba(0,0,0,.2)}
+.view-btn{border:0;border-radius:9px;padding:9px 13px;background:transparent;color:#b9d7ee;font-weight:800;cursor:pointer}
+.view-btn.active{background:linear-gradient(135deg,#1677b8,#22a3dc);color:#fff;box-shadow:0 5px 16px rgba(34,163,220,.25)}
+.rolls-view{padding:18px;max-width:1900px;margin:0 auto;color:#10213a;background:#eef4f9;min-height:calc(100vh - 72px)}
+.rolls-view[hidden]{display:none}
+.rolls-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.rolls-header h2{margin:0;color:#0b2747;font-size:25px}.rolls-period{padding:9px 14px;border:1px solid #c9d7e5;border-radius:11px;background:#fff;color:#38506a;font-weight:800}
+.rolls-kpis{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.rolls-kpi,.rolls-panel{background:#fff;border:1px solid #d8e2ec;border-radius:14px;box-shadow:0 3px 12px rgba(18,49,78,.08)}
+.rolls-kpi{padding:15px;min-height:102px;display:flex;flex-direction:column;justify-content:space-between}.rolls-kpi-label{font-size:13px;color:#52677c;font-weight:700}.rolls-kpi-value{font-size:25px;color:#0b47a1;font-weight:950}.rolls-kpi-value.good{color:#15803d}.rolls-kpi-value.cyan{color:#07899a}
+.rolls-main-grid{display:grid;grid-template-columns:minmax(520px,1.55fr) minmax(260px,.65fr) minmax(260px,.65fr);gap:12px;margin-bottom:12px}
+.rolls-panel{padding:15px;min-width:0}.rolls-panel h3{margin:0 0 12px;color:#10213a;font-size:16px}.rolls-chart{height:285px;position:relative}
+.rolls-bottom-grid{display:grid;grid-template-columns:minmax(360px,.8fr) minmax(620px,1.6fr);gap:12px;margin-bottom:12px}
+.weekly-roll-row{display:grid;grid-template-columns:72px 1fr 100px 62px;gap:9px;align-items:center;margin:9px 0;font-size:13px}.weekly-roll-track{height:12px;border-radius:999px;background:#e5edf5;overflow:hidden}.weekly-roll-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#1769df,#2f8cff)}.weekly-roll-fill.warn{background:linear-gradient(90deg,#e11d48,#fb7185)}.weekly-roll-pct{padding:4px 7px;border-radius:7px;text-align:center;background:#dcecff;color:#1550a0;font-weight:900}.weekly-roll-pct.warn{background:#fee2e2;color:#c81e1e}
+.efficiency-grid{display:grid;grid-template-columns:repeat(6,1fr);height:100%}.efficiency-item{padding:12px;text-align:center;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;justify-content:center;gap:9px}.efficiency-item:first-child{border-left:0}.efficiency-label{font-size:12px;color:#52677c;font-weight:800}.efficiency-value{font-size:25px;font-weight:950;color:#0b47a1}.efficiency-value.good{color:#15803d}.efficiency-value.bad{color:#dc2626}
+.rolls-table-wrap{overflow:auto;max-height:440px;border:1px solid #d8e2ec;border-radius:11px}.rolls-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}.rolls-table th{position:sticky;top:0;background:#082b50;color:#fff;padding:10px 12px;text-align:center}.rolls-table td{padding:9px 12px;border-bottom:1px solid #e4ebf2;text-align:right}.rolls-table td:first-child{text-align:left}.rolls-table tbody tr:nth-child(even){background:#f6f9fc}.rolls-pill{display:inline-block;min-width:52px;padding:4px 7px;border-radius:7px;text-align:center;font-weight:900}.rolls-pill.good{background:#dcfce7;color:#15803d}.rolls-pill.warn{background:#fef3c7;color:#b45309}.rolls-pill.bad{background:#fee2e2;color:#dc2626}
+.rolls-empty{padding:50px 20px;text-align:center;color:#52677c;font-size:16px;background:#fff;border:1px dashed #b9c9d8;border-radius:14px}
+@media(max-width:1300px){.rolls-kpis{grid-template-columns:repeat(3,1fr)}.rolls-main-grid{grid-template-columns:1fr 1fr}.rolls-main-grid .rolls-panel:first-child{grid-column:1/-1}.rolls-bottom-grid{grid-template-columns:1fr}.efficiency-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.rolls-view{padding:10px}.rolls-kpis{grid-template-columns:repeat(2,1fr)}.rolls-main-grid{grid-template-columns:1fr}.rolls-main-grid .rolls-panel:first-child{grid-column:auto}.efficiency-grid{grid-template-columns:repeat(2,1fr)}.view-switch{width:100%}.view-btn{flex:1}.weekly-roll-row{grid-template-columns:60px 1fr 82px 55px}}
+
 
 /* simplificado: KPI y mapeo se administran desde Google Sheets */
 .cfg-card[data-section="mapping"], .cfg-card[data-section="kpi-editor"]{display:none !important;}
@@ -150,6 +170,10 @@
   <div class="topbar">
     <div class="toolbar">
       <button class="btn" id="openCfg" data-admin-only="true">⚙ Configuración</button>
+      <div class="view-switch" aria-label="Cambiar pantalla">
+        <button class="view-btn active" id="viewSummaryBtn" type="button">Resumen</button>
+        <button class="view-btn" id="viewRollsBtn" type="button">Producción por día</button>
+      </div>
       <label class="file-label" id="fileLabel" data-admin-only="true">📂 Cargar Excel <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"></label>
       <button class="btn secondary" id="reloadBtn" data-admin-only="true">↻ Recargar Excel</button>
       <button class="btn secondary" id="googleSyncBtn">☁ Sincronizar Google</button>
@@ -164,7 +188,7 @@
       <div class="mini" id="googleInfo">Google Sheets inactivo</div>
     </div>
   </div>
-  <div class="shell">
+  <div class="shell" id="summaryView">
     <div id="captureArea">
       <div class="col">
         <div class="header-grid">
@@ -186,6 +210,19 @@
       </div>
     </div>
   </div>
+
+  <section class="rolls-view" id="rollsView" hidden>
+    <div class="rolls-header">
+      <div>
+        <h2>Producción y consumo de rollos</h2>
+        <div class="small" style="color:#63778b;margin-top:4px">Datos diarios leídos automáticamente de las filas 7 a 31</div>
+      </div>
+      <div class="rolls-period" id="rollsPeriod">Sin datos diarios</div>
+    </div>
+    <div id="rollsDashboardContent">
+      <div class="rolls-empty">Sin datos diarios. Sincronizá Google Sheets para cargar las filas 7 a 31.</div>
+    </div>
+  </section>
 
   </div>
 
@@ -609,7 +646,7 @@ async function loadRemoteConfig(){
   }
 }
 
-let cfg=loadCfg(), workbook=null, weekChart=null, currentUser=null;
+let cfg=loadCfg(), workbook=null, weekChart=null, rollsDailyChart=null, rollsShiftChart=null, rollsComplianceChart=null, currentUser=null;
 let lastRendered=loadRendered();
 const $=id=>document.getElementById(id);
 
@@ -707,7 +744,29 @@ function csvLineParse(line){
   return out;
 }
 function parseCSV(text){
-  return String(text||'').replace(/\r/g,'').split('\n').filter(x=>x.trim()!=='').map(csvLineParse);
+  const rows=[]; let row=[]; let cell=''; let inQ=false;
+  const source=String(text||'').replace(/^\uFEFF/,'');
+  for(let i=0;i<source.length;i++){
+    const ch=source[i];
+    if(ch==='"'){
+      if(inQ && source[i+1]==='"'){cell+='"';i++}
+      else inQ=!inQ;
+    }else if(ch===',' && !inQ){
+      row.push(cell); cell='';
+    }else if((ch==='\n' || ch==='\r') && !inQ){
+      if(ch==='\r' && source[i+1]==='\n') i++;
+      row.push(cell); cell='';
+      rows.push(row);
+      row=[];
+    }else if(ch!=='\r'){
+      cell+=ch;
+    }
+  }
+  if(cell!=='' || row.length){
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows;
 }
 async function loadGoogleSheetData(force=false){
   try{
@@ -1301,6 +1360,175 @@ function getActualDia(){return numMetric('actualDia')}
 function getActualSem(){return numMetric('actualSem')}
 function getActualMes(){return numMetric('actualMes')}
 function getActiveWeeks(weeks){return weeks.filter(v=>Number(v)>0)}
+function normalizeRollThousands(value,scalePlain=false){
+  if(value===null || value===undefined || value==='') return 0;
+  if(typeof value==='number') return scalePlain && Math.abs(value)>0 && Math.abs(value)<1000 ? value*1000 : value;
+  const source=String(value).trim().replace(/\s/g,'');
+  if(!source || source==='-') return 0;
+  if(/^-?\d+(?:\.\d+)+$/.test(source)){
+    const negative=source.startsWith('-');
+    const clean=negative ? source.slice(1) : source;
+    const parts=clean.split('.');
+    let parsed;
+    if(parts.length===2 && parts[1].length<=3) parsed=Number(parts[0])*1000+Number(parts[1].padEnd(3,'0'));
+    else parsed=Number(parts.join(''));
+    return negative ? -parsed : parsed;
+  }
+  const parsed=normalizeNumber(source);
+  return scalePlain && Math.abs(parsed)>0 && Math.abs(parsed)<1000 ? parsed*1000 : parsed;
+}
+function getRollProductionRows(){
+  if(!googleSheetGrid || !Array.isArray(googleSheetGrid)) return [];
+  const out=[];
+  for(let sheetRow=7;sheetRow<=31;sheetRow++){
+    const raw=googleSheetGrid[sheetRow-1] || [];
+    const date=String(raw[0] ?? '').trim();
+    if(!date) continue;
+    out.push({
+      sheetRow,
+      date:formatDate(date),
+      week:String(raw[1] ?? '').trim(),
+      diameter:normalizeNumber(raw[2]),
+      averageLength:normalizeNumber(raw[3]),
+      curvature:normalizeNumber(raw[4]),
+      rolls:normalizeRollThousands(raw[5]),
+      tons:normalizeNumber(raw[6]),
+      ttd:normalizeNumber(raw[7]),
+      tmd:normalizeNumber(raw[8]),
+      rhythm:normalizePercent(raw[9]),
+      fu:normalizePercent(raw[10]),
+      fo:normalizePercent(raw[11]),
+      gap:normalizeNumber(raw[12]),
+      expectedGap:normalizeNumber(raw[13]),
+      shift1:normalizeRollThousands(raw[14]),
+      shift2:normalizeRollThousands(raw[15]),
+      production:normalizeRollThousands(raw[16],true),
+      expected:normalizeRollThousands(raw[17],true),
+      compliance:normalizePercent(raw[18]),
+      p2h:normalizeRollThousands(raw[19]),
+      p2tn:normalizeNumber(raw[20]),
+      expectedP2tn:normalizeNumber(raw[21]),
+      realM3:normalizePercent(raw[22]),
+      deltaP2tn:normalizePercent(raw[23]),
+      rMir:normalizeNumber(raw[24]),
+      sbMin:normalizeNumber(raw[25])
+    });
+  }
+  return out;
+}
+function getRollProductionSummary(){
+  if(!googleSheetGrid || !Array.isArray(googleSheetGrid)) return null;
+  for(let sheetRow=7;sheetRow<=31;sheetRow++){
+    const raw=googleSheetGrid[sheetRow-1] || [];
+    if(String(raw[0] ?? '').trim() || !String(raw[16] ?? '').trim()) continue;
+    return {
+      totalRolls:normalizeRollThousands(raw[5]),
+      totalTons:normalizeNumber(raw[6]),
+      rhythm:normalizePercent(raw[9]),
+      fu:normalizePercent(raw[10]),
+      fo:normalizePercent(raw[11]),
+      gap:normalizeNumber(raw[12]),
+      shift1:normalizeRollThousands(raw[14]),
+      shift2:normalizeRollThousands(raw[15]),
+      totalProduction:normalizeRollThousands(raw[16],true),
+      totalExpected:normalizeRollThousands(raw[17],true),
+      compliance:normalizePercent(raw[18]),
+      p2h:normalizeRollThousands(raw[19]),
+      p2tn:normalizeNumber(raw[20]),
+      deltaP2tn:normalizePercent(raw[23])
+    };
+  }
+  return null;
+}
+function avgRollMetric(rows,key){
+  const values=rows.map(row=>Number(row[key])).filter(Number.isFinite);
+  return values.length ? values.reduce((sum,value)=>sum+value,0)/values.length : 0;
+}
+function sumRollMetric(rows,key){return rows.reduce((sum,row)=>sum+(Number(row[key])||0),0)}
+function rollStatusClass(value){return value>=100?'good':value>=85?'warn':'bad'}
+function renderRollsDashboard(){
+  const content=$('rollsDashboardContent');
+  if(!content) return;
+  const rows=getRollProductionRows();
+  if(!rows.length){
+    $('rollsPeriod').textContent='Sin datos diarios';
+    content.innerHTML='<div class="rolls-empty">No hay fechas cargadas entre las filas 7 y 31. Los días aparecerán automáticamente cuando se completen en Google Sheets.</div>';
+    if(rollsDailyChart){rollsDailyChart.destroy();rollsDailyChart=null}
+    if(rollsShiftChart){rollsShiftChart.destroy();rollsShiftChart=null}
+    if(rollsComplianceChart){rollsComplianceChart.destroy();rollsComplianceChart=null}
+    return;
+  }
+  const summary=getRollProductionSummary();
+  const totalProduction=summary?.totalProduction || sumRollMetric(rows,'production');
+  const totalExpected=summary?.totalExpected || sumRollMetric(rows,'expected');
+  const compliance=summary?.compliance || (totalExpected>0 ? totalProduction/totalExpected*100 : avgRollMetric(rows,'compliance'));
+  const totalRolls=summary?.totalRolls || sumRollMetric(rows,'rolls');
+  const totalTons=summary?.totalTons || sumRollMetric(rows,'tons');
+  const shift1=summary?.shift1 || sumRollMetric(rows,'shift1');
+  const shift2=summary?.shift2 || sumRollMetric(rows,'shift2');
+  const rhythm=summary?.rhythm || avgRollMetric(rows,'rhythm');
+  const weeklyMap=new Map();
+  rows.forEach(row=>{
+    const key=row.week || 'Sin semana';
+    const current=weeklyMap.get(key) || {production:0,expected:0};
+    current.production+=row.production;
+    current.expected+=row.expected;
+    weeklyMap.set(key,current);
+  });
+  const weekly=[...weeklyMap.entries()].map(([week,data])=>({week,...data,pct:data.expected>0?data.production/data.expected*100:0}));
+  $('rollsPeriod').textContent=`${rows[0].date} — ${rows[rows.length-1].date} · ${rows.length} días`;
+  content.innerHTML=`
+    <div class="rolls-kpis">
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Producción total</div><div class="rolls-kpi-value">${formatNum(totalProduction,0)} p²</div></div>
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Cumplimiento</div><div class="rolls-kpi-value ${compliance>=90?'good':''}">${formatPct(compliance,0)}</div></div>
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Producción esperada</div><div class="rolls-kpi-value">${formatNum(totalExpected,0)} p²</div></div>
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Ritmo promedio</div><div class="rolls-kpi-value cyan">${formatPct(rhythm,0)}</div></div>
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Rollos procesados</div><div class="rolls-kpi-value">${formatNum(totalRolls,0)}</div></div>
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Toneladas</div><div class="rolls-kpi-value">${formatNum(totalTons,0)} Tn</div></div>
+    </div>
+    <div class="rolls-main-grid">
+      <div class="rolls-panel"><h3>Producción diaria vs. objetivo</h3><div class="rolls-chart"><canvas id="rollsDailyChart"></canvas></div></div>
+      <div class="rolls-panel"><h3>Cumplimiento mensual</h3><div class="rolls-chart"><canvas id="rollsComplianceChart"></canvas></div></div>
+      <div class="rolls-panel"><h3>Producción por turno</h3><div class="rolls-chart"><canvas id="rollsShiftChart"></canvas></div></div>
+    </div>
+    <div class="rolls-bottom-grid">
+      <div class="rolls-panel"><h3>Producción semanal</h3><div id="rollsWeeklyList">${weekly.map(item=>{
+        const width=Math.min(item.pct,100);
+        const warn=item.pct<85;
+        return `<div class="weekly-roll-row"><b>Sem. ${esc(item.week)}</b><div class="weekly-roll-track"><div class="weekly-roll-fill ${warn?'warn':''}" style="width:${width}%"></div></div><span>${formatNum(item.production,0)}</span><span class="weekly-roll-pct ${warn?'warn':''}">${formatPct(item.pct,0)}</span></div>`;
+      }).join('')}</div></div>
+      <div class="rolls-panel"><h3>Eficiencia y desempeño general</h3><div class="efficiency-grid">
+        <div class="efficiency-item"><span class="efficiency-label">FU</span><span class="efficiency-value good">${formatPct(summary?.fu || avgRollMetric(rows,'fu'),0)}</span></div>
+        <div class="efficiency-item"><span class="efficiency-label">FO</span><span class="efficiency-value good">${formatPct(summary?.fo || avgRollMetric(rows,'fo'),0)}</span></div>
+        <div class="efficiency-item"><span class="efficiency-label">GAP medio</span><span class="efficiency-value">${formatNum(summary?.gap || avgRollMetric(rows,'gap'),2)} m</span></div>
+        <div class="efficiency-item"><span class="efficiency-label">P²/h real</span><span class="efficiency-value">${formatNum(summary?.p2h || avgRollMetric(rows,'p2h'),0)}</span></div>
+        <div class="efficiency-item"><span class="efficiency-label">P²/Tn</span><span class="efficiency-value">${formatNum(summary?.p2tn || avgRollMetric(rows,'p2tn'),0)}</span></div>
+        <div class="efficiency-item"><span class="efficiency-label">Δ P²/Tn</span><span class="efficiency-value ${(summary?.deltaP2tn ?? avgRollMetric(rows,'deltaP2tn'))<0?'bad':'good'}">${formatPct(summary?.deltaP2tn ?? avgRollMetric(rows,'deltaP2tn'),1)}</span></div>
+      </div></div>
+    </div>
+    <div class="rolls-panel"><h3>Detalle diario</h3><div class="rolls-table-wrap"><table class="rolls-table">
+      <thead><tr><th>Fecha</th><th>Semana</th><th>Rollos</th><th>Tn</th><th>Corte T1</th><th>Corte T2</th><th>Total p²</th><th>Objetivo p²</th><th>% Cumpl.</th><th>P²/h</th><th>P²/Tn</th><th>TTD</th><th>TMD</th></tr></thead>
+      <tbody>${rows.map(row=>`<tr><td>${esc(row.date)}</td><td>${esc(row.week)}</td><td>${formatNum(row.rolls,0)}</td><td>${formatNum(row.tons,1)}</td><td>${formatNum(row.shift1,0)}</td><td>${formatNum(row.shift2,0)}</td><td><b>${formatNum(row.production,0)}</b></td><td>${formatNum(row.expected,0)}</td><td><span class="rolls-pill ${rollStatusClass(row.compliance)}">${formatPct(row.compliance,0)}</span></td><td>${formatNum(row.p2h,0)}</td><td>${formatNum(row.p2tn,0)}</td><td>${formatNum(row.ttd,1)}</td><td>${formatNum(row.tmd,1)}</td></tr>`).join('')}</tbody>
+    </table></div></div>`;
+  if(typeof Chart==='undefined') return;
+  if(rollsDailyChart) rollsDailyChart.destroy();
+  if(rollsShiftChart) rollsShiftChart.destroy();
+  if(rollsComplianceChart) rollsComplianceChart.destroy();
+  const dailyCtx=$('rollsDailyChart');
+  const shiftCtx=$('rollsShiftChart');
+  const complianceCtx=$('rollsComplianceChart');
+  rollsDailyChart=new Chart(dailyCtx,{type:'bar',data:{labels:rows.map(row=>row.date.slice(0,5)),datasets:[{label:'Producción diaria',data:rows.map(row=>row.production),backgroundColor:'#2478ed',borderRadius:4},{label:'Objetivo diario',data:rows.map(row=>row.expected),type:'line',borderColor:'#10213a',borderDash:[6,5],borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#334155'}}},scales:{x:{ticks:{color:'#52677c'},grid:{display:false}},y:{ticks:{color:'#52677c'},grid:{color:'#dfe7ef'}}}}});
+  rollsShiftChart=new Chart(shiftCtx,{type:'doughnut',data:{labels:['Turno 1','Turno 2'],datasets:[{data:[shift1,shift2],backgroundColor:['#1769df','#19b4b7'],borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#334155'}}}}});
+  rollsComplianceChart=new Chart(complianceCtx,{type:'doughnut',data:{labels:['Cumplido','Faltante'],datasets:[{data:[Math.min(compliance,100),Math.max(100-compliance,0)],backgroundColor:['#2478ed','#e5edf5'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:false}}},plugins:[{id:'centerText',afterDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.fillStyle='#10213a';ctx.font='900 34px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(formatPct(compliance,0),(chartArea.left+chartArea.right)/2,(chartArea.top+chartArea.bottom)/2);ctx.restore()}}]});
+}
+function showAppView(view){
+  const rolls=view==='rolls';
+  $('summaryView').hidden=rolls;
+  $('rollsView').hidden=!rolls;
+  $('viewSummaryBtn').classList.toggle('active',!rolls);
+  $('viewRollsBtn').classList.toggle('active',rolls);
+  if(rolls) renderRollsDashboard();
+}
 function renderDashboard(){
   setVars(); renderTitles(); document.title=cfg.dashTitle;
   const fecha=displayMetric('fecha');
@@ -1433,6 +1661,7 @@ function renderDashboard(){
 
   saveRendered({fecha,fechaSub:$('fechaSub').textContent,rend:featuredValue,state:st,kpiData,goalData,weekData,faltSemana:missingEntries[0]?resolveFieldDisplay(missingEntries[0],ctx):formatNum(faltSemana,0),faltMes:missingEntries[1]?resolveFieldDisplay(missingEntries[1],ctx):formatNum(faltMes,0),faltActivo:missingEntries[2]?resolveFieldDisplay(missingEntries[2],ctx):formatNum(faltTotalActivo,0),featuredTitle, expectedWeek, expectedMonth});
   if(weekChart) weekChart.destroy(); weekChart=new Chart($('weekChart'),{type:'bar',data:{labels:weekTitles,datasets:[{label:cfg.titles.titleSemanal||'Producción semanal',data:weekValues,backgroundColor:'rgba(56,189,248,.45)',borderColor:'rgba(56,189,248,.9)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#ecf6ff'}},annotation:{annotations:{metaSemanal:{type:'line',yMin:targetLine,yMax:targetLine,borderColor:'#ff3b30',borderWidth:3,label:{display:true,content:'Meta '+formatNum(targetLine,0),color:'#fff',backgroundColor:'rgba(255,59,48,.90)',position:'end'}}}}},scales:{x:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#cfe8ff'},grid:{color:'rgba(255,255,255,.08)'}}}}});
+  renderRollsDashboard();
 }
 
 
@@ -1663,6 +1892,8 @@ function renderFromStored(){
 }
 
 $('openCfg').onclick=()=>openCfg(); $('closeCfg').onclick=()=>closeCfg(); $('cfgBackdrop').onclick=()=>closeCfg();
+$('viewSummaryBtn').onclick=()=>showAppView('summary');
+$('viewRollsBtn').onclick=()=>showAppView('rolls');
 document.querySelector('.cfg-tabs')?.addEventListener('click',e=>{
   const tab=e.target.closest('[data-cfg-tab]');
   if(tab) setCfgTab(tab.dataset.cfgTab);
