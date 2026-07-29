@@ -2457,19 +2457,14 @@ $('reportBtn').onclick=async ()=>{
     const detailCanvas=await captureElement(detailPanel);
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
-    const margin=8;
+    const margin=4;
     const pageWidth=pdf.internal.pageSize.getWidth();
     const pageHeight=pdf.internal.pageSize.getHeight();
     const printableWidth=pageWidth-margin*2;
     const printableHeight=pageHeight-margin*2;
     const addCanvasPage=(canvas,addPage)=>{
       if(addPage) pdf.addPage();
-      const ratio=Math.min(printableWidth/canvas.width,printableHeight/canvas.height);
-      const imageWidth=canvas.width*ratio;
-      const imageHeight=canvas.height*ratio;
-      const imageX=(pageWidth-imageWidth)/2;
-      const imageY=(pageHeight-imageHeight)/2;
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',imageX,imageY,imageWidth,imageHeight,undefined,'FAST');
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',margin,margin,printableWidth,printableHeight,undefined,'FAST');
     };
     addCanvasPage(summaryCanvas,false);
     addCanvasPage(detailCanvas,true);
