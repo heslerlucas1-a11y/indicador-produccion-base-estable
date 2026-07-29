@@ -1515,9 +1515,9 @@ function startShiftMessageRotation(latestRow){
   if(!banner || !latestRow) return;
   const date=latestRow.date;
   const messages=[
-    `Turno 1 ayer (${date}) produjo <strong>${formatNum(latestRow.shift1,0)} p²</strong>`,
-    `Turno 2 ayer (${date}) produjo <strong>${formatNum(latestRow.shift2,0)} p²</strong>`,
-    `La producción total de ayer (${date}) fue de <strong>${formatNum(latestRow.production,0)} p²</strong>`
+    `Turno 1 (${date}) produjo <strong>${formatNum(latestRow.shift1,0)} p²</strong>`,
+    `Turno 2 (${date}) produjo <strong>${formatNum(latestRow.shift2,0)} p²</strong>`,
+    `La producción total (${date}) fue de <strong>${formatNum(latestRow.production,0)} p²</strong>`
   ];
   const showMessage=index=>{
     banner.classList.remove('playing');
