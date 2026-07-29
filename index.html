@@ -2228,7 +2228,7 @@ $('reportBtn').onclick=async ()=>{
   const report=$('rollsView');
   const wasHidden=report.hidden;
   const originalReportStyle=report.getAttribute('style');
-  let tableWrap=null, originalTableStyle=null;
+  let tableWrap=null, originalTableStyle=null, detailPanel=null, originalDetailStyle=null;
   try{
     if(!getRollProductionRows().length){
       alert('No hay datos de producción para generar el reporte.');
@@ -2254,22 +2254,30 @@ $('reportBtn').onclick=async ()=>{
       originalTableStyle=tableWrap.getAttribute('style');
       tableWrap.style.maxHeight='none';
       tableWrap.style.overflow='visible';
+      detailPanel=tableWrap.closest('.rolls-panel');
+      if(detailPanel) originalDetailStyle=detailPanel.getAttribute('style');
     }
     if(document.fonts?.ready) await document.fonts.ready;
     await new Promise(resolve=>setTimeout(resolve,600));
-    const canvas=await html2canvas(report,{
-      backgroundColor:'#eef4f9',
-      scale:1.35,
-      useCORS:true,
-      allowTaint:true,
-      width:report.scrollWidth,
-      height:report.scrollHeight,
-      windowWidth:1800,
-      windowHeight:report.scrollHeight,
-      scrollX:0,
-      scrollY:0,
-      logging:false
-    });
+    if(!detailPanel) throw new Error('No se encontró la tabla de detalle diario.');
+    detailPanel.style.display='none';
+    const captureElement=target=>html2canvas(target,{
+        backgroundColor:'#eef4f9',
+        scale:1.35,
+        useCORS:true,
+        allowTaint:true,
+        width:target.scrollWidth,
+        height:target.scrollHeight,
+        windowWidth:1800,
+        windowHeight:target.scrollHeight,
+        scrollX:0,
+        scrollY:0,
+        logging:false
+      });
+    const summaryCanvas=await captureElement(report);
+    detailPanel.style.display='';
+    await new Promise(resolve=>setTimeout(resolve,150));
+    const detailCanvas=await captureElement(detailPanel);
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
     const margin=8;
@@ -2277,19 +2285,17 @@ $('reportBtn').onclick=async ()=>{
     const pageHeight=pdf.internal.pageSize.getHeight();
     const printableWidth=pageWidth-margin*2;
     const printableHeight=pageHeight-margin*2;
-    const imageWidth=printableWidth;
-    const imageHeight=canvas.height*imageWidth/canvas.width;
-    const imageData=canvas.toDataURL('image/jpeg',0.92);
-    let remaining=imageHeight;
-    let imageY=margin;
-    pdf.addImage(imageData,'JPEG',margin,imageY,imageWidth,imageHeight,undefined,'FAST');
-    remaining-=printableHeight;
-    while(remaining>0){
-      pdf.addPage();
-      imageY=margin-(imageHeight-remaining);
-      pdf.addImage(imageData,'JPEG',margin,imageY,imageWidth,imageHeight,undefined,'FAST');
-      remaining-=printableHeight;
-    }
+    const addCanvasPage=(canvas,addPage)=>{
+      if(addPage) pdf.addPage();
+      const ratio=Math.min(printableWidth/canvas.width,printableHeight/canvas.height);
+      const imageWidth=canvas.width*ratio;
+      const imageHeight=canvas.height*ratio;
+      const imageX=(pageWidth-imageWidth)/2;
+      const imageY=(pageHeight-imageHeight)/2;
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',imageX,imageY,imageWidth,imageHeight,undefined,'FAST');
+    };
+    addCanvasPage(summaryCanvas,false);
+    addCanvasPage(detailCanvas,true);
     const reportRows=getRollProductionRows();
     const latest=reportRows[reportRows.length-1];
     const reportDate=(latest?.date || new Date().toLocaleDateString('es-AR')).replace(/\//g,'-');
@@ -2299,6 +2305,10 @@ $('reportBtn').onclick=async ()=>{
     console.error(err);
     alert(`No se pudo generar el reporte PDF. ${err.message||''}`.trim());
   }finally{
+    if(detailPanel){
+      if(originalDetailStyle===null) detailPanel.removeAttribute('style');
+      else detailPanel.setAttribute('style',originalDetailStyle);
+    }
     if(tableWrap){
       if(originalTableStyle===null) tableWrap.removeAttribute('style');
       else tableWrap.setAttribute('style',originalTableStyle);
