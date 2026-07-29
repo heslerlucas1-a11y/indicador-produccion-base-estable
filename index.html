@@ -66,7 +66,7 @@
     .account-card{width:min(430px,92vw);background:linear-gradient(180deg,#0b1e31,#071421);border:1px solid rgba(72,133,182,.35);border-radius:18px;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,.45)}
     .user-chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px}
     .warn{color:#fcd34d}
-    .users-grid{display:grid;gap:8px}.user-row{display:grid;grid-template-columns:1.2fr 1fr .72fr .72fr;gap:8px;align-items:end;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);padding:10px;border-radius:14px}.user-row.head{background:transparent;border:none;padding:0 2px 6px}.user-row.head div{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.user-row .field{margin-bottom:0}.user-row input,.user-row select{min-width:0}.user-actions{display:flex;gap:8px;justify-content:flex-end}.centered-num{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+    .users-grid{display:grid;gap:8px}.user-row{display:grid;grid-template-columns:1.2fr 1fr .65fr .55fr 130px;gap:8px;align-items:end;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);padding:10px;border-radius:14px}.user-row.head{background:transparent;border:none;padding:0 2px 6px}.user-row.head div{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.user-row .field{margin-bottom:0}.user-row input,.user-row select{min-width:0}.invite-user-btn{width:100%;padding:9px 8px;border-radius:10px;border:0;background:linear-gradient(135deg,#c2410c,#f97316);color:#fff;font-weight:900;cursor:pointer}.invite-user-btn:hover{filter:brightness(1.1)}.user-actions{display:flex;gap:8px;justify-content:flex-end}.centered-num{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 
     
     .critical-glow{animation:criticalPulse 1.0s infinite ease-in-out; box-shadow:0 0 16px rgba(239,68,68,.30), 0 0 40px rgba(239,68,68,.28)}
@@ -1196,15 +1196,19 @@ function renderUsers(){
     return;
   }
 
-  const head = `<div class="user-row head"><div>Usuario</div><div>Contraseña</div><div>Rol</div><div>Activo</div></div>`;
+  const head = `<div class="user-row head"><div>Usuario</div><div>Contraseña</div><div>Rol</div><div>Activo</div><div>Invitación</div></div>`;
   const rows = window.userAdminRows.map((u,idx)=>`
     <div class="user-row" data-user-idx="${idx}">
       <div class="field"><input data-key="username" value="${esc(u.username||'')}" ${u.locked?'readonly':''}></div>
       <div class="field"><input data-key="password" value="${esc(u.password||'')}" placeholder="Contraseña"></div>
       <div class="field"><select data-key="role"><option value="admin" ${u.role==='admin'?'selected':''}>admin</option><option value="visor" ${u.role==='visor'?'selected':''}>visor</option></select></div>
       <div class="field"><select data-key="active"><option value="SI" ${(String(u.active||'SI').toUpperCase()==='SI')?'selected':''}>SI</option><option value="NO" ${(String(u.active||'SI').toUpperCase()==='NO')?'selected':''}>NO</option></select></div>
+      <div><button class="invite-user-btn" type="button" data-invite-user="${idx}">Invitación</button></div>
     </div>`).join('');
   box.innerHTML = `<div class="users-grid">${head}${rows}</div>`;
+  box.querySelectorAll('[data-invite-user]').forEach(button=>{
+    button.onclick=()=>generateUserInvitation(Number(button.dataset.inviteUser));
+  });
   if(msg) msg.textContent='Editá y guardá. Los cambios impactan sobre la hoja Usuarios vía Apps Script V29.';
 }
 
@@ -1235,6 +1239,154 @@ async function refreshUsersFromBackend(){
     renderUsers();
     if(msg) msg.textContent='No se pudo leer la lista de usuarios. Revisá que Apps Script tenga las acciones V29.';
   }
+}
+
+function invitationRoundRect(ctx,x,y,width,height,radius,fill,stroke){
+  const r=Math.min(radius,width/2,height/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+width,y,x+width,y+height,r);
+  ctx.arcTo(x+width,y+height,x,y+height,r);
+  ctx.arcTo(x,y+height,x,y,r);
+  ctx.arcTo(x,y,x+width,y,r);
+  ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill()}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}
+}
+function invitationWrappedText(ctx,text,x,y,maxWidth,lineHeight,maxLines=3){
+  const words=String(text||'').split(/\s+/);
+  const lines=[]; let line='';
+  words.forEach(word=>{
+    const test=line ? `${line} ${word}` : word;
+    if(ctx.measureText(test).width>maxWidth && line){lines.push(line);line=word}
+    else line=test;
+  });
+  if(line) lines.push(line);
+  lines.slice(0,maxLines).forEach((value,index)=>ctx.fillText(value,x,y+index*lineHeight));
+  return Math.min(lines.length,maxLines)*lineHeight;
+}
+function generateUserInvitation(index){
+  if(!currentUser || currentUser.role!=='admin'){
+    alert('Solo un administrador puede generar invitaciones.');
+    return;
+  }
+  const row=document.querySelector(`#usersContainer .user-row[data-user-idx="${index}"]`);
+  if(!row) return;
+  const username=row.querySelector('[data-key="username"]')?.value.trim()||'';
+  const password=row.querySelector('[data-key="password"]')?.value.trim()||'';
+  if(!username || !password){
+    alert('Completá el usuario y la contraseña antes de generar la invitación.');
+    return;
+  }
+  const canvas=document.createElement('canvas');
+  canvas.width=1200;
+  canvas.height=1600;
+  const ctx=canvas.getContext('2d');
+  const background=ctx.createLinearGradient(0,0,1200,1600);
+  background.addColorStop(0,'#041a31');
+  background.addColorStop(.52,'#073c6f');
+  background.addColorStop(1,'#071f3b');
+  ctx.fillStyle=background;
+  ctx.fillRect(0,0,1200,1600);
+  const glow=ctx.createRadialGradient(1030,150,10,1030,150,430);
+  glow.addColorStop(0,'rgba(39,133,255,.55)');
+  glow.addColorStop(1,'rgba(39,133,255,0)');
+  ctx.fillStyle=glow;
+  ctx.fillRect(600,0,600,650);
+
+  ctx.fillStyle='#4aa7ff';
+  ctx.beginPath();ctx.arc(92,92,42,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=7;
+  ctx.strokeRect(73,73,38,38);
+  ctx.beginPath();ctx.moveTo(73,92);ctx.lineTo(111,92);ctx.moveTo(92,73);ctx.lineTo(92,111);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='900 30px Segoe UI, Arial';ctx.fillText('DASHBOARD INDUSTRIAL',154,84);
+  ctx.fillStyle='#9ed3ff';ctx.font='600 19px Segoe UI, Arial';ctx.fillText('Producción y consumo de rollos',154,116);
+
+  ctx.fillStyle='#fff';ctx.font='900 58px Segoe UI, Arial';
+  ctx.fillText('Tu producción,',70,205);
+  ctx.fillStyle='#55b7ff';ctx.fillText('siempre visible.',70,268);
+
+  const productionRows=getRollProductionRows();
+  const summary=getRollProductionSummary();
+  const totalProduction=summary?.totalProduction || sumRollMetric(productionRows,'production');
+  const totalExpected=summary?.totalExpected || sumRollMetric(productionRows,'expected');
+  const compliance=totalExpected>0 ? totalProduction/totalExpected*100 : 0;
+  const monthlyCompliance=totalProduction>0 ? totalProduction/3000000*100 : 0;
+  const latest=productionRows[productionRows.length-1];
+
+  invitationRoundRect(ctx,70,315,1060,470,30,'#f7fbff','rgba(255,255,255,.3)');
+  ctx.fillStyle='#102b49';ctx.font='900 25px Segoe UI, Arial';ctx.fillText('Resumen de producción',102,360);
+  const cards=[
+    ['PRODUCCIÓN TOTAL',`${formatNum(totalProduction,0)} p²`,'#1769df'],
+    ['CUMPLIMIENTO',formatPct(compliance,0),'#16813a'],
+    ['ÚLTIMO DÍA',latest?.date||'--/--/----','#07899a']
+  ];
+  cards.forEach((card,i)=>{
+    const x=102+i*334;
+    invitationRoundRect(ctx,x,390,310,100,18,'#ffffff','#dce7f1');
+    ctx.fillStyle='#60758a';ctx.font='800 14px Segoe UI, Arial';ctx.fillText(card[0],x+18,420);
+    ctx.fillStyle=card[2];ctx.font='900 27px Segoe UI, Arial';ctx.fillText(card[1],x+18,463,275);
+  });
+
+  ctx.fillStyle='#183650';ctx.font='800 17px Segoe UI, Arial';ctx.fillText('Producción diaria',104,535);
+  const chartRows=productionRows.slice(-12);
+  const chartX=105,chartY=715,chartWidth=660,chartHeight=145;
+  ctx.strokeStyle='#d6e2ec';ctx.lineWidth=2;
+  for(let i=0;i<4;i++){const y=chartY-i*(chartHeight/3);ctx.beginPath();ctx.moveTo(chartX,y);ctx.lineTo(chartX+chartWidth,y);ctx.stroke()}
+  const maxProduction=Math.max(1,...chartRows.map(item=>Math.max(item.production,item.expected)));
+  const slot=chartWidth/Math.max(chartRows.length,1);
+  chartRows.forEach((item,i)=>{
+    const barHeight=(item.production/maxProduction)*chartHeight;
+    const x=chartX+i*slot+slot*.18;
+    const barGradient=ctx.createLinearGradient(0,chartY-barHeight,0,chartY);
+    barGradient.addColorStop(0,'#2086ff');barGradient.addColorStop(1,'#145dc8');
+    invitationRoundRect(ctx,x,chartY-barHeight,slot*.58,barHeight,5,barGradient);
+  });
+  if(!chartRows.length){
+    ctx.fillStyle='#7890a5';ctx.font='600 20px Segoe UI, Arial';ctx.fillText('Los datos aparecerán al sincronizar la producción.',125,635);
+  }
+
+  const donutX=940,donutY=625,donutRadius=92;
+  ctx.lineWidth=30;ctx.strokeStyle='#dfeaf4';ctx.beginPath();ctx.arc(donutX,donutY,donutRadius,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='#2478ed';ctx.lineCap='round';ctx.beginPath();ctx.arc(donutX,donutY,donutRadius,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(monthlyCompliance,100)/100);ctx.stroke();ctx.lineCap='butt';
+  ctx.fillStyle='#10213a';ctx.font='900 34px Segoe UI, Arial';ctx.textAlign='center';ctx.fillText(formatPct(monthlyCompliance,0),donutX,donutY+10);
+  ctx.font='800 15px Segoe UI, Arial';ctx.fillStyle='#60758a';ctx.fillText('META MENSUAL',donutX,760);
+  ctx.textAlign='left';
+
+  invitationRoundRect(ctx,70,825,1060,350,30,'rgba(255,255,255,.98)','rgba(129,194,255,.65)');
+  ctx.fillStyle='#0b3f73';ctx.font='900 34px Segoe UI, Arial';ctx.fillText(`Hola, ${username}`,108,878,950);
+  ctx.fillStyle='#526f89';ctx.font='600 21px Segoe UI, Arial';
+  ctx.fillText('Estas son tus credenciales personales para ingresar:',108,918);
+  invitationRoundRect(ctx,108,954,984,82,16,'#eaf4ff','#c4ddf3');
+  ctx.fillStyle='#55718a';ctx.font='800 16px Segoe UI, Arial';ctx.fillText('USUARIO',132,984);
+  ctx.fillStyle='#0a4c91';ctx.font='900 27px Segoe UI, Arial';ctx.fillText(username,132,1018,430);
+  ctx.fillStyle='#55718a';ctx.font='800 16px Segoe UI, Arial';ctx.fillText('CONTRASEÑA',620,984);
+  ctx.fillStyle='#0a4c91';ctx.font='900 27px Segoe UI, Arial';ctx.fillText(password,620,1018,430);
+  ctx.fillStyle='#60758a';ctx.font='700 17px Segoe UI, Arial';ctx.fillText('ACCESO',108,1082);
+  ctx.fillStyle='#1769df';ctx.font='800 19px Segoe UI, Arial';
+  ctx.fillText('heslerlucas1-a11y.github.io/indicador-produccion-base-estable/',108,1115,984);
+
+  invitationRoundRect(ctx,70,1215,1060,280,30,'rgba(7,31,59,.82)','rgba(94,183,255,.45)');
+  ctx.fillStyle='#55b7ff';ctx.font='900 31px Segoe UI, Arial';ctx.fillText('Instalalo como una aplicación',108,1267);
+  ctx.fillStyle='#fff';ctx.font='700 21px Segoe UI, Arial';
+  invitationWrappedText(ctx,'En PC: abrí el menú del navegador y elegí “Instalar aplicación”.',108,1312,950,32,2);
+  invitationWrappedText(ctx,'En el teléfono: usá “Agregar a pantalla de inicio”.',108,1380,950,32,2);
+  invitationRoundRect(ctx,108,1430,500,42,21,'#1d7bea');
+  ctx.fillStyle='#fff';ctx.font='900 17px Segoe UI, Arial';ctx.textAlign='center';ctx.fillText('SEGUÍ LA PRODUCCIÓN EN TIEMPO REAL',358,1457);
+  ctx.textAlign='left';
+  ctx.fillStyle='#a9c9e4';ctx.font='600 16px Segoe UI, Arial';ctx.fillText('Credenciales personales · No compartir públicamente',70,1550);
+
+  canvas.toBlob(blob=>{
+    if(!blob){alert('No se pudo generar la imagen de invitación.');return}
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download=`invitacion_${username.replace(/[^a-z0-9_-]+/gi,'_')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  },'image/png');
 }
 
 function collectUsersFromPanel(){
