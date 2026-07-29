@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <style>
     :root{--bg:#07131f;--panel:#0d2740;--text:#ecf6ff;--muted:#9fc2e3;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;--radius:18px;--kpiH:116px;--fontScale:.92;--topbarH:64px}
     *{box-sizing:border-box}
@@ -158,6 +159,7 @@
 .rolls-table-wrap{overflow:auto;max-height:440px;border:1px solid #d8e2ec;border-radius:11px}.rolls-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}.rolls-table th{position:sticky;top:0;background:#082b50;color:#fff;padding:10px 12px;text-align:center}.rolls-table td{padding:9px 12px;border-bottom:1px solid #e4ebf2;text-align:right}.rolls-table td:first-child{text-align:left}.rolls-table tbody tr:nth-child(even){background:#f6f9fc}.rolls-pill{display:inline-block;min-width:52px;padding:4px 7px;border-radius:7px;text-align:center;font-weight:900}.rolls-pill.good{background:#dcfce7;color:#15803d}.rolls-pill.warn{background:#fef3c7;color:#b45309}.rolls-pill.bad{background:#fee2e2;color:#dc2626}
 .rolls-empty{padding:50px 20px;text-align:center;color:#52677c;font-size:16px;background:#fff;border:1px dashed #b9c9d8;border-radius:14px}
 .page-update-notice{position:fixed;right:18px;bottom:18px;z-index:10050;max-width:390px;padding:15px 16px;border:1px solid #8bc4f5;border-radius:13px;background:linear-gradient(135deg,#073b70,#0a67ad);color:#fff;box-shadow:0 12px 34px rgba(0,25,55,.35);display:flex;align-items:center;gap:14px}.page-update-notice strong{display:block;font-size:15px;margin-bottom:3px}.page-update-notice span{font-size:12px;color:#d8efff}.page-update-notice button{flex:0 0 auto;border:0;border-radius:9px;padding:9px 12px;background:#fff;color:#07538f;font-weight:900;cursor:pointer}
+.pdf-exporting *{animation:none!important;transition:none!important}.pdf-exporting .shift-rotation{opacity:1!important;transform:none!important}
 .full-table-view{padding:14px;background:#eef4f9;min-height:calc(100vh - 72px);color:#10213a}.full-table-view[hidden]{display:none}.full-table-card{background:#fff;border:1px solid #cbd8e5;border-radius:13px;box-shadow:0 3px 14px rgba(18,49,78,.1);overflow:hidden}.full-table-title{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid #dce5ed}.full-table-title h2{font-size:20px;margin:0;color:#0b2747}.full-table-scroll{overflow:auto;max-height:calc(100vh - 180px)}.full-data-table{border-collapse:collapse;min-width:2050px;width:100%;font-size:12px;white-space:nowrap}.full-data-table th{position:sticky;top:0;z-index:3;background:#214f83;color:#fff;padding:8px 7px;border:1px solid #426b98;text-align:center;line-height:1.15}.full-data-table td{padding:7px 8px;border:1px solid #d5dce4;text-align:right;color:#101820}.full-data-table td:first-child{text-align:center}.full-data-table tbody tr:nth-child(even):not(.total-row){background:#f8fafc}.full-data-table tbody tr:hover:not(.total-row){background:#edf5ff}.full-data-table .negative-cell{color:#ef2020;font-weight:800}.full-data-table .emphasis-cell{font-weight:900;font-style:italic;text-decoration:underline}.full-data-table .weekly-total-cell{font-weight:900;background:#fff9e8}.full-data-table .weekly-pct-cell{font-weight:950;background:#8eb6df;color:#071421}.full-data-table .total-row{position:sticky;bottom:0;z-index:2;background:#f4f4f4;font-weight:950;box-shadow:0 -2px 7px rgba(0,0,0,.12)}.full-data-table .total-row td{border-top:2px solid #1f2937}.full-table-note{font-size:12px;color:#60758a}
 @media(max-width:1300px){.rolls-kpis{grid-template-columns:repeat(3,1fr)}.rolls-main-grid{grid-template-columns:1fr 1fr}.rolls-main-grid .rolls-panel:first-child{grid-column:1/-1}.rolls-bottom-grid{grid-template-columns:1fr}.efficiency-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.rolls-view{padding:10px}.rolls-kpis{grid-template-columns:repeat(2,1fr)}.rolls-main-grid{grid-template-columns:1fr}.rolls-main-grid .rolls-panel:first-child{grid-column:auto}.efficiency-grid{grid-template-columns:repeat(2,1fr)}.view-switch{width:100%}.view-btn{flex:1}.weekly-roll-row{grid-template-columns:60px 1fr 82px 55px}}
@@ -183,6 +185,7 @@
       <button class="btn secondary" id="reloadBtn" data-admin-only="true">↻ Recargar Excel</button>
       <button class="btn secondary" id="googleSyncBtn">☁ Sincronizar Google</button>
       <button class="btn green" id="exportBtn">🖼 Exportar PNG</button>
+      <button class="btn orange" id="reportBtn">📄 Reporte</button>
       
     </div>
     <div class="toolbar">
@@ -2217,6 +2220,97 @@ $('exportBtn').onclick=async ()=>{
   }catch(err){
     console.error(err);
     alert('Error al exportar PNG.');
+  }
+};
+$('reportBtn').onclick=async ()=>{
+  const button=$('reportBtn');
+  const originalText=button.textContent;
+  const report=$('rollsView');
+  const wasHidden=report.hidden;
+  const originalReportStyle=report.getAttribute('style');
+  let tableWrap=null, originalTableStyle=null;
+  try{
+    if(!getRollProductionRows().length){
+      alert('No hay datos de producción para generar el reporte.');
+      return;
+    }
+    if(typeof html2canvas==='undefined' || !window.jspdf?.jsPDF){
+      throw new Error('No se pudieron cargar las herramientas para generar PDF.');
+    }
+    button.disabled=true;
+    button.textContent='Generando reporte...';
+    report.hidden=false;
+    report.classList.add('pdf-exporting');
+    report.style.position='fixed';
+    report.style.left='-20000px';
+    report.style.top='0';
+    report.style.width='1800px';
+    report.style.maxWidth='1800px';
+    report.style.margin='0';
+    report.style.zIndex='-1';
+    renderRollsDashboard();
+    tableWrap=report.querySelector('.rolls-table-wrap');
+    if(tableWrap){
+      originalTableStyle=tableWrap.getAttribute('style');
+      tableWrap.style.maxHeight='none';
+      tableWrap.style.overflow='visible';
+    }
+    if(document.fonts?.ready) await document.fonts.ready;
+    await new Promise(resolve=>setTimeout(resolve,600));
+    const canvas=await html2canvas(report,{
+      backgroundColor:'#eef4f9',
+      scale:1.35,
+      useCORS:true,
+      allowTaint:true,
+      width:report.scrollWidth,
+      height:report.scrollHeight,
+      windowWidth:1800,
+      windowHeight:report.scrollHeight,
+      scrollX:0,
+      scrollY:0,
+      logging:false
+    });
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
+    const margin=8;
+    const pageWidth=pdf.internal.pageSize.getWidth();
+    const pageHeight=pdf.internal.pageSize.getHeight();
+    const printableWidth=pageWidth-margin*2;
+    const printableHeight=pageHeight-margin*2;
+    const imageWidth=printableWidth;
+    const imageHeight=canvas.height*imageWidth/canvas.width;
+    const imageData=canvas.toDataURL('image/jpeg',0.92);
+    let remaining=imageHeight;
+    let imageY=margin;
+    pdf.addImage(imageData,'JPEG',margin,imageY,imageWidth,imageHeight,undefined,'FAST');
+    remaining-=printableHeight;
+    while(remaining>0){
+      pdf.addPage();
+      imageY=margin-(imageHeight-remaining);
+      pdf.addImage(imageData,'JPEG',margin,imageY,imageWidth,imageHeight,undefined,'FAST');
+      remaining-=printableHeight;
+    }
+    const reportRows=getRollProductionRows();
+    const latest=reportRows[reportRows.length-1];
+    const reportDate=(latest?.date || new Date().toLocaleDateString('es-AR')).replace(/\//g,'-');
+    pdf.setProperties({title:`Reporte de producción ${reportDate}`,subject:'Producción y consumo de rollos'});
+    pdf.save(`reporte_produccion_${reportDate}.pdf`);
+  }catch(err){
+    console.error(err);
+    alert(`No se pudo generar el reporte PDF. ${err.message||''}`.trim());
+  }finally{
+    if(tableWrap){
+      if(originalTableStyle===null) tableWrap.removeAttribute('style');
+      else tableWrap.setAttribute('style',originalTableStyle);
+    }
+    report.classList.remove('pdf-exporting');
+    if(originalReportStyle===null) report.removeAttribute('style');
+    else report.setAttribute('style',originalReportStyle);
+    report.hidden=wasHidden;
+    button.disabled=false;
+    button.textContent=originalText;
+    if(wasHidden) clearShiftMessageRotation();
+    else renderRollsDashboard();
   }
 };
 $('logoutBtn').onclick=()=>{currentUser=null; clearTimeout(sessionTimer); clearSession(); renderUserChip(); updateRoleUi(); lockApp('Sesión cerrada');};
