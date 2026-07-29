@@ -1810,7 +1810,7 @@ function renderShiftComparison(){
   });
   shiftCompareDeadTimeChart=new Chart($('shiftCompareDeadTimeChart'),{
     type:'line',
-    data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>findRecord(date,name)?.tmd??null),borderColor:colors[index],backgroundColor:colors[index],borderWidth:3,tension:.28,pointRadius:4,pointHoverRadius:6,spanGaps:true,fill:false}))},
+    data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>{const record=findRecord(date,name);return !record || String(record.cut||'').trim().toUpperCase()==='NO' ? null : record.tmd}),borderColor:colors[index],backgroundColor:colors[index],borderWidth:3,tension:.28,pointRadius:4,pointHoverRadius:6,spanGaps:true,fill:false}))},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{label:context=>`${context.dataset.label}: ${formatNum(context.parsed.y,1)} hs`}}},scales:{x:{grid:{display:false},title:{display:true,text:'Día'}},y:{beginAtZero:true,grid:{color:'#dfe7ef'},title:{display:true,text:'Tiempo muerto (horas)'},ticks:{callback:value=>`${formatNum(value,1)} hs`}}}}
   });
 }
