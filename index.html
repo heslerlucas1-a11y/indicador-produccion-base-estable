@@ -1795,7 +1795,7 @@ function renderShiftComparison(){
   shiftCompareProductionChart=new Chart($('shiftCompareProductionChart'),{
     type:'bar',
     data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>findRecord(date,name)?.production||0),backgroundColor:colors[index],borderRadius:4}))},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#dfe7ef'}}}}
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'},annotation:{annotations:{productionTarget:{type:'line',yMin:75000,yMax:75000,borderColor:'#ef4444',borderWidth:3,borderDash:[8,6],label:{display:true,content:'Meta 75.000 p²',position:'end',backgroundColor:'#ef4444',color:'#fff',font:{weight:'bold'}}}}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#dfe7ef'}}}}
   });
   shiftCompareEfficiencyChart=new Chart($('shiftCompareEfficiencyChart'),{
     type:'line',
