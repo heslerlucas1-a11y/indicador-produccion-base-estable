@@ -2331,6 +2331,7 @@ $('loginBtn').onclick=async ()=>{
     unlockApp(currentUser.username,currentUser.role);
     bumpSessionTimer();
     await autoSyncGoogleOnAccess(true);
+    showAppView('rolls');
   }catch(err){
     console.error(err);
     $('loginMsg').textContent='No se pudo validar acceso con Apps Script.';
@@ -2474,6 +2475,7 @@ setInterval(checkForPageUpdate,60000);
     if(cfg.useGoogleSheet && cfg.googleAutoLoad){
       await autoSyncGoogleOnAccess(false);
     }
+    showAppView('rolls');
   }else{
     lockApp('Ingrese usuario y contraseña para visualizar el dashboard');
   }
