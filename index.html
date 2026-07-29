@@ -150,6 +150,7 @@
 .rolls-kpi{padding:15px;min-height:102px;display:flex;flex-direction:column;justify-content:space-between}.rolls-kpi-label{font-size:13px;color:#52677c;font-weight:700}.rolls-kpi-value{font-size:25px;color:#0b47a1;font-weight:950}.rolls-kpi-value.good{color:#15803d}.rolls-kpi-value.cyan{color:#07899a}
 .rolls-main-grid{display:grid;grid-template-columns:minmax(520px,1.55fr) minmax(260px,.65fr) minmax(260px,.65fr);gap:12px;margin-bottom:12px}
 .rolls-panel{padding:15px;min-width:0}.rolls-panel h3{margin:0 0 12px;color:#10213a;font-size:16px}.rolls-chart{height:285px;position:relative}
+.rolls-month-panel .rolls-chart{height:220px}.monthly-goal-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.monthly-goal-item{padding:8px 6px;border-radius:9px;background:#f1f6fb;text-align:center}.monthly-goal-label{display:block;font-size:11px;color:#60758a;font-weight:800;margin-bottom:4px}.monthly-goal-value{display:block;font-size:14px;color:#0b47a1;font-weight:950}
 .rolls-shift-panel .rolls-chart{height:218px}.shift-rotation{min-height:58px;margin-top:8px;padding:10px 12px;border-radius:11px;background:linear-gradient(135deg,#e9f3ff,#e5fbfb);border:1px solid #bcd5ec;color:#0b3d78;font-size:14px;font-weight:900;text-align:center;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(7px)}.shift-rotation.playing{animation:shiftMessageShow 5s ease both}.shift-rotation strong{color:#075fc4;font-size:17px}@keyframes shiftMessageShow{0%{opacity:0;transform:translateY(7px)}8%,90%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-7px)}}@media(prefers-reduced-motion:reduce){.shift-rotation.playing{animation:none;opacity:1;transform:none}}
 .rolls-bottom-grid{display:grid;grid-template-columns:minmax(360px,.8fr) minmax(620px,1.6fr);gap:12px;margin-bottom:12px}
 .weekly-roll-row{display:grid;grid-template-columns:72px 1fr 100px 62px;gap:9px;align-items:center;margin:9px 0;font-size:13px}.weekly-roll-track{height:12px;border-radius:999px;background:#e5edf5;overflow:hidden}.weekly-roll-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#1769df,#2f8cff)}.weekly-roll-fill.warn{background:linear-gradient(90deg,#e11d48,#fb7185)}.weekly-roll-pct{padding:4px 7px;border-radius:7px;text-align:center;background:#dcecff;color:#1550a0;font-weight:900}.weekly-roll-pct.warn{background:#fee2e2;color:#c81e1e}
@@ -1551,6 +1552,8 @@ function renderRollsDashboard(){
   const totalProduction=summary?.totalProduction || sumRollMetric(rows,'production');
   const totalExpected=summary?.totalExpected || sumRollMetric(rows,'expected');
   const compliance=summary?.compliance || (totalExpected>0 ? totalProduction/totalExpected*100 : avgRollMetric(rows,'compliance'));
+  const monthlyGoal=3000000;
+  const monthlyCompliance=monthlyGoal>0 ? totalProduction/monthlyGoal*100 : 0;
   const totalRolls=summary?.totalRolls || sumRollMetric(rows,'rolls');
   const totalTons=summary?.totalTons || sumRollMetric(rows,'tons');
   const shift1=summary?.shift1 || sumRollMetric(rows,'shift1');
@@ -1570,15 +1573,15 @@ function renderRollsDashboard(){
   content.innerHTML=`
     <div class="rolls-kpis">
       <div class="rolls-kpi"><div class="rolls-kpi-label">Producción total</div><div class="rolls-kpi-value">${formatNum(totalProduction,0)} p²</div></div>
-      <div class="rolls-kpi"><div class="rolls-kpi-label">Cumplimiento</div><div class="rolls-kpi-value ${compliance>=90?'good':''}">${formatPct(compliance,0)}</div></div>
       <div class="rolls-kpi"><div class="rolls-kpi-label">Producción esperada</div><div class="rolls-kpi-value">${formatNum(totalExpected,0)} p²</div></div>
+      <div class="rolls-kpi"><div class="rolls-kpi-label">Cumplimiento</div><div class="rolls-kpi-value ${compliance>=90?'good':''}">${formatPct(compliance,0)}</div></div>
       <div class="rolls-kpi"><div class="rolls-kpi-label">Ritmo promedio</div><div class="rolls-kpi-value cyan">${formatPct(rhythm,0)}</div></div>
       <div class="rolls-kpi"><div class="rolls-kpi-label">Rollos procesados</div><div class="rolls-kpi-value">${formatNum(totalRolls,0)}</div></div>
       <div class="rolls-kpi"><div class="rolls-kpi-label">Toneladas</div><div class="rolls-kpi-value">${formatNum(totalTons,0)} Tn</div></div>
     </div>
     <div class="rolls-main-grid">
       <div class="rolls-panel"><h3>Producción diaria vs. objetivo</h3><div class="rolls-chart"><canvas id="rollsDailyChart"></canvas></div></div>
-      <div class="rolls-panel"><h3>Cumplimiento mensual</h3><div class="rolls-chart"><canvas id="rollsComplianceChart"></canvas></div></div>
+      <div class="rolls-panel rolls-month-panel"><h3>Cumplimiento mensual</h3><div class="rolls-chart"><canvas id="rollsComplianceChart"></canvas></div><div class="monthly-goal-summary"><div class="monthly-goal-item"><span class="monthly-goal-label">Meta mensual</span><span class="monthly-goal-value">${formatNum(monthlyGoal,0)} p²</span></div><div class="monthly-goal-item"><span class="monthly-goal-label">Producción total</span><span class="monthly-goal-value">${formatNum(totalProduction,0)} p²</span></div></div></div>
       <div class="rolls-panel rolls-shift-panel"><h3>Producción por turno</h3><div class="rolls-chart"><canvas id="rollsShiftChart"></canvas></div><div class="shift-rotation" id="shiftRotationMessage" aria-live="polite"></div></div>
     </div>
     <div class="rolls-bottom-grid">
@@ -1609,7 +1612,7 @@ function renderRollsDashboard(){
   const complianceCtx=$('rollsComplianceChart');
   rollsDailyChart=new Chart(dailyCtx,{type:'bar',data:{labels:rows.map(row=>row.date.slice(0,5)),datasets:[{label:'Producción diaria',data:rows.map(row=>row.production),backgroundColor:'#2478ed',borderRadius:4},{label:'Objetivo diario',data:rows.map(row=>row.expected),type:'line',borderColor:'#10213a',borderDash:[6,5],borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#334155'}}},scales:{x:{ticks:{color:'#52677c'},grid:{display:false}},y:{ticks:{color:'#52677c'},grid:{color:'#dfe7ef'}}}}});
   rollsShiftChart=new Chart(shiftCtx,{type:'doughnut',data:{labels:['Turno 1','Turno 2'],datasets:[{data:[shift1,shift2],backgroundColor:['#1769df','#19b4b7'],borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#334155'}}}}});
-  rollsComplianceChart=new Chart(complianceCtx,{type:'doughnut',data:{labels:['Cumplido','Faltante'],datasets:[{data:[Math.min(compliance,100),Math.max(100-compliance,0)],backgroundColor:['#2478ed','#e5edf5'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:false}}},plugins:[{id:'centerText',afterDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.fillStyle='#10213a';ctx.font='900 34px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(formatPct(compliance,0),(chartArea.left+chartArea.right)/2,(chartArea.top+chartArea.bottom)/2);ctx.restore()}}]});
+  rollsComplianceChart=new Chart(complianceCtx,{type:'doughnut',data:{labels:['Cumplido','Faltante'],datasets:[{data:[Math.min(monthlyCompliance,100),Math.max(100-monthlyCompliance,0)],backgroundColor:['#2478ed','#e5edf5'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:false}}},plugins:[{id:'centerText',afterDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.fillStyle='#10213a';ctx.font='900 34px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(formatPct(monthlyCompliance,0),(chartArea.left+chartArea.right)/2,(chartArea.top+chartArea.bottom)/2);ctx.restore()}}]});
   if(!$('rollsView').hidden) startShiftMessageRotation(rows[rows.length-1]);
 }
 function showAppView(view){
