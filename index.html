@@ -167,7 +167,7 @@
 
 /* simplificado: KPI y mapeo se administran desde Google Sheets */
 .cfg-card[data-section="mapping"], .cfg-card[data-section="kpi-editor"]{display:none !important;}
-.login-box{display:flex;align-items:center;justify-content:center;padding:24px}.login-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)}.login-logo-wrap{text-align:center;margin-bottom:14px}.login-logo-wrap img{max-width:min(360px,70vw);height:auto;display:inline-block;background:#fff;border-radius:12px;padding:8px}.login-title{text-align:center;font-size:34px;font-weight:900;margin:8px 0 6px}.login-subtitle{text-align:center;color:var(--muted);margin:0 0 16px 0}.login-links{display:flex;justify-content:center;gap:22px;margin-top:12px;flex-wrap:wrap}.link-btn{background:none;border:none;color:#8fd3ff;padding:0;cursor:pointer;font-weight:700}.link-btn:hover{text-decoration:underline}.modal-box{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(0,0,0,.66)}.modal-box.open{display:flex}.modal-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.login-box{display:flex;align-items:center;justify-content:center;padding:24px}.login-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)}.login-logo-wrap{text-align:center;margin-bottom:14px}.login-logo-wrap img{max-width:min(360px,70vw);height:auto;display:inline-block;background:#fff;border-radius:12px;padding:8px}.login-title{text-align:center;font-size:34px;font-weight:900;margin:8px 0 6px}.login-subtitle{text-align:center;color:var(--muted);margin:0 0 16px 0}.password-input-wrap{position:relative}.password-input-wrap input{padding-right:48px}.password-eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:36px;height:34px;border:0;border-radius:9px;background:#173d5d;color:#dff3ff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}.password-eye:hover,.password-eye[aria-pressed="true"]{background:#1d78b8;color:#fff}.login-links{display:flex;justify-content:center;gap:22px;margin-top:12px;flex-wrap:wrap}.link-btn{background:none;border:none;color:#8fd3ff;padding:0;cursor:pointer;font-weight:700}.link-btn:hover{text-decoration:underline}.modal-box{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(0,0,0,.66)}.modal-box.open{display:flex}.modal-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
 
 </style>
 </head>
@@ -383,7 +383,7 @@
       <div class="login-title">Acceso de Usuarios</div>
       <div class="login-subtitle">Ingreso centralizado al dashboard de producción</div>
       <div class="field"><label>Usuario o correo</label><input id="loginUser" placeholder="Ingrese su usuario o correo"></div>
-      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Ingrese su contraseña"></div>
+      <div class="field"><label>Contraseña</label><div class="password-input-wrap"><input id="loginPass" type="password" placeholder="Ingrese su contraseña"><button class="password-eye" id="toggleLoginPass" type="button" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña">👁</button></div></div>
       <div class="row2">
         <button class="btn green" id="loginBtn">Acceder</button>
       </div>
@@ -1111,6 +1111,15 @@ async function autoSyncGoogleOnAccess(force=false){
     return false;
   }
 }
+function setLoginPasswordVisible(visible){
+  const input=$('loginPass');
+  const button=$('toggleLoginPass');
+  if(!input || !button) return;
+  input.type=visible?'text':'password';
+  button.setAttribute('aria-pressed',String(visible));
+  button.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña');
+  button.title=visible?'Ocultar contraseña':'Mostrar contraseña';
+}
 function lockApp(message='Ingrese usuario y contraseña para visualizar el dashboard'){
   document.body.classList.remove('auth-ok');
   document.body.classList.add('auth-locked');
@@ -1121,6 +1130,7 @@ function lockApp(message='Ingrese usuario y contraseña para visualizar el dashb
   $('loginBox').style.display='flex';
   $('loginUser').focus();
   $('loginPass').value='';
+  setLoginPasswordVisible(false);
   $('loginMsg').textContent=message;
   closeAccount();
   closeCfg();
@@ -1135,6 +1145,7 @@ function unlockApp(user, role){
   $('loginBox').style.display='none';
   $('loginMsg').textContent='Acceso correcto';
   $('loginPass').value='';
+  setLoginPasswordVisible(false);
   document.documentElement.style.overflowY='auto';
   document.body.style.overflowY='auto';
   renderUserChip();
@@ -1630,6 +1641,21 @@ function getFullProductionTableData(){
   }
   return {title:String(googleSheetGrid[4]?.[0] || 'Producción - Consumo de Rollos').trim(),headers,rows};
 }
+function fullProductionCellClass(column,value,isTotal){
+  const classes=[];
+  if(column===23 && String(value).includes('-')) classes.push('negative-cell');
+  if(column===20 && value && !isTotal) classes.push('emphasis-cell');
+  if(column===26 && value && !isTotal) classes.push('weekly-total-cell');
+  if(column===27 && value && !isTotal) classes.push('weekly-pct-cell');
+  return classes.join(' ');
+}
+function buildFullProductionTableHtml(data,wrapperClass='full-table-scroll'){
+  if(!data?.rows?.length) return '<div class="rolls-empty">No hay datos cargados entre las filas 7 y 31.</div>';
+  return `<div class="${wrapperClass}"><table class="full-data-table">
+    <thead><tr>${data.headers.map(header=>`<th>${esc(header)}</th>`).join('')}</tr></thead>
+    <tbody>${data.rows.map(row=>`<tr class="${row.isTotal?'total-row':''}">${row.cells.map((value,column)=>`<td class="${fullProductionCellClass(column,value,row.isTotal)}">${column===0 && row.isTotal?'TOTAL':esc(value)}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
 function renderFullProductionTable(){
   const target=$('fullTableContent');
   if(!target) return;
@@ -1638,22 +1664,7 @@ function renderFullProductionTable(){
   $('fullTableTitle').textContent=data.title;
   $('fullTableInfo').textContent='Vista completa · filas 7 a 31 · incluye la fila de totales';
   $('fullTablePeriod').textContent=dailyRows.length ? `${dailyRows[0].cells[0]} — ${dailyRows[dailyRows.length-1].cells[0]} · ${dailyRows.length} días` : 'Sin datos';
-  if(!data.rows.length){
-    target.innerHTML='<div class="rolls-empty">No hay datos cargados entre las filas 7 y 31.</div>';
-    return;
-  }
-  const cellClass=(column,value,isTotal)=>{
-    const classes=[];
-    if(column===23 && String(value).includes('-')) classes.push('negative-cell');
-    if(column===20 && value && !isTotal) classes.push('emphasis-cell');
-    if(column===26 && value && !isTotal) classes.push('weekly-total-cell');
-    if(column===27 && value && !isTotal) classes.push('weekly-pct-cell');
-    return classes.join(' ');
-  };
-  target.innerHTML=`<div class="full-table-scroll"><table class="full-data-table">
-    <thead><tr>${data.headers.map(header=>`<th>${esc(header)}</th>`).join('')}</tr></thead>
-    <tbody>${data.rows.map(row=>`<tr class="${row.isTotal?'total-row':''}">${row.cells.map((value,column)=>`<td class="${cellClass(column,value,row.isTotal)}">${column===0 && row.isTotal?'TOTAL':esc(value)}</td>`).join('')}</tr>`).join('')}</tbody>
-  </table></div>`;
+  target.innerHTML=buildFullProductionTableHtml(data);
 }
 function avgRollMetric(rows,key){
   const values=rows.map(row=>Number(row[key])).filter(Number.isFinite);
@@ -1718,6 +1729,7 @@ function renderRollsDashboard(){
   const totalTons=summary?.totalTons || sumRollMetric(rows,'tons');
   const rhythm=summary?.rhythm || avgRollMetric(rows,'rhythm');
   const latestRow=rows[rows.length-1];
+  const fullTableData=getFullProductionTableData();
   const weeklyMap=new Map();
   rows.forEach(row=>{
     const key=row.week || 'Sin semana';
@@ -1758,10 +1770,7 @@ function renderRollsDashboard(){
         <div class="efficiency-item" style="--move-index:6"><span class="efficiency-label">Real m³/m³</span><span class="efficiency-value">${formatPct(latestRow.realM3,0)}</span></div>
       </div></div>
     </div>
-    <div class="rolls-panel"><h3>Detalle diario</h3><div class="rolls-table-wrap"><table class="rolls-table">
-      <thead><tr><th>Fecha</th><th>Semana</th><th>Rollos</th><th>Tn</th><th>Corte T1</th><th>Corte T2</th><th>Total p²</th><th>Objetivo p²</th><th>% Cumpl.</th><th>P²/h</th><th>P²/Tn</th><th>TTD</th><th>TMD</th></tr></thead>
-      <tbody>${rows.map(row=>`<tr><td>${esc(row.date)}</td><td>${esc(row.week)}</td><td>${formatNum(row.rolls,0)}</td><td>${formatNum(row.tons,1)}</td><td>${formatNum(row.shift1,0)}</td><td>${formatNum(row.shift2,0)}</td><td><b>${formatNum(row.production,0)}</b></td><td>${formatNum(row.expected,0)}</td><td><span class="rolls-pill ${rollStatusClass(row.compliance)}">${formatPct(row.compliance,0)}</span></td><td>${formatNum(row.p2h,0)}</td><td>${formatNum(row.p2tn,0)}</td><td>${formatNum(row.ttd,1)}</td><td>${formatNum(row.tmd,1)}</td></tr>`).join('')}</tbody>
-    </table></div></div>`;
+    <div class="rolls-panel"><h3>Tabla completa de producción</h3>${buildFullProductionTableHtml(fullTableData,'rolls-table-wrap full-table-scroll')}</div>`;
   if(typeof Chart==='undefined') return;
   if(rollsDailyChart) rollsDailyChart.destroy();
   if(rollsShiftChart) rollsShiftChart.destroy();
@@ -2495,11 +2504,15 @@ $('loginBtn').onclick=async ()=>{
     showAppView('rolls');
   }catch(err){
     console.error(err);
-    $('loginMsg').textContent='No se pudo validar acceso con Apps Script.';
+    const connectionProblem=!navigator.onLine || /timeout|jsonp|script|fetch|network|conexi/i.test(String(err?.message||''));
+    $('loginMsg').textContent=connectionProblem
+      ? 'No se pudo conectar. Revisá tu conexión a Internet e intentá nuevamente.'
+      : 'No se pudo validar el acceso. Intentá nuevamente.';
   }
 };
 $('loginUser').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
 $('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
+$('toggleLoginPass').onclick=()=>setLoginPasswordVisible($('loginPass').type==='password');
 
 $('forgotPassBtn').onclick=()=>{ $('forgotModal').classList.add('open'); $('forgotUser').value=$('loginUser').value||''; $('forgotNote').value=''; $('forgotMsg').textContent=''; };
 $('closeForgotBtn').onclick=()=>{ $('forgotModal').classList.remove('open'); };
