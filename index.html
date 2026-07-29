@@ -272,6 +272,7 @@
     <div class="cfg-body">
       <div class="cfg-tabs" role="tablist" aria-label="Secciones de configuración">
         <button class="cfg-tab active" type="button" role="tab" id="cfgTabGeneral" data-cfg-tab="general" aria-controls="cfgPanelGeneral" aria-selected="true">Hoja y estilo</button>
+        <button class="cfg-tab" type="button" role="tab" id="cfgTabTargets" data-cfg-tab="targets" aria-controls="cfgPanelTargets" aria-selected="false" tabindex="-1">Metas</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabGoogle" data-cfg-tab="google" aria-controls="cfgPanelGoogle" aria-selected="false" tabindex="-1">Google Sheets</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabTitles" data-cfg-tab="titles" aria-controls="cfgPanelTitles" aria-selected="false" tabindex="-1">Títulos</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabWeeks" data-cfg-tab="weeks" aria-controls="cfgPanelWeeks" aria-selected="false" tabindex="-1">Semanas</button>
@@ -298,6 +299,16 @@
         <div class="field" style="margin-top:10px"><label>Comentario exportación PNG</label><textarea id="exportComment" rows="4" placeholder="Ej: Producción estable, continuar controlando tablas negras y rendimiento."></textarea></div>
         <div class="small">Este comentario se muestra al final de la imagen exportada. Si no cargás nada, se usa el texto guardado.</div>
         <div class="small">El total faltante activo ahora suma faltantes reales de semanas activas, sin promediar.</div>
+      </div>
+
+      <div class="cfg-card" id="cfgPanelTargets" data-cfg-panel="targets" role="tabpanel" aria-labelledby="cfgTabTargets">
+        <h3>Metas de comparaciÃ³n de turnos</h3>
+        <div class="row3">
+          <div class="field"><label>ProducciÃ³n diaria (pÂ²)</label><input id="compareProductionTarget" type="number" min="0" step="1000" value="75000"></div>
+          <div class="field"><label>Rendimiento (pÂ²/Tn)</label><input id="compareP2tnTarget" type="number" min="0" step="1" value="200"></div>
+          <div class="field"><label>Tiempo muerto (minutos)</label><input id="compareDeadTimeTargetMinutes" type="number" min="0" step="1" value="96"></div>
+        </div>
+        <div class="small" style="margin-top:8px">Estas metas controlan las lÃ­neas rojas de los tres grÃ¡ficos de ComparaciÃ³n de turnos.</div>
       </div>
 
       <div class="cfg-card" id="cfgPanelGoogle" data-cfg-panel="google" role="tabpanel" aria-labelledby="cfgTabGoogle">
@@ -471,6 +482,9 @@ const DEFAULT_CFG={
   exportBrandText:'LAHARRAGUE CHODORGE',
   selectedSheet:'',
   weeklyTargetLine:700000,
+  compareProductionTarget:75000,
+  compareP2tnTarget:200,
+  compareDeadTimeTargetMinutes:96,
   bgColor:'#07131f',
   panelColor:'#0d2740',
   textColor:'#ecf6ff',
@@ -603,6 +617,9 @@ function applyRemoteConfigToCfg(remote){
   if(remote.kpi_height != null) cfg.kpiH = Number(remote.kpi_height) || cfg.kpiH;
   if(remote.font_scale != null) cfg.fontScale = Number(remote.font_scale) || cfg.fontScale;
   if(remote.weekly_target_line != null) cfg.weeklyTargetLine = Number(remote.weekly_target_line) || cfg.weeklyTargetLine;
+  if(remote.comparison_production_target != null) cfg.compareProductionTarget = Number(remote.comparison_production_target) || cfg.compareProductionTarget;
+  if(remote.comparison_p2tn_target != null) cfg.compareP2tnTarget = Number(remote.comparison_p2tn_target) || cfg.compareP2tnTarget;
+  if(remote.comparison_dead_time_target_minutes != null) cfg.compareDeadTimeTargetMinutes = Number(remote.comparison_dead_time_target_minutes) || cfg.compareDeadTimeTargetMinutes;
 
   if(remote.label_date) cfg.titles.fechaTitle = remote.label_date;
   if(remote.label_featured_performance) cfg.titles.rendTitle = remote.label_featured_performance;
@@ -1428,6 +1445,9 @@ function collectUsersFromPanel(){
 function renderConfig(){
   $('dashTitle').value=cfg.dashTitle;
   $('weeklyTargetLine').value=cfg.weeklyTargetLine;
+  $('compareProductionTarget').value=cfg.compareProductionTarget;
+  $('compareP2tnTarget').value=cfg.compareP2tnTarget;
+  $('compareDeadTimeTargetMinutes').value=cfg.compareDeadTimeTargetMinutes;
   $('exportBrandText').value=cfg.exportBrandText||'LAHARRAGUE CHODORGE';
   $('bgColor').value=cfg.bgColor;
   $('panelColor').value=cfg.panelColor;
@@ -1525,6 +1545,9 @@ function renderKpiFieldsEditor(){
 function applyConfigFromPanel(){
   cfg.dashTitle=$('dashTitle').value||DEFAULT_CFG.dashTitle;
   cfg.weeklyTargetLine=normalizeNumber($('weeklyTargetLine').value);
+  cfg.compareProductionTarget=Math.max(0,normalizeNumber($('compareProductionTarget').value)) || DEFAULT_CFG.compareProductionTarget;
+  cfg.compareP2tnTarget=Math.max(0,normalizeNumber($('compareP2tnTarget').value)) || DEFAULT_CFG.compareP2tnTarget;
+  cfg.compareDeadTimeTargetMinutes=Math.max(0,normalizeNumber($('compareDeadTimeTargetMinutes').value)) || DEFAULT_CFG.compareDeadTimeTargetMinutes;
   cfg.exportBrandText=$('exportBrandText').value||DEFAULT_CFG.exportBrandText;
   cfg.bgColor=$('bgColor').value;
   cfg.panelColor=$('panelColor').value;
@@ -1736,6 +1759,10 @@ function renderShiftComparison(){
   const supervisors=[...new Set(rows.map(row=>row.supervisor))].slice(0,2);
   const dates=[...new Set(rows.map(row=>row.date))];
   const colors=['#1769df','#18aeb1'];
+  const productionTarget=Number(cfg.compareProductionTarget)||DEFAULT_CFG.compareProductionTarget;
+  const p2tnTarget=Number(cfg.compareP2tnTarget)||DEFAULT_CFG.compareP2tnTarget;
+  const deadTimeTargetMinutes=Number(cfg.compareDeadTimeTargetMinutes)||DEFAULT_CFG.compareDeadTimeTargetMinutes;
+  const deadTimeTargetHours=deadTimeTargetMinutes/60;
   const bySupervisor=supervisors.map((name,index)=>{
     const ownRows=rows.filter(row=>row.supervisor===name);
     return {
@@ -1801,17 +1828,17 @@ function renderShiftComparison(){
   shiftCompareProductionChart=new Chart($('shiftCompareProductionChart'),{
     type:'bar',
     data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>findRecord(date,name)?.production||0),backgroundColor:colors[index],borderRadius:4}))},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'},annotation:{annotations:{productionTarget:{type:'line',yMin:75000,yMax:75000,borderColor:'#ef4444',borderWidth:3,borderDash:[8,6],label:{display:true,content:'Meta 75.000 p²',position:'end',backgroundColor:'#ef4444',color:'#fff',font:{weight:'bold'}}}}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#dfe7ef'}}}}
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'},annotation:{annotations:{productionTarget:{type:'line',yMin:productionTarget,yMax:productionTarget,borderColor:'#ef4444',borderWidth:3,borderDash:[8,6],label:{display:true,content:`Meta ${formatNum(productionTarget,0)} p²`,position:'end',backgroundColor:'#ef4444',color:'#fff',font:{weight:'bold'}}}}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#dfe7ef'}}}}
   });
   shiftCompareEfficiencyChart=new Chart($('shiftCompareEfficiencyChart'),{
     type:'line',
     data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>{const record=findRecord(date,name);return !record || record.p2tn===0 || String(record.cut||'').trim().toUpperCase()==='NO' ? null : record.p2tn}),borderColor:colors[index],backgroundColor:colors[index],borderWidth:3,tension:.28,pointRadius:3,spanGaps:true}))},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{beginAtZero:false,grid:{color:'#dfe7ef'}}}}
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'},annotation:{annotations:{p2tnTarget:{type:'line',yMin:p2tnTarget,yMax:p2tnTarget,borderColor:'#ef4444',borderWidth:3,borderDash:[8,6],label:{display:true,content:`Meta ${formatNum(p2tnTarget,0)} p²/Tn`,position:'end',backgroundColor:'#ef4444',color:'#fff',font:{weight:'bold'}}}}}},scales:{x:{grid:{display:false}},y:{beginAtZero:false,grid:{color:'#dfe7ef'}}}}
   });
   shiftCompareDeadTimeChart=new Chart($('shiftCompareDeadTimeChart'),{
     type:'line',
     data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>{const record=findRecord(date,name);return !record || String(record.cut||'').trim().toUpperCase()==='NO' ? null : record.tmd}),borderColor:colors[index],backgroundColor:colors[index],borderWidth:3,tension:.28,pointRadius:4,pointHoverRadius:6,spanGaps:true,fill:false}))},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{label:context=>`${context.dataset.label}: ${formatNum(context.parsed.y,1)} hs`}},annotation:{annotations:{deadTimeTarget:{type:'line',yMin:1.6,yMax:1.6,borderColor:'#ef4444',borderWidth:3,borderDash:[8,6],label:{display:true,content:'Meta 96 min',position:'end',backgroundColor:'#ef4444',color:'#fff',font:{weight:'bold'}}}}}},scales:{x:{grid:{display:false},title:{display:true,text:'Día'}},y:{beginAtZero:true,grid:{color:'#dfe7ef'},title:{display:true,text:'Tiempo muerto (horas)'},ticks:{callback:value=>`${formatNum(value,1)} hs`}}}}
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top'},tooltip:{callbacks:{label:context=>`${context.dataset.label}: ${formatNum(context.parsed.y,1)} hs`}},annotation:{annotations:{deadTimeTarget:{type:'line',yMin:deadTimeTargetHours,yMax:deadTimeTargetHours,borderColor:'#ef4444',borderWidth:3,borderDash:[8,6],label:{display:true,content:`Meta ${formatNum(deadTimeTargetMinutes,0)} min`,position:'end',backgroundColor:'#ef4444',color:'#fff',font:{weight:'bold'}}}}}},scales:{x:{grid:{display:false},title:{display:true,text:'Día'}},y:{beginAtZero:true,grid:{color:'#dfe7ef'},title:{display:true,text:'Tiempo muerto (horas)'},ticks:{callback:value=>`${formatNum(value,1)} hs`}}}}
   });
 }
 function renderFullProductionTable(){
@@ -2363,6 +2390,9 @@ function buildRemoteConfigPayload(){
     color_bg: cfg.bgColor,
     color_panel: cfg.panelColor,
     color_text: cfg.textColor,
+    comparison_production_target: cfg.compareProductionTarget,
+    comparison_p2tn_target: cfg.compareP2tnTarget,
+    comparison_dead_time_target_minutes: cfg.compareDeadTimeTargetMinutes,
     label_date: cfg.titles.titleFecha,
     label_featured_performance: cfg.titles.titleRendDest,
     label_performance_state: cfg.titles.titleEstado,
