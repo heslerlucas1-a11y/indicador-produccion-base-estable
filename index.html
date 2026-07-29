@@ -1799,7 +1799,7 @@ function renderShiftComparison(){
   });
   shiftCompareEfficiencyChart=new Chart($('shiftCompareEfficiencyChart'),{
     type:'line',
-    data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>findRecord(date,name)?.p2tn||0),borderColor:colors[index],backgroundColor:colors[index],borderWidth:3,tension:.28,pointRadius:3}))},
+    data:{labels:dates.map(date=>date.slice(0,5)),datasets:supervisors.map((name,index)=>({label:name,data:dates.map(date=>{const record=findRecord(date,name);return !record || record.p2tn===0 || String(record.cut||'').trim().toUpperCase()==='NO' ? null : record.p2tn}),borderColor:colors[index],backgroundColor:colors[index],borderWidth:3,tension:.28,pointRadius:3,spanGaps:true}))},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:800},plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{beginAtZero:false,grid:{color:'#dfe7ef'}}}}
   });
 }
