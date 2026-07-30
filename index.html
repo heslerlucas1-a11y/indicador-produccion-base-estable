@@ -171,6 +171,7 @@
 /* simplificado: KPI y mapeo se administran desde Google Sheets */
 .cfg-card[data-section="mapping"], .cfg-card[data-section="kpi-editor"]{display:none !important;}
 .login-box{display:flex;align-items:center;justify-content:center;padding:24px}.login-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)}.login-logo-wrap{text-align:center;margin-bottom:14px}.login-logo-wrap img{max-width:min(360px,70vw);height:auto;display:inline-block;background:#fff;border-radius:12px;padding:8px}.login-title{text-align:center;font-size:34px;font-weight:900;margin:8px 0 6px}.login-subtitle{text-align:center;color:var(--muted);margin:0 0 16px 0}.password-input-wrap{position:relative}.password-input-wrap input{padding-right:48px}.password-eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:36px;height:34px;border:0;border-radius:9px;background:#173d5d;color:#dff3ff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}.password-eye:hover,.password-eye[aria-pressed="true"]{background:#1d78b8;color:#fff}.login-links{display:flex;justify-content:center;gap:22px;margin-top:12px;flex-wrap:wrap}.link-btn{background:none;border:none;color:#8fd3ff;padding:0;cursor:pointer;font-weight:700}.link-btn:hover{text-decoration:underline}.modal-box{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(0,0,0,.66)}.modal-box.open{display:flex}.modal-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.suggestion-fab{position:fixed;right:22px;bottom:22px;z-index:34;display:none;align-items:center;gap:10px}.auth-ok .suggestion-fab{display:flex}.suggestion-avatar{width:58px;height:58px;border:0;border-radius:50%;background:linear-gradient(145deg,#2563eb,#22c1c3);color:#fff;font-size:29px;cursor:pointer;box-shadow:0 12px 30px rgba(5,45,82,.35);animation:suggestionFloat 3s ease-in-out infinite}.suggestion-avatar:hover{transform:scale(1.06)}.suggestion-bubble{max-width:250px;padding:11px 14px;border-radius:15px 15px 4px 15px;background:#fff;color:#17324d;font-size:13px;font-weight:700;line-height:1.35;box-shadow:0 10px 28px rgba(5,45,82,.25);cursor:pointer}.suggestion-bubble[hidden]{display:none}@keyframes suggestionFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.suggestion-modal{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(3,14,26,.72)}.suggestion-modal.open{display:flex}.suggestion-card{width:min(620px,96vw);background:#f8fbff;color:#17324d;border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.4)}.suggestion-card h3{margin:0 0 6px}.suggestion-card textarea{min-height:130px;resize:vertical}.suggestions-table{width:100%;border-collapse:collapse;font-size:12px}.suggestions-table th,.suggestions-table td{padding:9px;border-bottom:1px solid rgba(143,211,255,.16);text-align:left;vertical-align:top}.suggestions-table th{color:#8fd3ff}.suggestions-table td{color:#eaf6ff}.suggestion-status{min-width:110px}.suggestion-empty{padding:22px;text-align:center;color:#9dc7ef}
 
 </style>
 </head>
@@ -279,6 +280,7 @@
         <button class="cfg-tab" type="button" role="tab" id="cfgTabTitles" data-cfg-tab="titles" aria-controls="cfgPanelTitles" aria-selected="false" tabindex="-1">Títulos</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabWeeks" data-cfg-tab="weeks" aria-controls="cfgPanelWeeks" aria-selected="false" tabindex="-1">Semanas</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabSupport" data-cfg-tab="support" aria-controls="cfgPanelSupport" aria-selected="false" tabindex="-1">Soporte</button>
+        <button class="cfg-tab" type="button" role="tab" id="cfgTabSuggestions" data-cfg-tab="suggestions" aria-controls="cfgPanelSuggestions" aria-selected="false" tabindex="-1">Sugerencias</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabUsers" data-cfg-tab="users" aria-controls="cfgPanelUsers" aria-selected="false" tabindex="-1">Usuarios</button>
       </div>
 
@@ -389,6 +391,15 @@
         <div class="small" id="supportMsg" style="margin-top:8px"></div>
       </div>
 
+      <div class="cfg-card" id="cfgPanelSuggestions" data-cfg-panel="suggestions" role="tabpanel" aria-labelledby="cfgTabSuggestions">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+          <div><h3 style="margin:0">Sugerencias de mejora</h3><div class="small">Propuestas enviadas por los usuarios desde el avatar.</div></div>
+          <button class="btn secondary" id="refreshSuggestionsBtn" type="button">↻ Actualizar</button>
+        </div>
+        <div class="small warn" id="suggestionsMsg" style="margin-bottom:10px">Abrí esta pestaña para cargar las sugerencias.</div>
+        <div id="suggestionsContainer"><div class="suggestion-empty">Todavía no se cargaron sugerencias.</div></div>
+      </div>
+
 <div class="cfg-card" id="cfgPanelUsers" data-cfg-panel="users" role="tabpanel" aria-labelledby="cfgTabUsers">
         <h3>Usuarios</h3>
         <div class="small warn" style="margin-bottom:10px">Esta versión usa login real contra Google Apps Script. Los usuarios ya no se guardan en este navegador.</div>
@@ -451,6 +462,27 @@
         <button class="btn secondary" id="closeAccountBtn">Cerrar</button>
       </div>
       <div class="small" id="accountMsg" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="suggestion-fab" id="suggestionFab">
+    <div class="suggestion-bubble" id="suggestionBubble">¿Tenés una sugerencia de mejora? Contámela.</div>
+    <button class="suggestion-avatar" id="suggestionAvatar" type="button" aria-label="Enviar una sugerencia" title="Enviar una sugerencia">🤖</button>
+  </div>
+  <div class="suggestion-modal" id="suggestionModal" role="dialog" aria-modal="true" aria-labelledby="suggestionTitle">
+    <div class="suggestion-card">
+      <h3 id="suggestionTitle">¡Hola! Tu idea puede mejorar el dashboard</h3>
+      <div class="small" id="suggestionGreeting" style="color:#52677c;margin-bottom:14px">Contanos qué cambiarías o agregarías.</div>
+      <div class="row2">
+        <div class="field"><label>Categoría</label><select id="suggestionCategory"><option>Mejora</option><option>Nuevo indicador</option><option>Reporte</option><option>Problema</option><option>Otra</option></select></div>
+        <div class="field"><label>Pantalla</label><input id="suggestionScreen" readonly></div>
+      </div>
+      <div class="field"><label>Sugerencia</label><textarea id="suggestionText" maxlength="1500" placeholder="Escribí tu propuesta con el mayor detalle posible..."></textarea></div>
+      <div class="row2">
+        <button class="btn green" id="sendSuggestionBtn" type="button">Enviar sugerencia</button>
+        <button class="btn secondary" id="closeSuggestionBtn" type="button">Cerrar</button>
+      </div>
+      <div class="small" id="suggestionMsg" style="margin-top:10px;color:#52677c"></div>
     </div>
   </div>
 
@@ -1188,6 +1220,10 @@ function unlockApp(user, role){
   document.body.style.overflowY='auto';
   renderUserChip();
   updateRoleUi();
+  $('suggestionBubble').textContent=`Hola ${user} 👋 ¿Tenés una sugerencia de mejora?`;
+  $('suggestionBubble').hidden=false;
+  clearTimeout(window.suggestionBubbleTimer);
+  window.suggestionBubbleTimer=setTimeout(()=>{$('suggestionBubble').hidden=true},12000);
   if(role!=='admin') closeCfg();
 }
 function openAccount(){
@@ -1223,9 +1259,44 @@ function setCfgTab(tabName, focusTab=false){
   });
   if(focusTab) selected.focus();
   $('cfgPanel').scrollTo({top:0,behavior:'smooth'});
+  if(selected.dataset.cfgTab==='suggestions') refreshSuggestions();
 }
 function openCfg(){ if(!currentUser || currentUser.role!=='admin'){ alert('Solo el usuario administrador puede entrar a configuración.'); return; } $('cfgBackdrop').classList.add('open'); $('cfgPanel').classList.add('open'); if(!document.querySelector('[data-cfg-tab].active')) setCfgTab('general'); refreshUsersFromBackend(); }
 function closeCfg(){ $('cfgBackdrop').classList.remove('open'); $('cfgPanel').classList.remove('open'); }
+function getSuggestionScreen(){
+  if(!$('shiftCompareView').hidden) return 'Comparación de turnos';
+  if(!$('rollsTableView').hidden) return 'Tabla completa';
+  return 'Producción por día';
+}
+function openSuggestion(){
+  if(!currentUser) return;
+  $('suggestionGreeting').textContent=`Hola ${currentUser.username}, contanos tu sugerencia y quedará registrada con tu usuario.`;
+  $('suggestionScreen').value=getSuggestionScreen();
+  $('suggestionMsg').textContent='';
+  $('suggestionModal').classList.add('open');
+  setTimeout(()=>$('suggestionText').focus(),50);
+}
+function closeSuggestion(){ $('suggestionModal').classList.remove('open'); }
+function renderSuggestions(){
+  const box=$('suggestionsContainer');
+  const rows=Array.isArray(window.dashboardSuggestions)?window.dashboardSuggestions:[];
+  if(!rows.length){box.innerHTML='<div class="suggestion-empty">Todavía no hay sugerencias registradas.</div>';return}
+  box.innerHTML=`<div style="overflow:auto"><table class="suggestions-table"><thead><tr><th>Fecha</th><th>Usuario</th><th>Categoría</th><th>Pantalla</th><th>Sugerencia</th><th>Estado</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${esc(row.fecha||'')}</td><td><b>${esc(row.usuario||'')}</b><br><span class="small">${esc(row.rol||'')}</span></td><td>${esc(row.categoria||'')}</td><td>${esc(row.pantalla||'')}</td><td style="min-width:300px">${esc(row.sugerencia||'')}</td><td><select class="suggestion-status" data-suggestion-id="${esc(row.id||'')}"><option ${row.estado==='Nueva'?'selected':''}>Nueva</option><option ${row.estado==='En revisión'?'selected':''}>En revisión</option><option ${row.estado==='Aceptada'?'selected':''}>Aceptada</option><option ${row.estado==='Implementada'?'selected':''}>Implementada</option><option ${row.estado==='Descartada'?'selected':''}>Descartada</option></select></td></tr>`).join('')}</tbody></table></div>`;
+}
+async function refreshSuggestions(){
+  if(!currentUser || currentUser.role!=='admin') return;
+  $('suggestionsMsg').textContent='Cargando sugerencias...';
+  try{
+    const data=await jsonpRequest({action:'listSuggestions',username:currentUser.username,password:currentUser.password});
+    if(!data || data.status!=='ok') throw new Error((data&&data.message)||'No se pudieron cargar');
+    window.dashboardSuggestions=Array.isArray(data.suggestions)?data.suggestions:[];
+    renderSuggestions();
+    $('suggestionsMsg').textContent=`${window.dashboardSuggestions.length} sugerencia(s) registrada(s).`;
+  }catch(err){
+    console.error(err);
+    $('suggestionsMsg').textContent=err.message||'No se pudieron cargar las sugerencias.';
+  }
+}
 function renderUsers(){
   const box=$('usersContainer'); if(!box) return;
   const msg=$('usersMsg');
@@ -2559,6 +2630,44 @@ document.querySelector('.cfg-tabs')?.addEventListener('keydown',e=>{
   if(e.key==='End') next=tabs.length-1;
   setCfgTab(tabs[next].dataset.cfgTab,true);
 });
+$('suggestionAvatar').onclick=openSuggestion;
+$('suggestionBubble').onclick=openSuggestion;
+$('closeSuggestionBtn').onclick=closeSuggestion;
+$('suggestionModal').addEventListener('click',e=>{if(e.target===$('suggestionModal')) closeSuggestion()});
+$('sendSuggestionBtn').onclick=async()=>{
+  const message=$('suggestionText').value.trim();
+  if(message.length<8){$('suggestionMsg').textContent='Escribí una sugerencia un poco más detallada.';return}
+  const button=$('sendSuggestionBtn');
+  button.disabled=true;
+  $('suggestionMsg').textContent='Enviando y registrando la sugerencia...';
+  try{
+    const payload={username:currentUser.username,password:currentUser.password,role:currentUser.role,category:$('suggestionCategory').value,screen:$('suggestionScreen').value,message};
+    const data=await jsonpRequest({action:'submitSuggestion',payload:JSON.stringify(payload)});
+    if(!data || data.status!=='ok') throw new Error((data&&data.message)||'No se pudo enviar');
+    $('suggestionMsg').textContent='¡Gracias! La sugerencia quedó registrada y se avisó al administrador.';
+    $('suggestionText').value='';
+    setTimeout(closeSuggestion,1800);
+  }catch(err){
+    console.error(err);
+    $('suggestionMsg').textContent=err.message||'No se pudo enviar. Revisá la conexión a internet.';
+  }finally{button.disabled=false}
+};
+$('refreshSuggestionsBtn').onclick=refreshSuggestions;
+$('suggestionsContainer').addEventListener('change',async e=>{
+  const select=e.target.closest('[data-suggestion-id]');
+  if(!select || !currentUser || currentUser.role!=='admin') return;
+  select.disabled=true;
+  $('suggestionsMsg').textContent='Actualizando estado...';
+  try{
+    const payload={username:currentUser.username,password:currentUser.password,id:select.dataset.suggestionId,status:select.value};
+    const data=await jsonpRequest({action:'updateSuggestionStatus',payload:JSON.stringify(payload)});
+    if(!data || data.status!=='ok') throw new Error((data&&data.message)||'No se pudo actualizar');
+    $('suggestionsMsg').textContent='Estado actualizado correctamente.';
+  }catch(err){
+    console.error(err);
+    $('suggestionsMsg').textContent=err.message||'No se pudo actualizar.';
+  }finally{select.disabled=false}
+});
 
 function buildRemoteConfigPayload(){
   applyConfigFromPanel();
@@ -2670,7 +2779,7 @@ if($('kpiFieldsContainer')) $('kpiFieldsContainer').addEventListener('input', (e
 });
 if($('mappingContainer')) $('mappingContainer').addEventListener('input', ()=>scheduleAutoSave('mapeo'));
 $('cfgPanel').addEventListener('change', (e)=>{
-  if(e.target && !e.target.closest('#usersContainer') && e.target.id!=='accountPass' && e.target.id!=='accountPass2' && e.target.id!=='accountCurrentPass'){
+  if(e.target && !e.target.closest('#usersContainer') && !e.target.closest('#suggestionsContainer') && e.target.id!=='accountPass' && e.target.id!=='accountPass2' && e.target.id!=='accountCurrentPass'){
     scheduleAutoSave('configuración');
   }
 });
