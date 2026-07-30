@@ -173,6 +173,7 @@
 .cfg-card[data-section="mapping"], .cfg-card[data-section="kpi-editor"]{display:none !important;}
 .login-box{display:flex;align-items:center;justify-content:center;padding:24px}.login-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.35)}.login-logo-wrap{text-align:center;margin-bottom:14px}.login-logo-wrap img{max-width:min(360px,70vw);height:auto;display:inline-block;background:#fff;border-radius:12px;padding:8px}.login-title{text-align:center;font-size:34px;font-weight:900;margin:8px 0 6px}.login-subtitle{text-align:center;color:var(--muted);margin:0 0 16px 0}.password-input-wrap{position:relative}.password-input-wrap input{padding-right:48px}.password-eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:36px;height:34px;border:0;border-radius:9px;background:#173d5d;color:#dff3ff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}.password-eye:hover,.password-eye[aria-pressed="true"]{background:#1d78b8;color:#fff}.login-links{display:flex;justify-content:center;gap:22px;margin-top:12px;flex-wrap:wrap}.link-btn{background:none;border:none;color:#8fd3ff;padding:0;cursor:pointer;font-weight:700}.link-btn:hover{text-decoration:underline}.modal-box{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(0,0,0,.66)}.modal-box.open{display:flex}.modal-card{width:min(520px,92vw);background:linear-gradient(180deg,#18324a,#0f2336);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
 .suggestion-fab{position:fixed;right:22px;bottom:22px;z-index:34;display:none;align-items:center;gap:10px}.auth-ok .suggestion-fab{display:flex}.suggestion-avatar{width:58px;height:58px;border:0;border-radius:50%;background:linear-gradient(145deg,#2563eb,#22c1c3);color:#fff;font-size:29px;cursor:pointer;box-shadow:0 12px 30px rgba(5,45,82,.35);animation:suggestionFloat 3s ease-in-out infinite}.suggestion-avatar:hover{transform:scale(1.06)}.suggestion-bubble{max-width:250px;padding:11px 14px;border-radius:15px 15px 4px 15px;background:#fff;color:#17324d;font-size:13px;font-weight:700;line-height:1.35;box-shadow:0 10px 28px rgba(5,45,82,.25);cursor:pointer}.suggestion-bubble[hidden]{display:none}@keyframes suggestionFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.suggestion-modal{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(3,14,26,.72)}.suggestion-modal.open{display:flex}.suggestion-card{width:min(620px,96vw);background:#f8fbff;color:#17324d;border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.4)}.suggestion-card h3{margin:0 0 6px}.suggestion-card textarea{min-height:130px;resize:vertical}.suggestions-table{width:100%;border-collapse:collapse;font-size:12px}.suggestions-table th,.suggestions-table td{padding:9px;border-bottom:1px solid rgba(143,211,255,.16);text-align:left;vertical-align:top}.suggestions-table th{color:#8fd3ff}.suggestions-table td{color:#eaf6ff}.suggestion-status{min-width:110px}.suggestion-empty{padding:22px;text-align:center;color:#9dc7ef}
+.announcement-toast{position:fixed;right:24px;bottom:96px;z-index:10060;width:min(460px,calc(100vw - 32px));padding:18px 18px 16px 20px;border:1px solid #70b7f1;border-left:7px solid #2387d9;border-radius:18px;background:linear-gradient(145deg,#f8fcff,#eaf5ff);color:#17324d;box-shadow:0 22px 58px rgba(3,32,61,.38);animation:announcementIn .38s ease both}.announcement-toast[hidden]{display:none}.announcement-toast.warning{border-color:#f4be52;border-left-color:#e59a05;background:linear-gradient(145deg,#fffdf4,#fff1c9)}.announcement-toast.urgent{border-color:#f48787;border-left-color:#dc2626;background:linear-gradient(145deg,#fffafa,#ffe1e1)}.announcement-head{display:flex;align-items:flex-start;gap:12px}.announcement-icon{flex:0 0 auto;width:42px;height:42px;border-radius:13px;background:#d8edff;color:#075fa8;display:flex;align-items:center;justify-content:center;font-size:23px}.announcement-toast.warning .announcement-icon{background:#ffe8ae;color:#9a5a00}.announcement-toast.urgent .announcement-icon{background:#ffd4d4;color:#b91c1c}.announcement-copy{min-width:0;flex:1}.announcement-copy strong{display:block;font-size:16px;margin-bottom:6px}.announcement-message{font-size:14px;line-height:1.48;white-space:pre-wrap;overflow-wrap:anywhere}.announcement-meta{margin-top:10px;font-size:11px;color:#617890;font-weight:700}.announcement-close{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:10px;background:rgba(20,65,100,.09);color:#23445f;font-size:19px;font-weight:900;cursor:pointer}.announcement-close:hover{background:rgba(20,65,100,.18)}.announcement-admin-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.announcement-status-box{margin-top:12px;padding:12px 14px;border:1px solid rgba(143,211,255,.18);border-radius:12px;background:rgba(4,19,31,.35);color:#b9d7ee}.announcement-status-box.active{border-color:#49d58b;color:#d8ffea}.announcement-preview{margin-top:12px;padding:14px;border-radius:13px;background:linear-gradient(145deg,#f8fcff,#eaf5ff);color:#17324d;border-left:6px solid #2387d9;white-space:pre-wrap}.announcement-preview.warning{background:linear-gradient(145deg,#fffdf4,#fff1c9);border-left-color:#e59a05}.announcement-preview.urgent{background:linear-gradient(145deg,#fffafa,#ffe1e1);border-left-color:#dc2626}@keyframes announcementIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}@media(max-width:650px){.announcement-toast{right:12px;bottom:86px;width:calc(100vw - 24px)}}
 
 </style>
 </head>
@@ -296,6 +297,7 @@
         <button class="cfg-tab" type="button" role="tab" id="cfgTabWeeks" data-cfg-tab="weeks" aria-controls="cfgPanelWeeks" aria-selected="false" tabindex="-1">Semanas</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabSupport" data-cfg-tab="support" aria-controls="cfgPanelSupport" aria-selected="false" tabindex="-1">Soporte</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabSuggestions" data-cfg-tab="suggestions" aria-controls="cfgPanelSuggestions" aria-selected="false" tabindex="-1">Sugerencias</button>
+        <button class="cfg-tab" type="button" role="tab" id="cfgTabAnnouncements" data-cfg-tab="announcements" aria-controls="cfgPanelAnnouncements" aria-selected="false" tabindex="-1">Avisos</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabUsers" data-cfg-tab="users" aria-controls="cfgPanelUsers" aria-selected="false" tabindex="-1">Usuarios</button>
       </div>
 
@@ -415,6 +417,26 @@
         <div id="suggestionsContainer"><div class="suggestion-empty">Todavía no se cargaron sugerencias.</div></div>
       </div>
 
+      <div class="cfg-card" id="cfgPanelAnnouncements" data-cfg-panel="announcements" role="tabpanel" aria-labelledby="cfgTabAnnouncements">
+        <h3>Avisos para todos los usuarios</h3>
+        <div class="small" style="margin-bottom:12px">El aviso aparecerá como un globo emergente en cualquier pantalla. Cada usuario podrá cerrarlo y dejará de mostrarse automáticamente al vencer el tiempo configurado.</div>
+        <div class="field">
+          <label>Mensaje</label>
+          <textarea id="announcementText" rows="5" maxlength="1200" placeholder="Ej.: Mañana se realizará mantenimiento programado desde las 08:00."></textarea>
+        </div>
+        <div class="row3">
+          <div class="field"><label>Duración</label><input id="announcementDuration" type="number" min="1" max="10080" step="1" value="1"></div>
+          <div class="field"><label>Unidad</label><select id="announcementDurationUnit"><option value="minutes">Minutos</option><option value="hours" selected>Horas</option><option value="days">Días</option></select></div>
+          <div class="field"><label>Importancia</label><select id="announcementLevel"><option value="info">Información</option><option value="warning">Atención</option><option value="urgent">Urgente</option></select></div>
+        </div>
+        <div class="announcement-preview" id="announcementPreview">Vista previa del aviso.</div>
+        <div class="announcement-admin-actions">
+          <button class="btn green" id="publishAnnouncementBtn" type="button">📢 Enviar aviso</button>
+          <button class="btn red" id="clearAnnouncementBtn" type="button">Desactivar aviso actual</button>
+        </div>
+        <div class="announcement-status-box" id="announcementAdminStatus">No hay un aviso activo.</div>
+      </div>
+
 <div class="cfg-card" id="cfgPanelUsers" data-cfg-panel="users" role="tabpanel" aria-labelledby="cfgTabUsers">
         <h3>Usuarios</h3>
         <div class="small warn" style="margin-bottom:10px">Esta versión usa login real contra Google Apps Script. Los usuarios ya no se guardan en este navegador.</div>
@@ -479,6 +501,18 @@
       <div class="small" id="accountMsg" style="margin-top:10px"></div>
     </div>
   </div>
+
+  <aside class="announcement-toast" id="announcementToast" role="alert" aria-live="polite" hidden>
+    <div class="announcement-head">
+      <div class="announcement-icon" id="announcementIcon">📢</div>
+      <div class="announcement-copy">
+        <strong id="announcementTitle">Aviso del administrador</strong>
+        <div class="announcement-message" id="announcementMessage"></div>
+        <div class="announcement-meta" id="announcementMeta"></div>
+      </div>
+      <button class="announcement-close" id="announcementCloseBtn" type="button" aria-label="Cerrar aviso" title="Cerrar aviso">×</button>
+    </div>
+  </aside>
 
   <div class="suggestion-fab" id="suggestionFab">
     <div class="suggestion-bubble" id="suggestionBubble">¿Tenés una sugerencia de mejora? Contámela.</div>
@@ -564,7 +598,14 @@ const DEFAULT_CFG={
   mapping:JSON.parse(JSON.stringify(DEFAULT_MAPPING)),
   supportEmail1:'Heslerlucas1@gmail.com',
   supportEmail2:'lhesler@victoriamaderas.com.ar',
-  exportComment:'Comentario del reporte'
+  exportComment:'Comentario del reporte',
+  announcementId:'',
+  announcementMessage:'',
+  announcementLevel:'info',
+  announcementCreatedBy:'',
+  announcementCreatedAt:'',
+  announcementExpiresAt:'',
+  announcementActive:false
 };
 
 function mergeCfgWithDefaults(source){
@@ -704,6 +745,13 @@ function applyRemoteConfigToCfg(remote){
   if(remote.support_email_1) cfg.supportEmail1 = String(remote.support_email_1).trim();
   if(remote.support_email_2) cfg.supportEmail2 = String(remote.support_email_2).trim();
   if(remote.export_comment) cfg.exportComment = String(remote.export_comment).trim();
+  if(remote.announcement_id !== undefined) cfg.announcementId = String(remote.announcement_id || '').trim();
+  if(remote.announcement_message !== undefined) cfg.announcementMessage = String(remote.announcement_message || '').trim();
+  if(remote.announcement_level !== undefined) cfg.announcementLevel = String(remote.announcement_level || 'info').trim().toLowerCase();
+  if(remote.announcement_created_by !== undefined) cfg.announcementCreatedBy = String(remote.announcement_created_by || '').trim();
+  if(remote.announcement_created_at !== undefined) cfg.announcementCreatedAt = String(remote.announcement_created_at || '').trim();
+  if(remote.announcement_expires_at !== undefined) cfg.announcementExpiresAt = String(remote.announcement_expires_at || '').trim();
+  if(remote.announcement_active !== undefined) cfg.announcementActive = remote.announcement_active === true || String(remote.announcement_active).toLowerCase() === 'true' || String(remote.announcement_active).toUpperCase() === 'SI';
 
   const mapPairs = {
     fecha:'map_date',
@@ -1273,7 +1321,153 @@ function unlockApp(user, role){
   $('suggestionBubble').hidden=false;
   clearTimeout(window.suggestionBubbleTimer);
   window.suggestionBubbleTimer=setTimeout(()=>{$('suggestionBubble').hidden=true},12000);
+  renderAnnouncement();
+  refreshAnnouncement();
   if(role!=='admin') closeCfg();
+}
+function announcementDismissKey(id){
+  const user=String(currentUser?.username||'usuario').trim().toLowerCase();
+  return `dashboard_announcement_dismissed_${user}_${String(id||'')}`;
+}
+function isAnnouncementActive(){
+  const expires=Date.parse(cfg.announcementExpiresAt||'');
+  return !!(cfg.announcementActive && cfg.announcementId && cfg.announcementMessage && Number.isFinite(expires) && expires>Date.now());
+}
+function announcementLevelMeta(level){
+  const normalized=['info','warning','urgent'].includes(level)?level:'info';
+  if(normalized==='urgent') return {level:normalized,title:'Aviso urgente del administrador',icon:'🚨'};
+  if(normalized==='warning') return {level:normalized,title:'Atención',icon:'⚠️'};
+  return {level:normalized,title:'Aviso del administrador',icon:'📢'};
+}
+function formatAnnouncementDate(value){
+  const date=new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'}) : '';
+}
+function applyAnnouncementData(data){
+  const source=data?.announcement || data || {};
+  cfg.announcementId=String(source.id ?? source.announcement_id ?? cfg.announcementId ?? '').trim();
+  cfg.announcementMessage=String(source.message ?? source.announcement_message ?? cfg.announcementMessage ?? '').trim();
+  cfg.announcementLevel=String(source.level ?? source.announcement_level ?? cfg.announcementLevel ?? 'info').trim().toLowerCase();
+  cfg.announcementCreatedBy=String(source.createdBy ?? source.created_by ?? source.announcement_created_by ?? cfg.announcementCreatedBy ?? '').trim();
+  cfg.announcementCreatedAt=String(source.createdAt ?? source.created_at ?? source.announcement_created_at ?? cfg.announcementCreatedAt ?? '').trim();
+  cfg.announcementExpiresAt=String(source.expiresAt ?? source.expires_at ?? source.announcement_expires_at ?? cfg.announcementExpiresAt ?? '').trim();
+  const activeValue=source.active ?? source.announcement_active;
+  if(activeValue!==undefined) cfg.announcementActive=activeValue===true || String(activeValue).toLowerCase()==='true' || String(activeValue).toUpperCase()==='SI';
+}
+function renderAnnouncementAdminStatus(){
+  const box=$('announcementAdminStatus');
+  if(!box) return;
+  if(isAnnouncementActive()){
+    box.classList.add('active');
+    box.innerHTML=`<b>Aviso activo</b><br>Publicado por ${esc(cfg.announcementCreatedBy||'Administrador')} · vence ${esc(formatAnnouncementDate(cfg.announcementExpiresAt))}`;
+  }else{
+    box.classList.remove('active');
+    box.textContent=cfg.announcementId?'El último aviso ya venció o fue desactivado.':'No hay un aviso activo.';
+  }
+}
+function renderAnnouncement(){
+  const toast=$('announcementToast');
+  if(!toast) return;
+  clearTimeout(window.announcementExpiryTimer);
+  renderAnnouncementAdminStatus();
+  if(!currentUser || !isAnnouncementActive() || localStorage.getItem(announcementDismissKey(cfg.announcementId))==='1'){
+    toast.hidden=true;
+    return;
+  }
+  const meta=announcementLevelMeta(cfg.announcementLevel);
+  toast.className=`announcement-toast ${meta.level}`;
+  $('announcementIcon').textContent=meta.icon;
+  $('announcementTitle').textContent=meta.title;
+  $('announcementMessage').textContent=cfg.announcementMessage;
+  const author=cfg.announcementCreatedBy?`Enviado por ${cfg.announcementCreatedBy}`:'Enviado por el administrador';
+  $('announcementMeta').textContent=`${author} · disponible hasta ${formatAnnouncementDate(cfg.announcementExpiresAt)}`;
+  toast.hidden=false;
+  const remaining=Math.max(0,Date.parse(cfg.announcementExpiresAt)-Date.now());
+  window.announcementExpiryTimer=setTimeout(()=>renderAnnouncement(),Math.min(remaining+500,2147483000));
+}
+async function refreshAnnouncement(){
+  if(!currentUser || window.announcementRefreshRunning) return false;
+  window.announcementRefreshRunning=true;
+  try{
+    const data=await jsonpRequest({action:'getAnnouncement'});
+    if(!data || data.status!=='ok') throw new Error((data&&data.message)||'No se pudo consultar el aviso');
+    applyAnnouncementData(data);
+    saveCfgLS();
+    renderAnnouncement();
+    return true;
+  }catch(err){
+    console.warn('No se pudo actualizar el aviso global.',err);
+    renderAnnouncement();
+    return false;
+  }finally{
+    window.announcementRefreshRunning=false;
+  }
+}
+function updateAnnouncementPreview(){
+  const preview=$('announcementPreview');
+  if(!preview) return;
+  const message=String($('announcementText')?.value||'').trim()||'Vista previa del aviso.';
+  const level=String($('announcementLevel')?.value||'info');
+  preview.className=`announcement-preview ${level}`;
+  preview.textContent=message;
+}
+function announcementDurationMinutes(){
+  const amount=Math.max(1,Number($('announcementDuration')?.value||1));
+  const unit=String($('announcementDurationUnit')?.value||'minutes');
+  const multiplier=unit==='days'?1440:unit==='hours'?60:1;
+  return Math.min(10080,Math.round(amount*multiplier));
+}
+async function publishAnnouncement(){
+  if(!currentUser || currentUser.role!=='admin') return;
+  const message=String($('announcementText')?.value||'').trim();
+  if(message.length<4){
+    $('announcementAdminStatus').textContent='Escribí un mensaje de al menos 4 caracteres.';
+    $('announcementText').focus();
+    return;
+  }
+  const button=$('publishAnnouncementBtn');
+  button.disabled=true;
+  $('announcementAdminStatus').classList.remove('active');
+  $('announcementAdminStatus').textContent='Publicando aviso para todos los usuarios...';
+  try{
+    const payload={
+      username:currentUser.username,
+      password:currentUser.password,
+      message,
+      level:$('announcementLevel').value,
+      durationMinutes:announcementDurationMinutes()
+    };
+    const data=await jsonpRequest({action:'publishAnnouncement',payload:JSON.stringify(payload)});
+    if(!data || data.status!=='ok') throw new Error((data&&data.message)||'No se pudo publicar el aviso');
+    applyAnnouncementData(data);
+    saveCfgLS();
+    renderAnnouncement();
+    $('announcementAdminStatus').classList.add('active');
+  }catch(err){
+    console.error(err);
+    $('announcementAdminStatus').textContent=err.message||'No se pudo publicar el aviso.';
+  }finally{
+    button.disabled=false;
+  }
+}
+async function clearAnnouncement(){
+  if(!currentUser || currentUser.role!=='admin') return;
+  const button=$('clearAnnouncementBtn');
+  button.disabled=true;
+  $('announcementAdminStatus').textContent='Desactivando aviso...';
+  try{
+    const payload={username:currentUser.username,password:currentUser.password};
+    const data=await jsonpRequest({action:'clearAnnouncement',payload:JSON.stringify(payload)});
+    if(!data || data.status!=='ok') throw new Error((data&&data.message)||'No se pudo desactivar el aviso');
+    applyAnnouncementData(data);
+    saveCfgLS();
+    renderAnnouncement();
+  }catch(err){
+    console.error(err);
+    $('announcementAdminStatus').textContent=err.message||'No se pudo desactivar el aviso.';
+  }finally{
+    button.disabled=false;
+  }
 }
 function openAccount(){
   if(!currentUser){ return; }
@@ -1309,6 +1503,7 @@ function setCfgTab(tabName, focusTab=false){
   if(focusTab) selected.focus();
   $('cfgPanel').scrollTo({top:0,behavior:'smooth'});
   if(selected.dataset.cfgTab==='suggestions') refreshSuggestions();
+  if(selected.dataset.cfgTab==='announcements') refreshAnnouncement();
 }
 function openCfg(){ if(!currentUser || currentUser.role!=='admin'){ alert('Solo el usuario administrador puede entrar a configuración.'); return; } $('cfgBackdrop').classList.add('open'); $('cfgPanel').classList.add('open'); if(!document.querySelector('[data-cfg-tab].active')) setCfgTab('general'); refreshUsersFromBackend(); }
 function closeCfg(){ $('cfgBackdrop').classList.remove('open'); $('cfgPanel').classList.remove('open'); }
@@ -1589,6 +1784,10 @@ function renderConfig(){
   if($('supportEmail2')) $('supportEmail2').value = cfg.supportEmail2 || '';
   if($('exportComment')) $('exportComment').value = cfg.exportComment || '';
   if($('supportMsg')) $('supportMsg').textContent='';
+  if($('announcementText') && !$('announcementText').value) $('announcementText').value=cfg.announcementMessage||'';
+  if($('announcementLevel')) $('announcementLevel').value=['info','warning','urgent'].includes(cfg.announcementLevel)?cfg.announcementLevel:'info';
+  updateAnnouncementPreview();
+  renderAnnouncementAdminStatus();
   Object.keys(DEFAULT_TITLES).forEach(k=>{
     const el=document.getElementById(k+'_in');
     if(el) el.value=cfg.titles[k]||DEFAULT_TITLES[k];
@@ -2796,6 +2995,14 @@ document.querySelector('.cfg-tabs')?.addEventListener('click',e=>{
   const tab=e.target.closest('[data-cfg-tab]');
   if(tab) setCfgTab(tab.dataset.cfgTab);
 });
+$('announcementText')?.addEventListener('input',updateAnnouncementPreview);
+$('announcementLevel')?.addEventListener('change',updateAnnouncementPreview);
+$('publishAnnouncementBtn').onclick=publishAnnouncement;
+$('clearAnnouncementBtn').onclick=clearAnnouncement;
+$('announcementCloseBtn').onclick=()=>{
+  if(cfg.announcementId) localStorage.setItem(announcementDismissKey(cfg.announcementId),'1');
+  $('announcementToast').hidden=true;
+};
 document.querySelector('.cfg-tabs')?.addEventListener('keydown',e=>{
   if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
   const tabs=[...document.querySelectorAll('[data-cfg-tab]')];
@@ -3149,7 +3356,7 @@ $('reportBtn').onclick=async ()=>{
     else renderRollsDashboard();
   }
 };
-$('logoutBtn').onclick=()=>{currentUser=null; clearTimeout(sessionTimer); clearSession(); renderUserChip(); updateRoleUi(); lockApp('Sesión cerrada');};
+$('logoutBtn').onclick=()=>{currentUser=null; clearTimeout(sessionTimer); clearSession(); $('announcementToast').hidden=true; renderUserChip(); updateRoleUi(); lockApp('Sesión cerrada');};
 $('loginBtn').onclick=async ()=>{
   const u=$('loginUser').value.trim();
   const p=$('loginPass').value;
@@ -3289,8 +3496,9 @@ async function checkForPageUpdate(){
   }
 }
 
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); }});
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ if(cfg.useGoogleSheet && cfg.googleAutoLoad) autoSyncGoogleOnAccess(false); refreshAnnouncement(); }});
 setInterval(()=>{ if(document.body.classList.contains('auth-ok') && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); } }, 60000);
+setInterval(()=>{ if(document.body.classList.contains('auth-ok')) refreshAnnouncement(); },20000);
 setTimeout(checkForPageUpdate,5000);
 setInterval(checkForPageUpdate,60000);
 
