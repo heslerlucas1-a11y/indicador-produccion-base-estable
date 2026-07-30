@@ -303,12 +303,13 @@
 
       <div class="cfg-card" id="cfgPanelTargets" data-cfg-panel="targets" role="tabpanel" aria-labelledby="cfgTabTargets">
         <h3>Metas de comparaciÃ³n de turnos</h3>
-        <div class="row3">
-          <div class="field"><label>ProducciÃ³n diaria (pÂ²)</label><input id="compareProductionTarget" type="number" min="0" step="1000" value="75000"></div>
-          <div class="field"><label>Rendimiento (pÂ²/Tn)</label><input id="compareP2tnTarget" type="number" min="0" step="1" value="200"></div>
-          <div class="field"><label>Tiempo muerto (minutos)</label><input id="compareDeadTimeTargetMinutes" type="number" min="0" step="1" value="96"></div>
+        <div class="row4">
+          <div class="field"><label>Meta fija diaria principal (pÂ²)</label><input id="dailyFixedProductionTarget" type="number" min="0" step="1000" value="148660"></div>
+          <div class="field"><label>ProducciÃ³n diaria por supervisor (pÂ²)</label><input id="compareProductionTarget" type="number" min="0" step="1000" value="75000"></div>
+          <div class="field"><label>Rendimiento por supervisor (pÂ²/Tn)</label><input id="compareP2tnTarget" type="number" min="0" step="1" value="200"></div>
+          <div class="field"><label>Tiempo muerto por supervisor (minutos)</label><input id="compareDeadTimeTargetMinutes" type="number" min="0" step="1" value="96"></div>
         </div>
-        <div class="small" style="margin-top:8px">Estas metas controlan las lÃ­neas rojas de los tres grÃ¡ficos de ComparaciÃ³n de turnos.</div>
+        <div class="small" style="margin-top:8px">La primera meta controla la lÃ­nea roja del grÃ¡fico principal. Las otras tres controlan los grÃ¡ficos de ComparaciÃ³n de turnos.</div>
       </div>
 
       <div class="cfg-card" id="cfgPanelGoogle" data-cfg-panel="google" role="tabpanel" aria-labelledby="cfgTabGoogle">
@@ -482,6 +483,7 @@ const DEFAULT_CFG={
   exportBrandText:'LAHARRAGUE CHODORGE',
   selectedSheet:'',
   weeklyTargetLine:700000,
+  dailyFixedProductionTarget:148660,
   compareProductionTarget:75000,
   compareP2tnTarget:200,
   compareDeadTimeTargetMinutes:96,
@@ -617,6 +619,7 @@ function applyRemoteConfigToCfg(remote){
   if(remote.kpi_height != null) cfg.kpiH = Number(remote.kpi_height) || cfg.kpiH;
   if(remote.font_scale != null) cfg.fontScale = Number(remote.font_scale) || cfg.fontScale;
   if(remote.weekly_target_line != null) cfg.weeklyTargetLine = Number(remote.weekly_target_line) || cfg.weeklyTargetLine;
+  if(remote.daily_fixed_production_target != null) cfg.dailyFixedProductionTarget = Number(remote.daily_fixed_production_target) || cfg.dailyFixedProductionTarget;
   if(remote.comparison_production_target != null) cfg.compareProductionTarget = Number(remote.comparison_production_target) || cfg.compareProductionTarget;
   if(remote.comparison_p2tn_target != null) cfg.compareP2tnTarget = Number(remote.comparison_p2tn_target) || cfg.compareP2tnTarget;
   if(remote.comparison_dead_time_target_minutes != null) cfg.compareDeadTimeTargetMinutes = Number(remote.comparison_dead_time_target_minutes) || cfg.compareDeadTimeTargetMinutes;
@@ -1445,6 +1448,7 @@ function collectUsersFromPanel(){
 function renderConfig(){
   $('dashTitle').value=cfg.dashTitle;
   $('weeklyTargetLine').value=cfg.weeklyTargetLine;
+  $('dailyFixedProductionTarget').value=cfg.dailyFixedProductionTarget;
   $('compareProductionTarget').value=cfg.compareProductionTarget;
   $('compareP2tnTarget').value=cfg.compareP2tnTarget;
   $('compareDeadTimeTargetMinutes').value=cfg.compareDeadTimeTargetMinutes;
@@ -1545,6 +1549,7 @@ function renderKpiFieldsEditor(){
 function applyConfigFromPanel(){
   cfg.dashTitle=$('dashTitle').value||DEFAULT_CFG.dashTitle;
   cfg.weeklyTargetLine=normalizeNumber($('weeklyTargetLine').value);
+  cfg.dailyFixedProductionTarget=Math.max(0,normalizeNumber($('dailyFixedProductionTarget').value)) || DEFAULT_CFG.dailyFixedProductionTarget;
   cfg.compareProductionTarget=Math.max(0,normalizeNumber($('compareProductionTarget').value)) || DEFAULT_CFG.compareProductionTarget;
   cfg.compareP2tnTarget=Math.max(0,normalizeNumber($('compareP2tnTarget').value)) || DEFAULT_CFG.compareP2tnTarget;
   cfg.compareDeadTimeTargetMinutes=Math.max(0,normalizeNumber($('compareDeadTimeTargetMinutes').value)) || DEFAULT_CFG.compareDeadTimeTargetMinutes;
@@ -1905,6 +1910,7 @@ function renderRollsDashboard(){
   const totalProduction=summary?.totalProduction || sumRollMetric(rows,'production');
   const totalExpected=summary?.totalExpected || sumRollMetric(rows,'expected');
   const compliance=summary?.compliance || (totalExpected>0 ? totalProduction/totalExpected*100 : avgRollMetric(rows,'compliance'));
+  const dailyFixedProductionTarget=Number(cfg.dailyFixedProductionTarget)||DEFAULT_CFG.dailyFixedProductionTarget;
   const monthlyGoal=3000000;
   const monthlyCompliance=monthlyGoal>0 ? totalProduction/monthlyGoal*100 : 0;
   const businessDays=Math.max(0,Math.trunc(normalizeNumber(readSheetCell('AA2'))));
@@ -1968,7 +1974,7 @@ function renderRollsDashboard(){
   const dailyCtx=$('rollsDailyChart');
   const shiftCtx=$('rollsShiftChart');
   const complianceCtx=$('rollsComplianceChart');
-  rollsDailyChart=new Chart(dailyCtx,{type:'bar',data:{labels:rows.map(row=>row.date.slice(0,5)),datasets:[{label:'Producción diaria',data:rows.map(row=>row.production),backgroundColor:'#2478ed',borderRadius:4},{label:'Objetivo diario',data:rows.map(row=>row.expected),type:'line',borderColor:'#10213a',borderDash:[6,5],borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#334155'}}},scales:{x:{ticks:{color:'#52677c'},grid:{display:false}},y:{ticks:{color:'#52677c'},grid:{color:'#dfe7ef'}}}}});
+  rollsDailyChart=new Chart(dailyCtx,{type:'bar',data:{labels:rows.map(row=>row.date.slice(0,5)),datasets:[{label:'Producción diaria',data:rows.map(row=>row.production),backgroundColor:'#2478ed',borderRadius:4},{label:'Objetivo diario',data:rows.map(row=>row.expected),type:'line',borderColor:'#10213a',borderDash:[6,5],borderWidth:2,pointRadius:0},{label:`Meta fija ${formatNum(dailyFixedProductionTarget,0)} p²`,data:rows.map(()=>dailyFixedProductionTarget),type:'line',borderColor:'#ef4444',backgroundColor:'#ef4444',borderDash:[9,6],borderWidth:3,pointRadius:0,pointHoverRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#334155'}}},scales:{x:{ticks:{color:'#52677c'},grid:{display:false}},y:{ticks:{color:'#52677c'},grid:{color:'#dfe7ef'}}}}});
   rollsShiftChart=new Chart(shiftCtx,{type:'doughnut',data:{labels:['Turno 1','Turno 2'],datasets:[{data:[latestRow.shift1,latestRow.shift2],backgroundColor:['#1769df','#19b4b7'],borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:$('rollsView').classList.contains('pdf-exporting')?false:{duration:900,easing:'easeOutQuart'},cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#334155'}}}}});
   rollsComplianceChart=new Chart(complianceCtx,{type:'doughnut',data:{labels:['Cumplido','Faltante'],datasets:[{data:[Math.min(monthlyCompliance,100),Math.max(100-monthlyCompliance,0)],backgroundColor:['#2478ed','#e5edf5'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:false}}},plugins:[{id:'centerText',afterDraw(chart){const {ctx,chartArea}=chart;ctx.save();ctx.fillStyle='#10213a';ctx.font='900 34px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(formatPct(monthlyCompliance,0),(chartArea.left+chartArea.right)/2,(chartArea.top+chartArea.bottom)/2);ctx.restore()}}]});
   if(!$('rollsView').hidden) startShiftMessageRotation(rows[rows.length-1]);
@@ -2390,6 +2396,7 @@ function buildRemoteConfigPayload(){
     color_bg: cfg.bgColor,
     color_panel: cfg.panelColor,
     color_text: cfg.textColor,
+    daily_fixed_production_target: cfg.dailyFixedProductionTarget,
     comparison_production_target: cfg.compareProductionTarget,
     comparison_p2tn_target: cfg.compareP2tnTarget,
     comparison_dead_time_target_minutes: cfg.compareDeadTimeTargetMinutes,
