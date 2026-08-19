@@ -1062,6 +1062,57 @@ function sourceDateInfo(value){
   if(!match)return null;
   return {text:formatted,key:`${match[3]}-${match[2]}-${match[1]}`,month:`${match[3]}-${match[2]}`};
 }
+function sourceHasValue(value){
+  return value!==null&&value!==undefined&&value!==''&&!isSpreadsheetError(value);
+}
+function sourceRounded(value,decimals=0){
+  if(!sourceHasValue(value)||String(value).trim()==='-')return '';
+  const number=typeof value==='number'?value:normalizeNumber(value);
+  if(!Number.isFinite(number))return '';
+  return Number(number.toFixed(decimals));
+}
+function sourcePercentValue(value){
+  if(!sourceHasValue(value)||String(value).trim()==='-')return '';
+  if(typeof value==='string'&&value.includes('%'))return Number((normalizePercent(value)/100).toFixed(6));
+  const number=typeof value==='number'?value:normalizeNumber(value);
+  if(!Number.isFinite(number))return '';
+  return Number((Math.abs(number)<=2?number:number/100).toFixed(6));
+}
+function formatProductionImportRow(values,dateText){
+  const output=[...values];
+  output[0]=dateText;
+  [1,4,5,6,7,14,15,16,17,19,20,21,26].forEach(index=>output[index]=sourceRounded(output[index],0));
+  [2,8,24,25].forEach(index=>output[index]=sourceRounded(output[index],1));
+  [3,12,13].forEach(index=>output[index]=sourceRounded(output[index],2));
+  [9,10,11,18,22,23,27].forEach(index=>output[index]=sourcePercentValue(output[index]));
+  return output;
+}
+function formatSupervisorImportRow(values,dateText){
+  const output=[...values];
+  output[0]=dateText;
+  [2,3,4,11,12,13].forEach(index=>output[index]=sourceRounded(output[index],0));
+  output[5]=sourceRounded(output[5],1);
+  [9,10].forEach(index=>output[index]=sourceRounded(output[index],2));
+  [6,7,8,14].forEach(index=>output[index]=sourcePercentValue(output[index]));
+  output[15]=String(output[15]??'').trim().toUpperCase();
+  return output;
+}
+function formatPerformanceImportRow(values){
+  const output=[...values];
+  const date=sourceDateInfo(output[0]);
+  if(date)output[0]=date.text;
+  [1,2,4,5,7,8,10,11,12,13,14,15,16,17,18,19].forEach(index=>output[index]=sourceRounded(output[index],0));
+  [3,6,9].forEach(index=>output[index]=sourcePercentValue(output[index]));
+  for(let index=20;index<output.length;index++)if(typeof output[index]==='number')output[index]=sourceRounded(output[index],0);
+  return output;
+}
+function formatDowntimeImportRow(values,dateText){
+  const output=[...values];
+  output[1]=dateText;
+  output[2]=sourceRounded(output[2],0);
+  for(let index=3;index<output.length;index++)output[index]=index%2===0?sourcePercentValue(output[index]):sourceRounded(output[index],0);
+  return output;
+}
 function sourceSheetRows(book,wanted){
   const normalized=normalizeSourceHeader(wanted);
   const sheetName=book.SheetNames.find(name=>normalizeSourceHeader(name)===normalized);
@@ -1094,7 +1145,7 @@ function buildProductionSource(book){
   if(!data.length) throw new Error('La hoja SegDiario no contiene días producidos en el último mes.');
   const canonicalHeaders=['Fecha','Sem','Ømed','Largo Medio','Curv','Rollos Total','Tn Total','TTD (Hs)','TMD Hs.','Ritmo','FU%','FO%','GAP ml','GAP Esp.','Corte T1','Corte T2','Total p²','p² Esp.','% Cump p²','p²/h Real','p²/Tn','p²/Tn Esp','Real m³/m³','Δ P²/Tn','R/ min','SB/min','p² Corte Semanal','% Cumpl Secado'];
   const aliases=[['Fecha'],['Sem','Semana'],['Ømed','omed'],['Largo Medio'],['Curv'],['Rollos Total'],['Tn Total','Tn'],['TTD (Hs)','TTD Hs'],['TMD Hs.','TMD Hs'],['Ritmo'],['FU%','FU'],['FO%','FO'],['GAP ml'],['GAP Esp.','GAP Esp'],['Corte T1'],['Corte T2'],['Total p²','Total p2'],['p² Esp.','p2 Esp'],['% Cump p²','% Cump p2'],['p²/h Real','p2/h Real'],['p²/Tn','p2/Tn'],['p²/Tn Esp','p2/Tn Esp'],['Real m³/m³','Real m3/m3'],['Δ P²/Tn','D P2/Tn'],['R/ min'],['SB/min'],['p² Corte Semanal','p2 Corte Semanal'],['% Cumpl Secado']];
-  const mapped=data.slice(-43).map(item=>aliases.map(list=>sourceValue(item.row,headers,list)));
+  const mapped=data.slice(-43).map(item=>formatProductionImportRow(aliases.map(list=>sourceValue(item.row,headers,list)),item.date.text));
   return {key:'production',sheet:'Produccion',startRow:5,clearRange:'A5:AB49',rows:[['Producción - Consumo de Rollos'],canonicalHeaders,...mapped],count:mapped.length};
 }
 function buildSupervisorSource(book){
@@ -1109,13 +1160,13 @@ function buildSupervisorSource(book){
   if(!data.length) throw new Error('La hoja supervisor no contiene turnos trabajados en el último mes.');
   const canonicalHeaders=['Fecha','Supervisor','Rollos Total','Tn','TTD (Hs)','TMD Hs.','Ritmo','FU%','FO%','GAP ml','GAP Esp.','Prod. P²','P²/Tn','P²/Tn Esp','Δ P²/Tn','corte'];
   const aliases=[['Fecha'],['Supervisor'],['Rollos Total'],['Tn'],['TTD (Hs)','TTD Hs'],['TMD Hs.','TMD Hs'],['Ritmo'],['FU%','FU'],['FO%','FO'],['GAP ml'],['GAP Esp.','GAP Esp'],['Prod. P²','Prod. P2'],['P²/Tn','P2/Tn'],['P²/Tn Esp','P2/Tn Esp'],['Δ P²/Tn','D P2/Tn'],['corte']];
-  const mapped=data.slice(-50).map(item=>aliases.map(list=>sourceValue(item.row,headers,list)));
+  const mapped=data.slice(-50).map(item=>formatSupervisorImportRow(aliases.map(list=>sourceValue(item.row,headers,list)),item.date.text));
   return {key:'supervisor',sheet:'Produccion',startRow:50,clearRange:'A50:P100',rows:[canonicalHeaders,...mapped],count:mapped.length};
 }
 function buildPerformanceSource(book){
   const rows=sourceSheetRows(book,'HTML');
   if(rows.length<2) throw new Error('La hoja HTML no contiene las filas 1 y 2.');
-  const output=[rows[0].slice(0,28),rows[1].slice(0,28)];
+  const output=[rows[0].slice(0,28),formatPerformanceImportRow(rows[1].slice(0,28))];
   if(!sourceDateInfo(output[1][0])) throw new Error('La celda A2 de HTML no contiene una fecha válida.');
   return {key:'performance',sheet:'Produccion',startRow:1,clearRange:'A1:AB2',rows:output,count:1};
 }
@@ -1126,7 +1177,8 @@ function buildDowntimeSource(book){
   const headers=rows[headerIndex];
   const worked=latestWorkedMonth(rows.slice(headerIndex+1),row=>sourceValue(row,headers,['FECHA']),row=>normalizeNumber(sourceValue(row,headers,['TTD']))>0);
   if(!worked.length) throw new Error('CASCADEO_TM no contiene días trabajados en el último mes.');
-  const output=[rows[headerIndex-2].slice(0,23),rows[headerIndex-1].slice(0,23),headers.slice(0,23),...worked.map(item=>item.row.slice(0,23))];
+  const percentRow=row=>row.slice(0,23).map(value=>typeof value==='number'?sourcePercentValue(value):value);
+  const output=[percentRow(rows[headerIndex-2]),percentRow(rows[headerIndex-1]),headers.slice(0,23),...worked.map(item=>formatDowntimeImportRow(item.row.slice(0,23),item.date.text))];
   return {key:'downtime',sheet:'CASCADEO_TM',startRow:1,clearRange:'A1:W100',rows:output,count:worked.length};
 }
 function importChunks(rows,maxLength=3600){
