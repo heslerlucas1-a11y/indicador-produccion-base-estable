@@ -1181,11 +1181,11 @@ function buildDowntimeSource(book){
   const output=[percentRow(rows[headerIndex-2]),percentRow(rows[headerIndex-1]),headers.slice(0,23),...worked.map(item=>formatDowntimeImportRow(item.row.slice(0,23),item.date.text))];
   return {key:'downtime',sheet:'CASCADEO_TM',startRow:1,clearRange:'A1:W100',rows:output,count:worked.length};
 }
-function importChunks(rows,maxLength=3600){
+function importChunks(rows,maxLength=3600,maxRows=12){
   const chunks=[];let current=[];
   for(const row of rows){
     const candidate=[...current,row];
-    if(current.length&&JSON.stringify(candidate).length>maxLength){chunks.push(current);current=[row]}
+    if(current.length&&(candidate.length>maxRows||JSON.stringify(candidate).length>maxLength)){chunks.push(current);current=[row]}
     else current=candidate;
   }
   if(current.length)chunks.push(current);
