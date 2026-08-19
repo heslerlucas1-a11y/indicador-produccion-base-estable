@@ -147,6 +147,7 @@
 .rolls-view[hidden]{display:none}
 .rolls-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
 .rolls-header h2{margin:0;color:#0b2747;font-size:25px}.rolls-period{padding:9px 14px;border:1px solid #c9d7e5;border-radius:11px;background:#fff;color:#38506a;font-weight:800}
+.rolls-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.period-filter{height:39px;padding:0 11px;border:1px solid #c9d7e5;border-radius:10px;background:#fff;color:#23445f;font-weight:800}.plant-mode-btn{height:39px;border:0;border-radius:10px;padding:0 13px;background:#0b4f8a;color:#fff;font-weight:900;cursor:pointer}.plant-mode-exit{position:fixed;right:18px;top:16px;z-index:11000;display:none;border:0;border-radius:11px;padding:11px 15px;background:#ef4444;color:#fff;font-weight:950;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer}.executive-summary{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:12px}.executive-card{padding:13px 15px;background:#fff;border:1px solid #d8e2ec;border-radius:13px;box-shadow:0 3px 12px rgba(18,49,78,.07)}.executive-card span{display:block;color:#60758a;font-size:11px;font-weight:850;margin-bottom:6px}.executive-card strong{display:block;color:#0b4a9e;font-size:19px}.executive-card strong.good{color:#15803d}.executive-card strong.warn{color:#b45309}.executive-card strong.bad{color:#dc2626}.executive-card small{display:block;color:#60758a;margin-top:5px;line-height:1.3}.operational-alerts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.operational-alert{flex:1 1 260px;padding:10px 12px;border-radius:10px;border:1px solid #f3cc72;background:#fff8df;color:#7a4b00;font-size:12px;font-weight:800}.operational-alert.critical{border-color:#f4a2a2;background:#fff0f0;color:#a51d1d}.operational-alert.ok{border-color:#9bd7b0;background:#edfff3;color:#147a38}
 .rolls-kpis{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;margin-bottom:12px}
 .rolls-kpi,.rolls-panel{background:#fff;border:1px solid #d8e2ec;border-radius:14px;box-shadow:0 3px 12px rgba(18,49,78,.08)}
 .rolls-kpi{padding:15px;min-height:102px;display:flex;flex-direction:column;justify-content:space-between}.rolls-kpi-label{font-size:13px;color:#52677c;font-weight:700}.rolls-kpi-value{font-size:25px;color:#0b47a1;font-weight:950}.rolls-kpi-value.good{color:#15803d}.rolls-kpi-value.cyan{color:#07899a}
@@ -167,6 +168,8 @@
 .cascade-view{padding:18px;max-width:1900px;margin:0 auto;color:#10213a;background:#eef4f9;min-height:calc(100vh - 72px)}.cascade-view[hidden]{display:none}.cascade-view h2{margin:0;color:#0b2747;font-size:25px}.cascade-kpis{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:10px;margin-bottom:12px}.cascade-kpi,.cascade-sector-card,.cascade-panel{background:#fff;border:1px solid #d8e2ec;border-radius:14px;box-shadow:0 3px 12px rgba(18,49,78,.08)}.cascade-kpi{padding:14px}.cascade-kpi span{display:block;color:#60758a;font-size:11px;font-weight:850;margin-bottom:7px}.cascade-kpi strong{display:block;color:#0b4a9e;font-size:24px;font-weight:950}.cascade-kpi strong.good{color:#15803d}.cascade-kpi strong.bad{color:#dc2626}.cascade-sectors{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:10px;margin-bottom:12px}.cascade-sector-card{padding:13px;border-top:5px solid var(--sector-color,#2478ed)}.cascade-sector-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.cascade-sector-head b{font-size:15px}.cascade-status{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:950}.cascade-status.ok{background:#dcfce7;color:#147a38}.cascade-status.over{background:#fee2e2;color:#b91c1c}.cascade-sector-values{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;text-align:center}.cascade-sector-values span{display:block;color:#60758a;font-size:9px;font-weight:800}.cascade-sector-values strong{display:block;margin-top:4px;font-size:17px;color:#123f70}.cascade-progress{height:7px;background:#e4ebf2;border-radius:999px;overflow:hidden;margin-top:10px}.cascade-progress div{height:100%;border-radius:999px;background:var(--sector-color,#2478ed)}.cascade-charts{display:grid;grid-template-columns:1fr 1.5fr;gap:12px;margin-bottom:12px}.cascade-panel{padding:15px}.cascade-panel h3{margin:0 0 10px;font-size:16px}.cascade-chart{height:330px;position:relative}.cascade-table-wrap{overflow:auto;max-height:520px;border:1px solid #d8e2ec;border-radius:11px}.cascade-table{border-collapse:collapse;width:100%;min-width:1800px;font-size:11px;white-space:nowrap}.cascade-table th{position:sticky;top:0;z-index:2;background:#123f70;color:#fff;padding:8px}.cascade-table td{padding:7px;border:1px solid #dbe4ed;text-align:right;background:#fff}.cascade-table td:first-child,.cascade-table td:nth-child(2){text-align:center}.cascade-table tr:nth-child(even) td{background:#f7fafc}.cascade-table .over-target{background:#fee2e2!important;color:#b91c1c;font-weight:900}.cascade-table .within-target{color:#15803d;font-weight:800}@media(max-width:1100px){.cascade-kpis{grid-template-columns:repeat(2,1fr)}.cascade-sectors{grid-template-columns:repeat(2,1fr)}.cascade-charts{grid-template-columns:1fr}}@media(max-width:650px){.cascade-sectors{grid-template-columns:1fr}.cascade-kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:1300px){.rolls-kpis{grid-template-columns:repeat(3,1fr)}.rolls-main-grid{grid-template-columns:1fr 1fr}.rolls-main-grid .rolls-panel:first-child{grid-column:1/-1}.rolls-bottom-grid{grid-template-columns:1fr}.efficiency-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.rolls-view{padding:10px}.rolls-kpis{grid-template-columns:repeat(2,1fr)}.rolls-main-grid{grid-template-columns:1fr}.rolls-main-grid .rolls-panel:first-child{grid-column:auto}.efficiency-grid{grid-template-columns:repeat(2,1fr)}.view-switch{width:100%}.view-btn{flex:1}.weekly-roll-row{grid-template-columns:60px 1fr 82px 55px}}
+@media(max-width:1000px){.executive-summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.executive-summary{grid-template-columns:1fr}.rolls-header-actions{width:100%;justify-content:stretch}.period-filter,.plant-mode-btn{flex:1}}
+body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .suggestion-fab,body.plant-mode .announcement-toast{display:none!important}body.plant-mode .rolls-view{max-width:none;padding:12px;min-height:100vh}body.plant-mode .plant-mode-exit{display:block}body.plant-mode .production-table-panel{display:none}body.plant-mode .rolls-main-grid{grid-template-columns:1.55fr .7fr .7fr}body.plant-mode .rolls-chart{height:330px}body.plant-mode .rolls-header{padding-right:120px}@media(max-width:1100px){body.plant-mode .rolls-main-grid{grid-template-columns:1fr 1fr}body.plant-mode .rolls-main-grid .rolls-panel:first-child{grid-column:1/-1}}
 
 
 /* simplificado: KPI y mapeo se administran desde Google Sheets */
@@ -233,12 +236,17 @@
         <h2>Producción y consumo de rollos</h2>
         <div class="small" style="color:#63778b;margin-top:4px">Datos diarios leídos automáticamente de las filas 7 a 31</div>
       </div>
-      <div class="rolls-period" id="rollsPeriod">Sin datos diarios</div>
+      <div class="rolls-header-actions">
+        <select class="period-filter" id="rollsPeriodFilter" aria-label="Período de producción"><option value="all">Todo el período</option><option value="last7">Últimos 7 días</option><option value="last14">Últimos 14 días</option></select>
+        <div class="rolls-period" id="rollsPeriod">Sin datos diarios</div>
+        <button class="plant-mode-btn" id="plantModeBtn" type="button">📺 Modo planta</button>
+      </div>
     </div>
     <div id="rollsDashboardContent">
       <div class="rolls-empty">Sin datos diarios. Sincronizá Google Sheets para cargar las filas 7 a 31.</div>
     </div>
   </section>
+  <button class="plant-mode-exit" id="plantModeExit" type="button">Salir del modo planta</button>
 
   <section class="full-table-view" id="rollsTableView" hidden>
     <div class="full-table-card">
@@ -847,6 +855,7 @@ function saveRendered(obj){localStorage.setItem('dashboard_rendered_v30',JSON.st
 
 let googleSheetGrid = null;
 let cascadeSheetGrid = null;
+let rollsPeriodMode = 'all';
 window.userAdminRows = [];
 
 function colToIndex(col){
@@ -1968,6 +1977,50 @@ function getRollProductionRows(){
   }
   return out;
 }
+function refreshRollsPeriodOptions(allRows){
+  const select=$('rollsPeriodFilter');
+  if(!select) return;
+  const weeks=[...new Set(allRows.map(row=>row.week).filter(Boolean))];
+  const desired=['all','last7','last14',...weeks.map(week=>`week:${week}`)];
+  const current=[...select.options].map(option=>option.value);
+  if(desired.join('|')!==current.join('|')){
+    select.innerHTML=`<option value="all">Todo el período</option><option value="last7">Últimos 7 días</option><option value="last14">Últimos 14 días</option>${weeks.map(week=>`<option value="week:${esc(week)}">Semana ${esc(week)}</option>`).join('')}`;
+  }
+  if(!desired.includes(rollsPeriodMode)) rollsPeriodMode='all';
+  select.value=rollsPeriodMode;
+}
+function filterRollProductionRows(allRows){
+  if(rollsPeriodMode==='last7') return allRows.slice(-7);
+  if(rollsPeriodMode==='last14') return allRows.slice(-14);
+  if(rollsPeriodMode.startsWith('week:')){
+    const week=rollsPeriodMode.slice(5);
+    return allRows.filter(row=>row.week===week);
+  }
+  return allRows;
+}
+function previousRollPeriod(allRows,selectedRows){
+  if(allRows.length<2 || !selectedRows.length) return {rows:[],label:'Sin período anterior'};
+  if(rollsPeriodMode==='all'){
+    const current=allRows.slice(-7);
+    return {rows:allRows.slice(Math.max(0,allRows.length-14),Math.max(0,allRows.length-7)),current,label:'Últimos 7 días vs. 7 anteriores'};
+  }
+  const start=allRows.indexOf(selectedRows[0]);
+  return {rows:allRows.slice(Math.max(0,start-selectedRows.length),start),current:selectedRows,label:'Período seleccionado vs. anterior'};
+}
+function rollDataQualityIssues(rows){
+  const issues=[];
+  const dates=new Set();
+  const duplicates=new Set();
+  rows.forEach(row=>{if(dates.has(row.date)) duplicates.add(row.date);dates.add(row.date)});
+  if(duplicates.size) issues.push(`${duplicates.size} fecha(s) duplicada(s)`);
+  const errorRows=rows.filter(row=>(googleSheetGrid[row.sheetRow-1]||[]).some(isSpreadsheetError));
+  if(errorRows.length) issues.push(`${errorRows.length} fila(s) con errores de fórmula`);
+  const emptyProduction=rows.filter(row=>row.production<=0 && row.expected>0);
+  if(emptyProduction.length) issues.push(`${emptyProduction.length} día(s) con producción vacía o cero`);
+  const invalidValues=rows.filter(row=>row.production<0 || row.ttd<0 || row.tmd<0);
+  if(invalidValues.length) issues.push(`${invalidValues.length} fila(s) con valores negativos`);
+  return issues;
+}
 function getRollProductionSummary(){
   if(!googleSheetGrid || !Array.isArray(googleSheetGrid)) return null;
   for(let sheetRow=7;sheetRow<=31;sheetRow++){
@@ -2410,8 +2463,10 @@ function renderRollsDashboard(){
   clearShiftMessageRotation();
   const content=$('rollsDashboardContent');
   if(!content) return;
-  const rows=getRollProductionRows();
-  if(!rows.length){
+  const allRows=getRollProductionRows();
+  refreshRollsPeriodOptions(allRows);
+  const rows=filterRollProductionRows(allRows);
+  if(!allRows.length){
     $('rollsPeriod').textContent='Sin datos diarios';
     content.innerHTML='<div class="rolls-empty">No hay fechas cargadas entre las filas 7 y 31. Los días aparecerán automáticamente cuando se completen en Google Sheets.</div>';
     if(rollsDailyChart){rollsDailyChart.destroy();rollsDailyChart=null}
@@ -2419,19 +2474,21 @@ function renderRollsDashboard(){
     if(rollsComplianceChart){rollsComplianceChart.destroy();rollsComplianceChart=null}
     return;
   }
-  const summary=getRollProductionSummary();
-  const totalProduction=summary?.totalProduction || sumRollMetric(rows,'production');
-  const totalExpected=summary?.totalExpected || sumRollMetric(rows,'expected');
-  const compliance=summary?.compliance || (totalExpected>0 ? totalProduction/totalExpected*100 : avgRollMetric(rows,'compliance'));
+  const fullSummary=getRollProductionSummary();
+  const useSheetSummary=rollsPeriodMode==='all';
+  const totalProduction=useSheetSummary && fullSummary?.totalProduction ? fullSummary.totalProduction : sumRollMetric(rows,'production');
+  const totalExpected=useSheetSummary && fullSummary?.totalExpected ? fullSummary.totalExpected : sumRollMetric(rows,'expected');
+  const compliance=useSheetSummary && fullSummary?.compliance ? fullSummary.compliance : (totalExpected>0 ? totalProduction/totalExpected*100 : avgRollMetric(rows,'compliance'));
   const dailyFixedProductionTarget=Number(cfg.dailyFixedProductionTarget)||DEFAULT_CFG.dailyFixedProductionTarget;
   const monthlyGoal=3000000;
-  const monthlyCompliance=monthlyGoal>0 ? totalProduction/monthlyGoal*100 : 0;
+  const monthlyProduction=fullSummary?.totalProduction || sumRollMetric(allRows,'production');
+  const monthlyCompliance=monthlyGoal>0 ? monthlyProduction/monthlyGoal*100 : 0;
   const businessDays=Math.max(0,Math.trunc(normalizeNumber(readSheetCell('AA2'))));
-  const remainingProduction=Math.max(monthlyGoal-totalProduction,0);
+  const remainingProduction=Math.max(monthlyGoal-monthlyProduction,0);
   const dailyProductionNeeded=businessDays>0 ? remainingProduction/businessDays : 0;
-  const totalRolls=summary?.totalRolls || sumRollMetric(rows,'rolls');
-  const totalTons=summary?.totalTons || sumRollMetric(rows,'tons');
-  const rhythm=summary?.rhythm || avgRollMetric(rows,'rhythm');
+  const totalRolls=useSheetSummary && fullSummary?.totalRolls ? fullSummary.totalRolls : sumRollMetric(rows,'rolls');
+  const totalTons=useSheetSummary && fullSummary?.totalTons ? fullSummary.totalTons : sumRollMetric(rows,'tons');
+  const rhythm=useSheetSummary && fullSummary?.rhythm ? fullSummary.rhythm : avgRollMetric(rows,'rhythm');
   const latestRow=rows[rows.length-1];
   const totalTables=normalizeNumber(readMetric('totalTablas'));
   const blackTables=normalizeNumber(readMetric('tablasNegras'));
@@ -2446,8 +2503,28 @@ function renderRollsDashboard(){
     weeklyMap.set(key,current);
   });
   const weekly=[...weeklyMap.entries()].map(([week,data])=>({week,...data,pct:data.expected>0?data.production/data.expected*100:0}));
+  const comparison=previousRollPeriod(allRows,rows);
+  const trendCurrent=comparison.current||rows;
+  const trendCurrentProduction=sumRollMetric(trendCurrent,'production');
+  const trendPreviousProduction=sumRollMetric(comparison.rows,'production');
+  const trendPct=trendPreviousProduction>0 ? (trendCurrentProduction-trendPreviousProduction)/trendPreviousProduction*100 : null;
+  const bestDay=rows.reduce((best,row)=>!best||row.production>best.production?row:best,null);
+  const qualityIssues=rollDataQualityIssues(rows);
+  const alerts=[];
+  if(compliance<90) alerts.push({type:'critical',text:`Cumplimiento del período en ${formatPct(compliance,1)}: por debajo del 90%.`});
+  if(latestRow.tmd*60>Number(cfg.compareDeadTimeTargetMinutes||96)) alerts.push({type:'critical',text:`Tiempo muerto del ${latestRow.date}: ${formatNum(latestRow.tmd*60,0)} min, supera la meta.`});
+  if(latestRow.p2tn>0 && latestRow.p2tn<Number(cfg.compareP2tnTarget||200)) alerts.push({type:'warning',text:`P²/Tn del ${latestRow.date}: ${formatNum(latestRow.p2tn,0)}, debajo de la meta.`});
+  qualityIssues.forEach(text=>alerts.push({type:'warning',text:`Calidad de datos: ${text}.`}));
+  if(!alerts.length) alerts.push({type:'ok',text:'Sin alertas críticas en el período seleccionado.'});
   $('rollsPeriod').textContent=`${rows[0].date} — ${rows[rows.length-1].date} · ${rows.length} días`;
   content.innerHTML=`
+    <div class="executive-summary">
+      <div class="executive-card"><span>ESTADO GENERAL</span><strong class="${compliance>=100?'good':compliance>=90?'warn':'bad'}">${compliance>=100?'Objetivo cumplido':compliance>=90?'En seguimiento':'Requiere atención'}</strong><small>Cumplimiento: ${formatPct(compliance,1)}</small></div>
+      <div class="executive-card"><span>TENDENCIA</span><strong class="${trendPct===null?'':trendPct>=0?'good':'bad'}">${trendPct===null?'Sin comparación':`${trendPct>=0?'+':''}${formatPct(trendPct,1)}`}</strong><small>${esc(comparison.label)}</small></div>
+      <div class="executive-card"><span>MEJOR DÍA DEL PERÍODO</span><strong>${bestDay?esc(bestDay.date):'Sin datos'}</strong><small>${bestDay?`${formatNum(bestDay.production,0)} p²`:'--'}</small></div>
+      <div class="executive-card"><span>CALIDAD DE DATOS</span><strong class="${qualityIssues.length?'warn':'good'}">${qualityIssues.length?`${qualityIssues.length} aviso(s)`:'Datos consistentes'}</strong><small>${qualityIssues.length?esc(qualityIssues[0]):'Sin errores detectados'}</small></div>
+    </div>
+    <div class="operational-alerts">${alerts.slice(0,4).map(alert=>`<div class="operational-alert ${alert.type==='warning'?'':alert.type}">${alert.type==='ok'?'✓':'⚠'} ${esc(alert.text)}</div>`).join('')}</div>
     <div class="rolls-kpis">
       <div class="rolls-kpi"><div class="rolls-kpi-label">Producción total</div><div class="rolls-kpi-value">${formatNum(totalProduction,0)} p²</div></div>
       <div class="rolls-kpi"><div class="rolls-kpi-label">Producción esperada</div><div class="rolls-kpi-value">${formatNum(totalExpected,0)} p²</div></div>
@@ -2458,7 +2535,7 @@ function renderRollsDashboard(){
     </div>
     <div class="rolls-main-grid">
       <div class="rolls-panel"><h3>Producción diaria vs. objetivo</h3><div class="rolls-chart"><canvas id="rollsDailyChart"></canvas></div></div>
-      <div class="rolls-panel rolls-month-panel"><h3>Cumplimiento mensual</h3><div class="rolls-chart"><canvas id="rollsComplianceChart"></canvas></div><div class="monthly-goal-summary"><div class="monthly-goal-item"><span class="monthly-goal-label">Meta mensual</span><span class="monthly-goal-value">${formatNum(monthlyGoal,0)} p²</span></div><div class="monthly-goal-item"><span class="monthly-goal-label">Producción total</span><span class="monthly-goal-value">${formatNum(totalProduction,0)} p²</span></div><div class="monthly-goal-item days"><span class="monthly-goal-label">Días hábiles restantes</span><span class="monthly-goal-value">${formatNum(businessDays,0)}</span></div><div class="monthly-goal-item needed"><span class="monthly-goal-label">Necesario por día</span><span class="monthly-goal-value">${businessDays>0 ? `${formatNum(dailyProductionNeeded,0)} p²` : 'Sin días cargados'}</span></div></div></div>
+      <div class="rolls-panel rolls-month-panel"><h3>Cumplimiento mensual</h3><div class="rolls-chart"><canvas id="rollsComplianceChart"></canvas></div><div class="monthly-goal-summary"><div class="monthly-goal-item"><span class="monthly-goal-label">Meta mensual</span><span class="monthly-goal-value">${formatNum(monthlyGoal,0)} p²</span></div><div class="monthly-goal-item"><span class="monthly-goal-label">Producción total</span><span class="monthly-goal-value">${formatNum(monthlyProduction,0)} p²</span></div><div class="monthly-goal-item days"><span class="monthly-goal-label">Días hábiles restantes</span><span class="monthly-goal-value">${formatNum(businessDays,0)}</span></div><div class="monthly-goal-item needed"><span class="monthly-goal-label">Necesario por día</span><span class="monthly-goal-value">${businessDays>0 ? `${formatNum(dailyProductionNeeded,0)} p²` : 'Sin días cargados'}</span></div></div></div>
       <div class="rolls-panel rolls-shift-panel"><h3>Producción por turno del ${esc(latestRow.date)}</h3><div class="rolls-chart"><canvas id="rollsShiftChart"></canvas></div><div class="shift-rotation" id="shiftRotationMessage" aria-live="polite"></div></div>
     </div>
     <div class="rolls-bottom-grid">
@@ -2479,7 +2556,7 @@ function renderRollsDashboard(){
         <div class="efficiency-item" style="--move-index:8"><span class="efficiency-label">Tablas negras</span><span class="efficiency-value quality">${formatNum(blackTables,0)}</span><span class="efficiency-subvalue">${formatPct(blackTablesPercent,1)} del total</span></div>
       </div></div>
     </div>
-    <div class="rolls-panel"><h3>Tabla completa de producción</h3>${buildFullProductionTableHtml(fullTableData,'rolls-table-wrap full-table-scroll')}</div>`;
+    <div class="rolls-panel production-table-panel"><h3>Tabla completa de producción</h3>${buildFullProductionTableHtml(fullTableData,'rolls-table-wrap full-table-scroll')}</div>`;
   if(typeof Chart==='undefined') return;
   if(rollsDailyChart) rollsDailyChart.destroy();
   if(rollsShiftChart) rollsShiftChart.destroy();
@@ -2635,6 +2712,25 @@ function showAppView(view){
     else renderCascadeDashboard();
   }
   if(full) renderFullProductionTable();
+}
+function recordUiAudit(action,detail=''){
+  try{
+    const key='dashboard_ui_audit_v1';
+    const entries=JSON.parse(localStorage.getItem(key)||'[]');
+    entries.push({at:new Date().toISOString(),user:currentUser?.username||'sin usuario',action,detail});
+    localStorage.setItem(key,JSON.stringify(entries.slice(-200)));
+  }catch(error){console.warn('No se pudo guardar el evento local',error)}
+}
+async function setPlantMode(enabled){
+  document.body.classList.toggle('plant-mode',enabled);
+  $('plantModeBtn').textContent=enabled?'✓ Modo planta activo':'📺 Modo planta';
+  recordUiAudit(enabled?'plant-mode-open':'plant-mode-close','Pantalla principal');
+  if(enabled && document.documentElement.requestFullscreen){
+    try{await document.documentElement.requestFullscreen()}catch(error){console.info('Pantalla completa no autorizada',error)}
+  }else if(!enabled && document.fullscreenElement && document.exitFullscreen){
+    try{await document.exitFullscreen()}catch(error){console.info('No se pudo salir de pantalla completa',error)}
+  }
+  setTimeout(()=>{[rollsDailyChart,rollsShiftChart,rollsComplianceChart].forEach(chart=>chart?.resize())},120);
 }
 function renderDashboard(){
   setVars(); renderTitles(); document.title=cfg.dashTitle;
@@ -3005,6 +3101,16 @@ $('viewRollsBtn').onclick=()=>showAppView('rolls');
 $('viewShiftCompareBtn').onclick=()=>showAppView('compare');
 $('viewCascadeBtn').onclick=()=>showAppView('cascade');
 $('viewFullTableBtn').onclick=()=>showAppView('full');
+$('rollsPeriodFilter').onchange=event=>{
+  rollsPeriodMode=event.target.value;
+  recordUiAudit('production-period-filter',rollsPeriodMode);
+  renderRollsDashboard();
+};
+$('plantModeBtn').onclick=()=>setPlantMode(!document.body.classList.contains('plant-mode'));
+$('plantModeExit').onclick=()=>setPlantMode(false);
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement && document.body.classList.contains('plant-mode')) setPlantMode(false);
+});
 $('shiftReportBtn').onclick=async()=>{
   const button=$('shiftReportBtn');
   const original=button.textContent;
