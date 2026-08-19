@@ -153,7 +153,7 @@
 .rolls-main-grid{display:grid;grid-template-columns:minmax(520px,1.55fr) minmax(260px,.65fr) minmax(260px,.65fr);gap:12px;margin-bottom:12px}
 .rolls-panel{padding:15px;min-width:0}.rolls-panel h3{margin:0 0 12px;color:#10213a;font-size:16px}.rolls-chart{height:285px;position:relative}
 .rolls-month-panel .rolls-chart{height:220px}.monthly-goal-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.monthly-goal-item{padding:8px 6px;border-radius:9px;background:#f1f6fb;text-align:center}.monthly-goal-item.days{background:#fff4cc}.monthly-goal-item.needed{background:#e2f7ed}.monthly-goal-label{display:block;font-size:11px;color:#60758a;font-weight:800;margin-bottom:4px}.monthly-goal-value{display:block;font-size:14px;color:#0b47a1;font-weight:950}.monthly-goal-item.days .monthly-goal-value{color:#9a5a00}.monthly-goal-item.needed .monthly-goal-value{color:#087443}
-.rolls-shift-panel .rolls-chart{height:218px}.shift-rotation{min-height:76px;margin-top:8px;padding:10px 12px;border-radius:11px;background:linear-gradient(135deg,#e9f3ff,#e5fbfb);border:1px solid #bcd5ec;color:#0b3d78;font-size:14px;font-weight:900;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;opacity:0;transform:translateY(7px)}.shift-rotation.playing{animation:shiftMessageShow 10s ease both}.shift-line{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}.shift-rotation strong{color:#075fc4;font-size:17px;white-space:nowrap}@keyframes shiftMessageShow{0%{opacity:0;transform:translateY(7px)}5%,94%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-7px)}}@media(prefers-reduced-motion:reduce){.shift-rotation.playing{animation:none;opacity:1;transform:none}}
+.rolls-shift-panel .rolls-chart{height:218px}.shift-rotation{min-height:104px;margin-top:8px;padding:10px 12px;border-radius:11px;background:linear-gradient(135deg,#e9f3ff,#e5fbfb);border:1px solid #bcd5ec;color:#0b3d78;font-size:14px;font-weight:900;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;opacity:0;transform:translateY(7px)}.shift-rotation.playing{animation:shiftMessageShow 10s ease both}.shift-rotation.static{opacity:1;transform:none}.shift-line{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}.shift-line.total{margin-top:2px;padding-top:7px;border-top:1px solid #9fc8e8;color:#062f61}.shift-line.total strong{color:#063f91;font-size:18px}.shift-rotation strong{color:#075fc4;font-size:17px;white-space:nowrap}@keyframes shiftMessageShow{0%{opacity:0;transform:translateY(7px)}5%,94%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-7px)}}@media(prefers-reduced-motion:reduce){.shift-rotation.playing{animation:none;opacity:1;transform:none}}
 .rolls-bottom-grid{display:grid;grid-template-columns:minmax(360px,.8fr) minmax(620px,1.6fr);gap:12px;margin-bottom:12px}
 .weekly-roll-row{display:grid;grid-template-columns:72px 1fr 100px 62px;gap:9px;align-items:center;margin:9px 0;font-size:13px}.weekly-roll-track{height:12px;border-radius:999px;background:#e5edf5;overflow:hidden}.weekly-roll-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#1769df,#2f8cff)}.weekly-roll-fill.warn{background:linear-gradient(90deg,#e11d48,#fb7185)}.weekly-roll-pct{padding:4px 7px;border-radius:7px;text-align:center;background:#dcecff;color:#1550a0;font-weight:900}.weekly-roll-pct.warn{background:#fee2e2;color:#c81e1e}
 .efficiency-grid{display:grid;grid-template-columns:repeat(9,1fr);height:100%;overflow:hidden}.efficiency-item{padding:12px;text-align:center;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;justify-content:center;gap:9px;animation:efficiencyMove 30s ease-in-out infinite;animation-delay:calc(var(--move-index,0) * 120ms)}.efficiency-item:first-child{border-left:0}.efficiency-label{font-size:12px;color:#52677c;font-weight:800}.efficiency-value{font-size:25px;font-weight:950;color:#0b47a1}.efficiency-value.good{color:#15803d}.efficiency-value.bad{color:#dc2626}.efficiency-value.quality{color:#b45309}.efficiency-subvalue{font-size:11px;color:#8a5a13;font-weight:900;margin-top:-4px}@keyframes efficiencyMove{0%,6%,100%{transform:translateY(0);opacity:1}2%{transform:translateY(-9px);opacity:.55}4%{transform:translateY(5px);opacity:.82}}@media(prefers-reduced-motion:reduce){.efficiency-item{animation:none}}
@@ -2396,27 +2396,15 @@ function startShiftMessageRotation(latestRow){
   const banner=$('shiftRotationMessage');
   if(!banner || !latestRow) return;
   const date=latestRow.date;
-  const messages=[
-    `<div class="shift-line"><span>Turno 1 (${date})</span><strong>${formatNum(latestRow.shift1,0)} p²</strong></div><div class="shift-line"><span>Turno 2 (${date})</span><strong>${formatNum(latestRow.shift2,0)} p²</strong></div>`,
-    `<div class="shift-line"><span>Producción total (${date})</span><strong>${formatNum(latestRow.production,0)} p²</strong></div>`
-  ];
-  const showMessage=index=>{
-    banner.classList.remove('playing');
-    banner.innerHTML=messages[index];
-    void banner.offsetWidth;
-    banner.classList.add('playing');
-    if(rollsShiftChart && !banner.closest('.pdf-exporting')){
-      rollsShiftChart.reset();
-      rollsShiftChart.update();
-    }
-  };
-  const runCycle=()=>{
-    shiftMessageTimeouts=[];
-    showMessage(0);
-    shiftMessageTimeouts.push(setTimeout(()=>showMessage(1),10000));
-    shiftMessageTimeouts.push(setTimeout(runCycle,20000));
-  };
-  runCycle();
+  const shift1=Number(latestRow.shift1)||0;
+  const shift2=Number(latestRow.shift2)||0;
+  const total=shift1+shift2;
+  banner.classList.remove('playing');
+  banner.classList.add('static');
+  banner.innerHTML=`
+    <div class="shift-line"><span>Turno 1 (${date})</span><strong>${formatNum(shift1,0)} p²</strong></div>
+    <div class="shift-line"><span>Turno 2 (${date})</span><strong>${formatNum(shift2,0)} p²</strong></div>
+    <div class="shift-line total"><span>Total Turno 1 + Turno 2</span><strong>${formatNum(total,0)} p²</strong></div>`;
 }
 function renderRollsDashboard(){
   clearShiftMessageRotation();
