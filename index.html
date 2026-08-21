@@ -16,6 +16,7 @@
     html,body{margin:0;padding:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;overflow-x:hidden;overflow-y:auto}
     body{display:block;min-height:100vh}
     .topbar{height:var(--topbarH);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);backdrop-filter:blur(10px);border-bottom:1px solid rgba(65,120,165,.35);position:sticky;top:0;z-index:20}
+    .data-health-badge{display:inline-flex;align-items:center;gap:7px;max-width:250px;min-height:34px;padding:7px 10px;border:1px solid #456078;border-radius:11px;background:#183047;color:#d8e8f5;font-size:11px;font-weight:850;line-height:1.15;cursor:pointer;text-align:left}.data-health-badge.ok{border-color:#27b76e;background:#103d2b;color:#d5ffe6}.data-health-badge.warn{border-color:#d99c23;background:#4b3917;color:#fff0b7}.data-health-badge.error{border-color:#e04b4b;background:#4a2024;color:#ffd7d7}.data-health-badge.neutral{cursor:default}.data-health-badge .health-icon{font-size:15px}.data-health-badge .health-copy{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .btn,.file-label{border:none;border-radius:12px;padding:9px 13px;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,#144d7a,#1d77b6)}
     .btn.secondary{background:linear-gradient(135deg,#334155,#475569)}
@@ -204,6 +205,7 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
       
     </div>
     <div class="toolbar">
+      <button class="data-health-badge neutral" id="dataHealthBadge" type="button" title="Todavía no hay una actualización registrada"><span class="health-icon">◌</span><span class="health-copy">Sin actualización registrada</span></button>
       <div class="user-chip" id="userChip">No autenticado</div>
       <button class="btn secondary" id="accountBtn">Mi usuario</button>
       <button class="btn secondary" id="logoutBtn">Salir</button>
@@ -1028,9 +1030,40 @@ function sourceStatus(kind,message,state=''){
 function sourceMetaRead(){try{return JSON.parse(localStorage.getItem('dashboard_linked_source_meta_v1')||'{}')}catch(error){return {}}}
 const SOURCE_REPORT_STORAGE_KEY='dashboard_source_import_report_v1';
 function sourceReportRead(){try{return JSON.parse(localStorage.getItem(SOURCE_REPORT_STORAGE_KEY)||'null')}catch(error){return null}}
+function sourceReportDisplayTime(timestamp){
+  const date=new Date(timestamp||0);
+  if(Number.isNaN(date.getTime()))return 'sin fecha';
+  const now=new Date();
+  const sameDay=date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth()&&date.getDate()===now.getDate();
+  const time=date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  return sameDay?`hoy ${time}`:`${date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})} ${time}`;
+}
+function renderDataHealthBadge(report=sourceReportRead()){
+  const badge=$('dataHealthBadge');
+  if(!badge)return;
+  let state='neutral',icon='◌',label='Sin actualización registrada',detail='Todavía no hay una actualización registrada.';
+  if(report){
+    const ageHours=(Date.now()-Date.parse(report.timestamp||0))/3600000;
+    if(report.status==='error'){
+      state='error';icon='⛔';label='Última actualización fallida';detail=report.warnings?.[0]||report.title||label;
+    }else if(report.status==='warning'){
+      state='warn';icon='⚠️';label='Datos con advertencias';detail=`${report.title||label} · ${sourceReportDisplayTime(report.timestamp)}`;
+    }else if(Number.isFinite(ageHours)&&ageHours>24){
+      state='warn';icon='⏱';label='Datos con más de 24 horas';detail=`Última actualización correcta: ${sourceReportDisplayTime(report.timestamp)}`;
+    }else{
+      state='ok';icon='✅';label=`Datos actualizados ${sourceReportDisplayTime(report.timestamp)}`;detail=report.title||'Actualización correcta';
+    }
+  }
+  badge.className=`data-health-badge ${state}`;
+  badge.querySelector('.health-icon').textContent=icon;
+  badge.querySelector('.health-copy').textContent=label;
+  badge.title=`${detail}${currentUser?.role==='admin'?' · Presioná para ver el informe.':''}`;
+  badge.setAttribute('aria-label',badge.title);
+}
 function sourceReportWrite(report){
   localStorage.setItem(SOURCE_REPORT_STORAGE_KEY,JSON.stringify(report));
   renderSourceImportReport(report);
+  renderDataHealthBadge(report);
 }
 function sourceBlockDataRows(block){
   const offsets={production:2,supervisor:1,performance:1,downtime:3};
@@ -1670,6 +1703,7 @@ function updateRoleUi(){
   $('googleSyncBtn').style.display = currentUser ? 'inline-block' : 'none';
   $('accountBtn').style.display = currentUser ? 'inline-block' : 'none';
   $('logoutBtn').style.display = currentUser ? 'inline-block' : 'none';
+  renderDataHealthBadge();
 }
 async function autoSyncGoogleOnAccess(force=false){
   if(localLinkedMode) return false;
@@ -3599,6 +3633,13 @@ function renderFromStored(){
 }
 
 $('openCfg').onclick=()=>openCfg(); $('closeCfg').onclick=()=>closeCfg(); $('cfgBackdrop').onclick=()=>closeCfg();
+$('dataHealthBadge').onclick=()=>{
+  const report=sourceReportRead();
+  if(!report)return;
+  if(currentUser?.role==='admin'){openCfg();setCfgTab('sources',true);return}
+  const warning=report.warnings?.[0];
+  alert(`${report.title||'Estado de los datos'}\n${sourceReportDisplayTime(report.timestamp)}${warning?`\n${warning}`:''}`);
+};
 $('viewRollsBtn').onclick=()=>showAppView('rolls');
 $('viewHistoryBtn').onclick=()=>showAppView('history');
 $('viewShiftCompareBtn').onclick=()=>showAppView('compare');
@@ -4166,6 +4207,7 @@ async function checkForPageUpdate(){
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ if(cfg.useGoogleSheet && cfg.googleAutoLoad) autoSyncGoogleOnAccess(false); refreshAnnouncement(); }});
 setInterval(()=>{ if(document.body.classList.contains('auth-ok') && cfg.useGoogleSheet && cfg.googleAutoLoad){ autoSyncGoogleOnAccess(false); } }, 60000);
 setInterval(()=>{ if(document.body.classList.contains('auth-ok')) refreshAnnouncement(); },20000);
+setInterval(()=>renderDataHealthBadge(),60000);
 setTimeout(checkForPageUpdate,5000);
 setInterval(checkForPageUpdate,60000);
 
