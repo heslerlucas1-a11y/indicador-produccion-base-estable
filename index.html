@@ -459,7 +459,11 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
             <div class="source-actions"><button class="btn" type="button" data-link-source="downtime">Vincular archivo</button><button class="btn secondary" type="button" data-refresh-source="downtime">Actualizar</button></div>
           </article>
         </div>
-        <div class="source-actions" style="margin-top:14px"><button class="btn green" id="refreshAllSourcesCfgBtn" type="button">Actualizar todos los datos</button></div>
+        <div class="source-actions" style="margin-top:14px">
+          <button class="btn green" id="refreshAllSourcesCfgBtn" type="button">Actualizar todos los datos</button>
+          <button class="btn secondary" id="restorePreviousImportBtn" type="button">↶ Restaurar actualización anterior</button>
+        </div>
+        <div class="small" id="sourceRestoreStatus" style="margin-top:8px">Antes de cada actualización se guardará una copia completa de producción, supervisores, tablas negras y tiempo muerto.</div>
         <div class="source-summary" id="sourceImportSummary">Todavía no se realizó una actualización desde los archivos vinculados.</div>
       </div>
 
@@ -680,7 +684,7 @@ function getWebAppUrl(){
   return String((cfg && cfg.appScriptUrl) || DEFAULT_CFG.appScriptUrl || '').trim();
 }
 
-function jsonpRequest(params){
+function jsonpRequest(params,timeoutMs=15000){
   return new Promise((resolve, reject) => {
     const callbackName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
     const query = new URLSearchParams({...params, callback: callbackName});
@@ -697,7 +701,7 @@ function jsonpRequest(params){
       finished = true;
       cleanup();
       reject(new Error('Timeout backend Apps Script'));
-    }, 15000);
+    }, timeoutMs);
 
     window[callbackName] = function(data){
       if(finished) return;
@@ -1318,6 +1322,47 @@ function applySourceBlocksLocally(blocks){
   localLinkedMode=true;
   workbook=null;
 }
+function backendAdminPayload(extra={}){
+  return {username:currentUser?.username||'',password:currentUser?.password||'',...extra};
+}
+async function createImportBackup(){
+  const result=await jsonpRequest({action:'createImportBackup',payload:JSON.stringify(backendAdminPayload())},45000);
+  if(!result||result.status!=='ok')throw new Error(result?.message||'No se pudo crear el respaldo previo.');
+  return result;
+}
+async function restorePreviousImport(){
+  if(!currentUser||String(currentUser.role).toLowerCase()!=='admin')throw new Error('Solo un administrador puede restaurar datos.');
+  const button=$('restorePreviousImportBtn');
+  const status=$('sourceRestoreStatus');
+  const original=button.textContent;
+  button.disabled=true;button.textContent='Buscando respaldo…';
+  try{
+    const latest=await jsonpRequest({action:'getLatestImportBackup',payload:JSON.stringify(backendAdminPayload())},30000);
+    if(!latest||latest.status!=='ok')throw new Error(latest?.message||'No se encontró un respaldo disponible.');
+    const backup=latest.backup||{};
+    if(!backup.backupId)throw new Error('Todavía no hay una actualización anterior para restaurar.');
+    const createdAt=backup.createdAt?new Date(backup.createdAt).toLocaleString('es-AR'):'sin fecha';
+    const createdBy=backup.createdBy?` por ${backup.createdBy}`:'';
+    const accepted=confirm(`Se restaurarán producción, supervisores, tablas negras y tiempo muerto al respaldo del ${createdAt}${createdBy}.\n\nAntes de restaurar se guardará una copia del estado actual. ¿Continuar?`);
+    if(!accepted)return false;
+    button.textContent='Restaurando…';
+    status.textContent='Restaurando las cuatro fuentes y creando una copia de seguridad del estado actual…';
+    const result=await jsonpRequest({action:'restoreImportBackup',payload:JSON.stringify(backendAdminPayload({backupId:backup.backupId}))},45000);
+    if(!result||result.status!=='ok')throw new Error(result?.message||'No se pudo restaurar el respaldo.');
+    const loaded=await loadGoogleSheetData(true);
+    if(!loaded)throw new Error('Los datos se restauraron, pero la página no pudo volver a leer Google Sheets.');
+    const report={timestamp:new Date().toISOString(),status:'ok',title:`Respaldo restaurado: ${createdAt}`,items:[],checks:[{ok:true,text:'Producción, supervisores, tablas negras y tiempo muerto restaurados'},{ok:true,text:'Se guardó una copia de seguridad del estado reemplazado'}],warnings:[]};
+    sourceReportWrite(report);
+    status.textContent=`Último respaldo restaurado: ${createdAt}. Copia de seguridad actual: ${result.safetyBackupId||'guardada'}.`;
+    alert('Restauración completada. La página ya muestra los datos del respaldo anterior.');
+    return true;
+  }catch(error){
+    console.error(error);
+    status.textContent=error.message||'No se pudo restaurar la actualización anterior.';
+    alert(status.textContent);
+    return false;
+  }finally{button.disabled=false;button.textContent=original}
+}
 async function refreshLinkedSources(kinds=Object.keys(LINKED_SOURCE_SPECS),interactive=true){
   if(!currentUser||currentUser.role!=='admin') throw new Error('Solo un administrador puede actualizar los archivos.');
   const blocks=[];const details=[];
@@ -1332,7 +1377,9 @@ async function refreshLinkedSources(kinds=Object.keys(LINKED_SOURCE_SPECS),inter
   }
   const summary=$('sourceImportSummary');
   summary.className='source-summary';
-  summary.textContent='Archiving datos anteriores y publicando en Google Sheets…';
+  summary.textContent='Creando respaldo completo de los datos actuales…';
+  const backup=await createImportBackup();
+  summary.textContent='Archivando historial y publicando en Google Sheets…';
   await archiveCurrentHistory(false);
   for(const block of blocks)await publishSourceBlock(block);
   const finished=await jsonpRequest({action:'finishLocalImport',payload:JSON.stringify({username:currentUser.username,password:currentUser.password,files:details.map(file=>file.name)})});
@@ -1342,7 +1389,10 @@ async function refreshLinkedSources(kinds=Object.keys(LINKED_SOURCE_SPECS),inter
   saveCfgLS();
   $('fileInfo').textContent=`Excel vinculados · actualizado ${new Date().toLocaleString('es-AR')}`;
   $('googleInfo').textContent='Google Sheets actualizado desde Excel';
-  sourceReportWrite(buildSourceImportReport(blocks,details));
+  const report=buildSourceImportReport(blocks,details);
+  report.backupId=backup.backupId;
+  sourceReportWrite(report);
+  $('sourceRestoreStatus').textContent=`Respaldo previo guardado: ${backup.createdAt?new Date(backup.createdAt).toLocaleString('es-AR'):backup.backupId}.`;
   renderDashboard();
   if(!$('cascadeView').hidden)renderCascadeDashboard();
   await renderLinkedSourceStatus();
@@ -3669,6 +3719,7 @@ async function runLinkedSourceUpdate(kinds,button){
 }
 $('refreshLinkedSourcesBtn').onclick=event=>runLinkedSourceUpdate(Object.keys(LINKED_SOURCE_SPECS),event.currentTarget);
 $('refreshAllSourcesCfgBtn').onclick=event=>runLinkedSourceUpdate(Object.keys(LINKED_SOURCE_SPECS),event.currentTarget);
+$('restorePreviousImportBtn').onclick=restorePreviousImport;
 $('cfgPanelSources').addEventListener('click',async event=>{
   const linkButton=event.target.closest('[data-link-source]');
   if(linkButton){
