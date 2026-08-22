@@ -1157,7 +1157,7 @@ async function renderLinkedSourceStatus(){
   }
 }
 function normalizeSourceHeader(value){
-  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/²/g,'2').replace(/³/g,'3').toLowerCase().replace(/[^a-z0-9%/]+/g,' ').trim().replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');
+  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\u0394\u03b4]/g,' delta ').replace(/²/g,'2').replace(/³/g,'3').toLowerCase().replace(/[^a-z0-9%/]+/g,' ').trim().replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');
 }
 function sourceColumn(headers,aliases){
   const normalized=(headers||[]).map(normalizeSourceHeader);
@@ -1256,7 +1256,7 @@ function buildProductionSource(book){
   const data=latestWorkedMonth(rows.slice(headerIndex+1),row=>sourceValue(row,headers,['Fecha']),row=>normalizeRollThousands(sourceValue(row,headers,['Total p2','Total P²']),true)>0);
   if(!data.length) throw new Error('La hoja SegDiario no contiene días producidos en el último mes.');
   const canonicalHeaders=['Fecha','Sem','Ømed','Largo Medio','Curv','Rollos Total','Tn Total','TTD (Hs)','TMD Hs.','Ritmo','FU%','FO%','GAP ml','GAP Esp.','Corte T1','Corte T2','Total p²','p² Esp.','% Cump p²','p²/h Real','p²/Tn','p²/Tn Esp','Real m³/m³','Δ P²/Tn','R/ min','SB/min','p² Corte Semanal','% Cumpl Secado'];
-  const aliases=[['Fecha'],['Sem','Semana'],['Ømed','omed'],['Largo Medio'],['Curv'],['Rollos Total'],['Tn Total','Tn'],['TTD (Hs)','TTD Hs'],['TMD Hs.','TMD Hs'],['Ritmo'],['FU%','FU'],['FO%','FO'],['GAP ml'],['GAP Esp.','GAP Esp'],['Corte T1'],['Corte T2'],['Total p²','Total p2'],['p² Esp.','p2 Esp'],['% Cump p²','% Cump p2'],['p²/h Real','p2/h Real'],['p²/Tn','p2/Tn'],['p²/Tn Esp','p2/Tn Esp'],['Real m³/m³','Real m3/m3'],['Δ P²/Tn','D P2/Tn'],['R/ min'],['SB/min'],['p² Corte Semanal','p2 Corte Semanal'],['% Cumpl Secado']];
+  const aliases=[['Fecha'],['Sem','Semana'],['Ømed','omed'],['Largo Medio'],['Curv'],['Rollos Total'],['Tn Total','Tn'],['TTD (Hs)','TTD Hs'],['TMD Hs.','TMD Hs'],['Ritmo'],['FU%','FU'],['FO%','FO'],['GAP ml'],['GAP Esp.','GAP Esp'],['Corte T1'],['Corte T2'],['Total p²','Total p2'],['p² Esp.','p2 Esp'],['% Cump p²','% Cump p2'],['p²/h Real','p2/h Real'],['p²/Tn','p2/Tn'],['p²/Tn Esp','p2/Tn Esp'],['Real m³/m³','Real m3/m3'],['Delta P²/Tn','Δ P²/Tn','D P2/Tn'],['R/ min'],['SB/min'],['p² Corte Semanal','p2 Corte Semanal'],['% Cumpl Secado']];
   const mapped=data.slice(-43).map(item=>formatProductionImportRow(aliases.map(list=>sourceValue(item.row,headers,list)),item.date.text));
   return {key:'production',sheet:'Produccion',startRow:5,clearRange:'A5:AB49',rows:[['Producción - Consumo de Rollos'],canonicalHeaders,...mapped],count:mapped.length};
 }
@@ -1271,7 +1271,7 @@ function buildSupervisorSource(book){
   });
   if(!data.length) throw new Error('La hoja supervisor no contiene turnos trabajados en el último mes.');
   const canonicalHeaders=['Fecha','Supervisor','Rollos Total','Tn','TTD (Hs)','TMD Hs.','Ritmo','FU%','FO%','GAP ml','GAP Esp.','Prod. P²','P²/Tn','P²/Tn Esp','Δ P²/Tn','corte'];
-  const aliases=[['Fecha'],['Supervisor'],['Rollos Total'],['Tn'],['TTD (Hs)','TTD Hs'],['TMD Hs.','TMD Hs'],['Ritmo'],['FU%','FU'],['FO%','FO'],['GAP ml'],['GAP Esp.','GAP Esp'],['Prod. P²','Prod. P2'],['P²/Tn','P2/Tn'],['P²/Tn Esp','P2/Tn Esp'],['Δ P²/Tn','D P2/Tn'],['corte']];
+  const aliases=[['Fecha'],['Supervisor'],['Rollos Total'],['Tn'],['TTD (Hs)','TTD Hs'],['TMD Hs.','TMD Hs'],['Ritmo'],['FU%','FU'],['FO%','FO'],['GAP ml'],['GAP Esp.','GAP Esp'],['Prod. P²','Prod. P2'],['P²/Tn','P2/Tn'],['P²/Tn Esp','P2/Tn Esp'],['Delta P²/Tn','Δ P²/Tn','D P2/Tn'],['corte']];
   const mapped=data.slice(-50).map(item=>formatSupervisorImportRow(aliases.map(list=>sourceValue(item.row,headers,list)),item.date.text));
   return {key:'supervisor',sheet:'Produccion',startRow:50,clearRange:'A50:P100',rows:[canonicalHeaders,...mapped],count:mapped.length};
 }
@@ -1479,7 +1479,7 @@ async function loadGoogleSheetData(force=false){
 function setVars(){document.documentElement.style.setProperty('--bg',cfg.bgColor);document.documentElement.style.setProperty('--panel',cfg.panelColor);document.documentElement.style.setProperty('--text',cfg.textColor);document.documentElement.style.setProperty('--kpiH',cfg.kpiH+'px');document.documentElement.style.setProperty('--fontScale',cfg.fontScale)}
 function isSpreadsheetError(v){return typeof v==='string' && /^#(?:DIV\/0!|N\/A|VALUE!|REF!|NAME\?|NUM!|NULL!)$/i.test(v.trim())}
 function normalizeNumber(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;let s=String(v).trim().replace(/%/g,'');if(/^\d{4}-\d{2}-\d{2}/.test(s)||/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s))return 0;if(/\d+\.\d{3}(?:\.\d{3})*,\d+/.test(s)||/\d{1,3}(?:\.\d{3})+(?:,\d+)?/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/\d+,\d+/.test(s)&&!/\d+\.\d+/.test(s))s=s.replace(',','.');s=s.replace(/[^0-9.-]/g,'');const n=Number(s);return isNaN(n)?0:n}
-function normalizePercent(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number'){return Math.abs(v)<=1? v*100 : v;} let s=String(v).trim(); if(s.includes('%')) return normalizeNumber(s); let n=normalizeNumber(s); return Math.abs(n)<=1? n*100 : n;}
+function normalizePercent(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number'){return Math.abs(v)<=2? v*100 : v;} let s=String(v).trim(); if(s.includes('%')) return normalizeNumber(s); let n=normalizeNumber(s); return Math.abs(n)<=2? n*100 : n;}
 function formatNum(n,d=0){return Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function formatPct(n,d=1){return `${Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d})}%`}
 function formatDate(v){
@@ -2429,6 +2429,8 @@ function getRollProductionRows(){
     const raw=googleSheetGrid[sheetRow-1] || [];
     const date=String(raw[0] ?? '').trim();
     if(!date) continue;
+    const p2tn=normalizeNumber(raw[20]);
+    const expectedP2tn=normalizeNumber(raw[21]);
     out.push({
       sheetRow,
       date:formatDate(date),
@@ -2451,10 +2453,10 @@ function getRollProductionRows(){
       expected:normalizeRollThousands(raw[17],true),
       compliance:normalizePercent(raw[18]),
       p2h:normalizeRollThousands(raw[19]),
-      p2tn:normalizeNumber(raw[20]),
-      expectedP2tn:normalizeNumber(raw[21]),
+      p2tn,
+      expectedP2tn,
       realM3:normalizePercent(raw[22]),
-      deltaP2tn:normalizePercent(raw[23]),
+      deltaP2tn:expectedP2tn>0 ? (p2tn/expectedP2tn-1)*100 : normalizePercent(raw[23]),
       rMir:normalizeNumber(raw[24]),
       sbMin:normalizeNumber(raw[25])
     });
@@ -2540,10 +2542,14 @@ function getFullProductionTableData(){
     const hasDate=String(raw[0] ?? '').trim()!=='';
     const isTotal=!hasDate && String(raw[16] ?? '').trim()!=='';
     if(!hasDate && !isTotal) continue;
-    rows.push({sheetRow,isTotal,cells:headers.map((_,index)=>{
+    const cells=headers.map((_,index)=>{
       const value=String(raw[index] ?? '').replace(/\s+/g,' ').trim();
       return isSpreadsheetError(value) ? '—' : value;
-    })});
+    });
+    const p2tn=normalizeNumber(raw[20]);
+    const expectedP2tn=normalizeNumber(raw[21]);
+    if(!isTotal && expectedP2tn>0) cells[23]=(p2tn/expectedP2tn-1)*100;
+    rows.push({sheetRow,isTotal,cells});
   }
   return {title:String(googleSheetGrid[4]?.[0] || 'Producción - Consumo de Rollos').trim(),headers,rows};
 }
@@ -2555,12 +2561,22 @@ function fullProductionCellClass(column,value,isTotal){
   if(column===27 && value && !isTotal) classes.push('weekly-pct-cell');
   return classes.join(' ');
 }
+function fullProductionDisplayValue(column,value,isTotal){
+  if(value==='' || value==='—') return value;
+  if(column===0) return value;
+  if([1,4,5,6,7,14,15,16,17,19,20,21,26].includes(column)) return formatNum(normalizeRollThousands(value,column===16||column===17),0);
+  if([2,8,24,25].includes(column)) return formatNum(normalizeNumber(value),1);
+  if([3,12,13].includes(column)) return formatNum(normalizeNumber(value),2);
+  if([9,10,11,18,22,27].includes(column)) return formatPct(normalizePercent(value),0);
+  if(column===23) return formatPct(normalizePercent(value),1);
+  return value;
+}
 function buildFullProductionTableHtml(data,wrapperClass='full-table-scroll'){
   if(!data?.rows?.length) return '<div class="rolls-empty">No hay datos cargados entre las filas 7 y 31.</div>';
   const weeks=[...new Set(data.rows.filter(row=>!row.isTotal).map(row=>String(row.cells[1]||'').trim()).filter(Boolean))];
   const rowHtml=data.rows.map((row,rowIndex)=>{
     if(row.isTotal){
-      return `<tr class="total-row">${row.cells.map((value,column)=>`<td class="${fullProductionCellClass(column,value,true)}">${column===0?'TOTAL':esc(value)}</td>`).join('')}</tr>`;
+      return `<tr class="total-row">${row.cells.map((value,column)=>`<td class="${fullProductionCellClass(column,value,true)}">${column===0?'TOTAL':esc(fullProductionDisplayValue(column,value,true))}</td>`).join('')}</tr>`;
     }
     const week=String(row.cells[1]||'').trim();
     const previousWeek=rowIndex>0 && !data.rows[rowIndex-1].isTotal ? String(data.rows[rowIndex-1].cells[1]||'').trim() : '';
@@ -2568,7 +2584,8 @@ function buildFullProductionTableHtml(data,wrapperClass='full-table-scroll'){
     const tone=Math.max(0,weeks.indexOf(week))%5;
     const rowClasses=[`week-tone-${tone}`,week!==previousWeek?'week-start':'',week!==nextWeek?'week-end':''].filter(Boolean).join(' ');
     const cells=row.cells.map((value,column)=>{
-      const display=column===1 && week ? `<span class="week-badge">${esc(value)}</span>` : esc(value);
+      const formatted=fullProductionDisplayValue(column,value,false);
+      const display=column===1 && week ? `<span class="week-badge">${esc(formatted)}</span>` : esc(formatted);
       return `<td class="${fullProductionCellClass(column,value,false)}">${display}</td>`;
     }).join('');
     return `<tr class="${rowClasses}">${cells}</tr>`;
@@ -2586,6 +2603,8 @@ function getShiftComparisonRows(){
     const date=String(raw[0]??'').trim();
     const supervisor=String(raw[1]??'').trim();
     if(!date || !supervisor) continue;
+    const p2tn=normalizeNumber(raw[12]);
+    const expectedP2tn=normalizeNumber(raw[13]);
     rows.push({
       sheetRow,
       date:formatDate(date),
@@ -2600,9 +2619,9 @@ function getShiftComparisonRows(){
       gap:normalizeNumber(raw[9]),
       expectedGap:normalizeNumber(raw[10]),
       production:normalizeRollThousands(raw[11],true),
-      p2tn:normalizeNumber(raw[12]),
-      expectedP2tn:normalizeNumber(raw[13]),
-      deltaP2tn:normalizePercent(raw[14]),
+      p2tn,
+      expectedP2tn,
+      deltaP2tn:expectedP2tn>0 ? (p2tn/expectedP2tn-1)*100 : normalizePercent(raw[14]),
       cut:String(raw[15]??'').trim(),
       worked:String(raw[15]??'').trim().toUpperCase()!=='NO'
     });
@@ -2935,7 +2954,7 @@ function startShiftMessageRotation(latestRow){
   const date=latestRow.date;
   const shift1=Number(latestRow.shift1)||0;
   const shift2=Number(latestRow.shift2)||0;
-  const total=shift1+shift2;
+  const total=Number(latestRow.production)||(shift1+shift2);
   banner.classList.remove('playing');
   banner.classList.add('static');
   banner.innerHTML=`
