@@ -2993,8 +2993,8 @@ function renderRollsDashboard(){
   const totalTons=useSheetSummary && fullSummary?.totalTons ? fullSummary.totalTons : sumRollMetric(rows,'tons');
   const rhythm=useSheetSummary && fullSummary?.rhythm ? fullSummary.rhythm : avgRollMetric(rows,'rhythm');
   const latestRow=rows[rows.length-1];
-  const totalTables=normalizeNumber(readMetric('totalTablas'));
-  const blackTables=normalizeNumber(readMetric('tablasNegras'));
+  const totalTables=normalizeRollThousands(readMetric('totalTablas'));
+  const blackTables=normalizeRollThousands(readMetric('tablasNegras'));
   const blackTablesPercent=totalTables>0 ? blackTables/totalTables*100 : 0;
   const fullTableData=getFullProductionTableData();
   const weeklyMap=new Map();
