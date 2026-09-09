@@ -1480,16 +1480,17 @@ async function loadGoogleSheetData(force=false){
 function setVars(){document.documentElement.style.setProperty('--bg',cfg.bgColor);document.documentElement.style.setProperty('--panel',cfg.panelColor);document.documentElement.style.setProperty('--text',cfg.textColor);document.documentElement.style.setProperty('--kpiH',cfg.kpiH+'px');document.documentElement.style.setProperty('--fontScale',cfg.fontScale)}
 function isSpreadsheetError(v){return typeof v==='string' && /^#(?:DIV\/0!|N\/A|VALUE!|REF!|NAME\?|NUM!|NULL!)$/i.test(v.trim())}
 function normalizeNumber(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;let s=String(v).trim().replace(/%/g,'');if(/^\d{4}-\d{2}-\d{2}/.test(s)||/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s))return 0;if(/\d+\.\d{3}(?:\.\d{3})*,\d+/.test(s)||/\d{1,3}(?:\.\d{3})+(?:,\d+)?/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/\d+,\d+/.test(s)&&!/\d+\.\d+/.test(s))s=s.replace(',','.');s=s.replace(/[^0-9.-]/g,'');const n=Number(s);return isNaN(n)?0:n}
-function normalizePercent(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number'){return Math.abs(v)<=2? v*100 : v;} let s=String(v).trim(); if(s.includes('%')) return normalizeNumber(s); let n=normalizeNumber(s); return Math.abs(n)<=2? n*100 : n;}
-function normalizeOperationalPercent(v){
+function normalizePercent(v){
   if(v===null||v===undefined||v==='')return 0;
   const source=String(v).trim();
-  if(source.includes('%'))return normalizeNumber(source);
-  const number=normalizeNumber(v);
-  const absolute=Math.abs(number);
-  if(absolute<=2)return number*100;
-  if(absolute<10)return number*10;
-  return number;
+  // Percent fractions use a decimal separator, never thousands grouping.
+  const number=typeof v==='number'?v:Number(source.replace(/%/g,'').replace(/\s/g,'').replace(',','.'));
+  if(!Number.isFinite(number))return 0;
+  if(source.includes('%'))return number;
+  return Math.abs(number)<=2?number*100:number;
+}
+function normalizeOperationalPercent(v){
+  return normalizePercent(v);
 }
 function formatNum(n,d=0){return Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function formatPct(n,d=1){return `${Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d})}%`}
@@ -2561,8 +2562,8 @@ function getFullProductionTableData(){
     const expectedP2tn=normalizeNumber(raw[21]);
     const production=normalizeRollThousands(raw[16],true);
     const expected=normalizeRollThousands(raw[17],true);
-    if(!isTotal && expected>0) cells[18]=production/expected*100;
-    if(!isTotal && expectedP2tn>0) cells[23]=(p2tn/expectedP2tn-1)*100;
+    if(!isTotal && expected>0) cells[18]=`${production/expected*100}%`;
+    if(!isTotal && expectedP2tn>0) cells[23]=`${(p2tn/expectedP2tn-1)*100}%`;
     rows.push({sheetRow,isTotal,cells});
   }
   return {title:String(googleSheetGrid[4]?.[0] || 'Producción - Consumo de Rollos').trim(),headers,rows};
