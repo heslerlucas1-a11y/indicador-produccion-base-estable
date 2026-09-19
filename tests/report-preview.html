@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>Prueba de reporte</title>
+<button id="whatsappImageBtn">Generar</button>
+<script>
+const fixture={row:{date:'18/09/2026',shift1:101040,shift2:83310,production:184349,fu:70,fo:70,gap:2.4,rhythm:101,p2h:11534,p2tn:203,deltaP2tn:-6,realM3:53},goal:3000000,production:1877559,days:8,tables:28317,black:97,partial:0};
+function getRollProductionRows(){return [fixture.row]}
+function getRollProductionSummary(){return {totalProduction:fixture.production}}
+function readSheetCell(c){return c==='AA2'?8:0}
+function readMetric(c){return c==='totalTablas'?28317:97}
+function normalizeNumber(v){return Number(v)}
+function normalizeRollThousands(v){return Number(v)}
+</script>
+<script src="../whatsapp-report.js"></script>
+<script>document.body.appendChild(renderWhatsAppProductionReport(fixture));document.querySelector('canvas').style.width='900px';</script>
