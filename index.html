@@ -2644,6 +2644,18 @@ function getShiftComparisonRows(){
   }
   return rows;
 }
+function latestShiftProductionResult(rows,supervisors){
+  const dateKey=date=>String(date).split('/').reverse().join('-');
+  const dates=[...new Set(rows.map(row=>row.date))].sort((a,b)=>dateKey(a).localeCompare(dateKey(b)));
+  const date=dates[dates.length-1]||'';
+  const records=supervisors.map(name=>rows.find(row=>row.date===date && row.supervisor===name));
+  if(records.length<2 || records.some(row=>!row || !Number.isFinite(row.production))){
+    return {date,winner:'Sin comparación',production:null};
+  }
+  const production=Math.max(...records.map(row=>row.production));
+  const winners=records.filter(row=>row.production===production);
+  return {date,winner:winners.length>1?'Empate':winners[0].supervisor,production};
+}
 function renderShiftComparison(){
   const target=$('shiftCompareContent');
   if(!target) return;
@@ -2716,6 +2728,7 @@ function renderShiftComparison(){
   const hourDifference=describeDifference(firstSummary.hoursWorked,secondSummary.hoursWorked,'hs');
   const bestPerShift=firstSummary.productionPerShift===secondSummary.productionPerShift?'Empate':firstSummary.productionPerShift>secondSummary.productionPerShift?firstName:secondName;
   const bestPerHour=firstSummary.productionPerHour===secondSummary.productionPerHour?'Empate':firstSummary.productionPerHour>secondSummary.productionPerHour?firstName:secondName;
+  const latestResult=latestShiftProductionResult(rows,supervisors);
   const comparisonRows=dates.map(date=>{
     const first=findRecord(date,firstName);
     const second=findRecord(date,secondName);
@@ -2739,8 +2752,9 @@ function renderShiftComparison(){
     <div class="workload-comparison" aria-label="Comparación de carga de trabajo">
       <div class="workload-card"><span>DIFERENCIA DE TURNOS TRABAJADOS</span><strong>${shiftDifference.value}</strong><small>${esc(shiftDifference.detail)}</small></div>
       <div class="workload-card"><span>DIFERENCIA DE HORAS TRABAJADAS</span><strong>${hourDifference.value}</strong><small>${esc(hourDifference.detail)}</small></div>
-      <div class="workload-card"><span>MEJOR PRODUCCIÓN POR TURNO</span><strong>${esc(bestPerShift)}</strong><small>${formatNum(Math.max(firstSummary.productionPerShift,secondSummary.productionPerShift),0)} p² por turno</small></div>
+      <div class="workload-card"><span>MEJOR PROMEDIO POR TURNO DEL PERÍODO</span><strong>${esc(bestPerShift)}</strong><small>${formatNum(Math.max(firstSummary.productionPerShift,secondSummary.productionPerShift),0)} p² por turno</small></div>
       <div class="workload-card"><span>MEJOR PRODUCCIÓN POR HORA EFECTIVA</span><strong>${esc(bestPerHour)}</strong><small>${formatNum(Math.max(firstSummary.productionPerHour,secondSummary.productionPerHour),0)} p² por hora</small></div>
+      <div class="workload-card"><span>MAYOR PRODUCCIÓN DEL ÚLTIMO DÍA</span><strong>${esc(latestResult.winner)}</strong><small>${esc(latestResult.date)} · ${latestResult.production===null?'Faltan datos de un supervisor':`${formatNum(latestResult.production,0)} p²${latestResult.winner==='Empate'?' cada uno':''}`}</small></div>
     </div>
     <div class="compare-charts">
       <div class="compare-panel"><h3>Producción diaria por supervisor</h3><div class="compare-chart"><canvas id="shiftCompareProductionChart"></canvas></div></div>
