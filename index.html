@@ -290,7 +290,7 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
         <h2>Comparación de turnos</h2>
         <div class="small" style="color:#63778b;margin-top:4px">Comparación diaria por supervisor · datos de las filas 51 a 100</div>
       </div>
-      <div class="rolls-period" id="shiftComparePeriod">Sin datos comparativos</div>
+      <div><button class="btn green" id="shiftImageBtn" type="button">📷 Imagen de turnos</button><div class="rolls-period" id="shiftComparePeriod">Sin datos comparativos</div></div>
     </div>
     <div id="shiftCompareContent">
       <div class="rolls-empty">Sin datos. Completá la tabla desde la fila 51.</div>
@@ -303,7 +303,7 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
         <h2>Tiempo muerto por sector</h2>
         <div class="small" style="color:#63778b;margin-top:4px">Seguimiento diario y acumulado contra las metas de la hoja CASCADEO_TM</div>
       </div>
-      <div class="rolls-period" id="cascadePeriod">Sin datos de cascadeo</div>
+      <div><button class="btn green" id="downtimeImageBtn" type="button">📷 Imagen de tiempos muertos</button><div class="rolls-period" id="cascadePeriod">Sin datos de cascadeo</div></div>
     </div>
     <div id="cascadeContent">
       <div class="rolls-empty">Sin datos. Sincronizá Google Sheets para leer la hoja CASCADEO_TM.</div>
@@ -4348,5 +4348,6 @@ setInterval(checkForPageUpdate,60000);
 })();
 </script>
 <script src="whatsapp-report.js"></script>
+<script src="operational-reports.js"></script>
 </body>
 </html>
