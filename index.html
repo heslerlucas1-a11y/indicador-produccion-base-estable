@@ -183,34 +183,45 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
 .source-grid{display:grid;grid-template-columns:repeat(3,minmax(240px,1fr));gap:12px}.source-card{padding:15px;border:1px solid #2c4b66;border-radius:14px;background:rgba(4,19,31,.42)}.source-card h4{margin:0 0 7px;color:#eaf6ff}.source-card p{margin:0 0 10px;color:#9fc3df;font-size:11px;line-height:1.45}.source-status{min-height:44px;padding:9px 10px;border-radius:10px;background:#071725;color:#a8c6dc;font-size:11px;line-height:1.4}.source-status.ok{border:1px solid #24b36b;color:#caffdf}.source-status.warn{border:1px solid #d99c23;color:#ffe7ab}.source-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.source-summary{margin-top:12px;padding:12px 14px;border-radius:12px;background:#071725;color:#b8d5ea;line-height:1.5}.source-summary.ok{border:1px solid #24b36b;color:#d7ffe7}.source-summary.warn{border:1px solid #d99c23;color:#fff0bd}.source-summary.error{border:1px solid #e04b4b;color:#ffd2d2}.source-report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.source-report-head strong{display:block;color:#f2f8ff;font-size:14px}.source-report-head small{color:#9fc3df}.source-report-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:8px;margin-top:11px}.source-report-item{padding:9px 10px;border-radius:9px;background:#0c2438;border:1px solid #24455f}.source-report-item b{display:block;color:#fff;font-size:12px}.source-report-item span{display:block;margin-top:3px;color:#a8c6dc;font-size:10px}.source-report-checks,.source-report-warnings{margin:10px 0 0;padding-left:18px;font-size:11px}.source-report-checks li,.source-report-warnings li{margin:4px 0}.source-report-checks .pass{color:#8ff0b8}.source-report-warnings{color:#ffd27a}@media(max-width:950px){.source-grid,.source-report-grid{grid-template-columns:1fr}}
 
 </style>
+<link rel="stylesheet" href="industrial-toolbar.css">
 </head>
 <body class="auth-locked">
   <div id="appContent" class="app-content" aria-hidden="true">
-  <div class="topbar">
-    <div class="toolbar">
-      <button class="btn" id="openCfg" data-admin-only="true">⚙ Configuración</button>
-      <div class="view-switch" aria-label="Cambiar pantalla">
+  <div class="topbar industrial-toolbar">
+    <div class="industrial-main">
+      <div class="industrial-brand"><span class="industrial-mark" aria-hidden="true">▥</span><div>BERESHIT<small>CONTROL DE PRODUCCIÓN</small></div></div>
+      <nav class="view-switch" aria-label="Cambiar pantalla">
         <button class="view-btn active" id="viewRollsBtn" type="button">Producción por día</button>
         <button class="view-btn" id="viewHistoryBtn" type="button">Historial</button>
         <button class="view-btn" id="viewShiftCompareBtn" type="button">Comparación de turnos</button>
         <button class="view-btn" id="viewCascadeBtn" type="button">Tiempo muerto por sector</button>
         <button class="view-btn" id="viewFullTableBtn" type="button">Tabla completa</button>
+      </nav>
+      <div class="industrial-account" aria-label="Cuenta">
+        <button class="btn industrial-config" id="openCfg" data-admin-only="true">⚙ Configuración</button>
+        <div class="user-chip" id="userChip">No autenticado</div>
+        <button class="btn secondary" id="accountBtn">Mi usuario</button>
+        <button class="btn secondary" id="logoutBtn">Salir</button>
       </div>
+    </div>
+    <div class="industrial-actions">
+      <div class="industrial-group" role="group" aria-label="Datos y sincronización">
+      <span class="industrial-group-label">DATOS</span>
       <label class="file-label" id="fileLabel" data-admin-only="true">📂 Cargar Excel <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsb,.xlsm,.csv"></label>
       <button class="btn secondary" id="reloadBtn" data-admin-only="true">↻ Recargar Excel</button>
       <button class="btn green" id="refreshLinkedSourcesBtn" type="button" data-admin-only="true">⟳ Actualizar archivos</button>
       <button class="btn secondary" id="googleSyncBtn">☁ Sincronizar Google</button>
+      </div>
+      <div class="industrial-group industrial-reports" role="group" aria-label="Reportes y exportación">
+      <span class="industrial-group-label">REPORTES</span>
       <button class="btn green" id="exportBtn">🖼 Exportar PNG</button>
       <button class="btn orange" id="reportBtn">📄 Reporte</button>
       <button class="btn green" id="whatsappImageBtn" title="Descargar una imagen del último día cargado para compartir">📷 Imagen para WhatsApp</button>
       <button class="btn green" id="shiftReportBtn">📊 Reporte de turnos</button>
-      
+      </div>
     </div>
-    <div class="toolbar">
+    <div class="industrial-status" aria-label="Estado de los datos">
       <button class="data-health-badge neutral" id="dataHealthBadge" type="button" title="Todavía no hay una actualización registrada"><span class="health-icon">◌</span><span class="health-copy">Sin actualización registrada</span></button>
-      <div class="user-chip" id="userChip">No autenticado</div>
-      <button class="btn secondary" id="accountBtn">Mi usuario</button>
-      <button class="btn secondary" id="logoutBtn">Salir</button>
       <div class="mini" id="fileInfo">Sin archivo cargado</div>
       <div class="mini" id="googleInfo">Google Sheets inactivo</div>
     </div>
