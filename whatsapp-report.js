@@ -106,7 +106,7 @@
       if (!rows.length) throw new Error('Primero cargá los datos de producción.');
       const row = rows[rows.length - 1];
       const data = {
-        row, goal: 3000000,
+        row, goal: getMonthlyProductionGoal(row.date),
         production: getRollProductionSummary()?.totalProduction || sumRollMetric(rows, 'production'),
         days: Math.max(0, Math.trunc(normalizeNumber(readSheetCell('AA2')))),
         tables: normalizeRollThousands(readMetric('totalTablas')),

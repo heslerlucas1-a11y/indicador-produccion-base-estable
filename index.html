@@ -214,7 +214,7 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
       </div>
       <div class="industrial-group industrial-reports" role="group" aria-label="Reportes y exportación">
       <span class="industrial-group-label">REPORTES</span>
-      <button class="btn green" id="exportBtn">🖼 Exportar PNG</button>
+      <button class="btn green" id="exportBtn" hidden>🖼 Exportar PNG</button>
       <button class="btn orange" id="reportBtn">📄 Reporte</button>
       <button class="btn green" id="whatsappImageBtn" title="Descargar una imagen del último día cargado para compartir">📷 Imagen para WhatsApp</button>
       <button class="btn green" id="shiftReportBtn">📊 Reporte de turnos</button>
@@ -335,7 +335,6 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
         <button class="cfg-tab" type="button" role="tab" id="cfgTabGoogle" data-cfg-tab="google" aria-controls="cfgPanelGoogle" aria-selected="false" tabindex="-1">Google Sheets</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabSources" data-cfg-tab="sources" aria-controls="cfgPanelSources" aria-selected="false" tabindex="-1">Fuentes de datos</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabTitles" data-cfg-tab="titles" aria-controls="cfgPanelTitles" aria-selected="false" tabindex="-1">Títulos</button>
-        <button class="cfg-tab" type="button" role="tab" id="cfgTabWeeks" data-cfg-tab="weeks" aria-controls="cfgPanelWeeks" aria-selected="false" tabindex="-1">Semanas</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabSupport" data-cfg-tab="support" aria-controls="cfgPanelSupport" aria-selected="false" tabindex="-1">Soporte</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabSuggestions" data-cfg-tab="suggestions" aria-controls="cfgPanelSuggestions" aria-selected="false" tabindex="-1">Sugerencias</button>
         <button class="cfg-tab" type="button" role="tab" id="cfgTabAnnouncements" data-cfg-tab="announcements" aria-controls="cfgPanelAnnouncements" aria-selected="false" tabindex="-1">Avisos</button>
@@ -364,6 +363,11 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
       </div>
 
       <div class="cfg-card" id="cfgPanelTargets" data-cfg-panel="targets" role="tabpanel" aria-labelledby="cfgTabTargets">
+        <h3>Metas mensuales de producción (p²)</h3>
+        <p class="small">Una meta por mes y año, utilizada también en los reportes. Sin una meta mensual definida se usa la meta de la hoja; si falta, 3.000.000 p².</p>
+        <div id="monthlyGoalsEditor"></div>
+        <button type="button" class="btn secondary" id="addMonthlyGoal">Agregar mes</button>
+        <p class="small" id="monthlyGoalsStatus"></p>
         <h3>Metas de comparaciÃ³n de turnos</h3>
         <div class="row4">
           <div class="field"><label>Meta fija diaria principal (pÂ²)</label><input id="dailyFixedProductionTarget" type="number" min="0" step="1000" value="148660"></div>
@@ -764,6 +768,9 @@ function applyRemoteConfigToCfg(remote){
   if(!remote || typeof remote !== 'object') return;
 
   cfg = mergeCfgWithDefaults(cfg);
+  if(remote.monthly_production_goals!==undefined){
+    try{const goals=typeof remote.monthly_production_goals==='string'?JSON.parse(remote.monthly_production_goals):remote.monthly_production_goals;if(goals&&typeof goals==='object'&&!Array.isArray(goals))cfg.monthlyGoals=goals;}catch(error){console.warn('Metas mensuales remotas inválidas');}
+  }
 
   cfg.dashTitle = remote.title_window || cfg.dashTitle;
   cfg.exportBrandText = remote.brand_text_export || cfg.exportBrandText;
@@ -1055,6 +1062,16 @@ function sourceReportDisplayTime(timestamp){
   const time=date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   return sameDay?`hoy ${time}`:`${date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})} ${time}`;
 }
+function unifiedQualityIssues(report=sourceReportRead()){
+  const issues=getRollProductionRows().length?rollDataQualityIssues(getRollProductionRows()).map(text=>`Producción: ${text}`):[];
+  if(report){
+    (report.warnings||[]).forEach(text=>issues.push(`Importación de fuentes: ${text}`));
+    if(report.status==='error')issues.push(`Actualización: ${report.title||'Última importación fallida'}`);
+    if(report.status==='warning'&&!(report.warnings||[]).length)issues.push(`Importación: ${report.title||'Con advertencias'}`);
+    if(Date.now()-Date.parse(report.timestamp)>86400000)issues.push('Actualización: el último control de archivos tiene más de 24 horas');
+  }
+  return [...new Set(issues)];
+}
 function renderDataHealthBadge(report=sourceReportRead()){
   const badge=$('dataHealthBadge');
   if(!badge)return;
@@ -1071,6 +1088,8 @@ function renderDataHealthBadge(report=sourceReportRead()){
       state='ok';icon='✅';label=`Datos actualizados ${sourceReportDisplayTime(report.timestamp)}`;detail=report.title||'Actualización correcta';
     }
   }
+  const issues=unifiedQualityIssues(report);
+  if(issues.length){state=report?.status==='error'?'error':'warn';icon='⚠️';label=`${issues.length} aviso(s) de calidad`;detail=issues.join(' · ');}
   badge.className=`data-health-badge ${state}`;
   badge.querySelector('.health-icon').textContent=icon;
   badge.querySelector('.health-copy').textContent=label;
@@ -1695,7 +1714,7 @@ function buildDashboardContext(){
   const actualDia=normalizeNumber(readSheetCell(cfg.mapping.objDia?.actualCell||cfg.mapping.actualDia?.cell||cfg.mapping.valorActualDia?.cell||'T2')) || normalizeNumber(readSheetCell('T2')) || 0;
   const objDia=normalizeNumber(readMetric('objDia'))||0;
   const objSem=normalizeNumber(readMetric('objSem'))||0;
-  const objMes=normalizeNumber(readMetric('objMes'))||0;
+  const objMes=getMonthlyProductionGoal();
   const sem1=normalizeNumber(readMetric('sem1'))||0;
   const sem2=normalizeNumber(readMetric('sem2'))||0;
   const sem3=normalizeNumber(readMetric('sem3'))||0;
@@ -2087,10 +2106,23 @@ function renderUsers(){
   box.innerHTML = `<div class="users-grid">${head}${rows}</div>`;
   box.querySelectorAll('[data-invite-user]').forEach(button=>{
     button.onclick=()=>generateUserInvitation(Number(button.dataset.inviteUser));
+    const remove=document.createElement('button');remove.type='button';remove.className='btn red';remove.textContent='Eliminar';button.parentNode.appendChild(remove);
+    remove.onclick=()=>stageUserRemoval(Number(button.dataset.inviteUser));
   });
   if(msg) msg.textContent='Editá y guardá. Los cambios impactan sobre la hoja Usuarios vía Apps Script V29.';
 }
 
+function stageUserRemoval(index){
+  if(currentUser?.role!=='admin')return;
+  const users=[...document.querySelectorAll('#usersContainer [data-user-idx]')].map(row=>({username:row.querySelector('[data-key="username"]').value.trim(),password:row.querySelector('[data-key="password"]').value,role:row.querySelector('[data-key="role"]').value,active:row.querySelector('[data-key="active"]').value,locked:window.userAdminRows[Number(row.dataset.userIdx)]?.locked}));
+  const user=users[index];
+  if(user.username.toLowerCase()===currentUser.username.toLowerCase())return alert('No podés eliminar tu propia cuenta.');
+  if(user.role==='admin'&&users.filter(u=>u.role==='admin'&&u.active==='SI').length<=1)return alert('No se puede eliminar al último administrador activo.');
+  if(!confirm(`¿Quitar a ${user.username||'este usuario nuevo'}? Se enviará al presionar Guardar usuarios.`))return;
+  if(user.locked){window.pendingUserDeletes=window.pendingUserDeletes||[];window.pendingUserDeletes.push(user.username);}
+  users.splice(index,1);window.userAdminRows=users;renderUsers();
+  $('usersMsg').textContent='Eliminación pendiente. Presioná Guardar usuarios para enviarla al servidor.';
+}
 async function refreshUsersFromBackend(){
   const msg=$('usersMsg');
   if(!currentUser || currentUser.role!=='admin') return;
@@ -2190,7 +2222,7 @@ function generateUserInvitation(index){
   const totalProduction=summary?.totalProduction || sumRollMetric(productionRows,'production');
   const totalExpected=summary?.totalExpected || sumRollMetric(productionRows,'expected');
   const compliance=totalExpected>0 ? totalProduction/totalExpected*100 : 0;
-  const monthlyCompliance=totalProduction>0 ? totalProduction/3000000*100 : 0;
+  const monthlyCompliance=totalProduction>0 ? totalProduction/getMonthlyProductionGoal()*100 : 0;
   const latest=productionRows[productionRows.length-1];
 
   invitationRoundRect(ctx,70,315,1060,470,30,'#f7fbff','rgba(255,255,255,.3)');
@@ -2277,7 +2309,35 @@ function collectUsersFromPanel(){
     active: row.querySelector('[data-key="active"]').value
   })).filter(u=>u.username);
 }
+function monthlyKey(date){
+  const value=String(date||'');
+  const match=value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return match?`${match[3]}-${match[2].padStart(2,'0')}`:value.slice(0,7);
+}
+function getMonthlyProductionGoal(date){
+  const rows=getRollProductionRows();
+  const key=monthlyKey(date||rows[rows.length-1]?.date||formatDate(readMetric('fecha')));
+  const configured=Number(cfg.monthlyGoals?.[key]);
+  const source=normalizeNumber(readMetric('objMes'));
+  return configured>0?configured:source>0?source:3000000;
+}
+function renderMonthlyGoals(){
+  const entries=Object.entries(cfg.monthlyGoals||{}).sort();
+  $('monthlyGoalsEditor').innerHTML=entries.map(([month,value])=>`<div class="row2 monthly-goal-row"><div class="field"><label>Mes</label><input type="month" data-goal-month value="${esc(month)}"></div><div class="field"><label>Meta (p²)</label><input type="number" min="1" step="1" data-goal-value value="${Number(value)||''}"></div></div>`).join('');
+}
+function collectMonthlyGoals(){
+  const goals={};
+  document.querySelectorAll('.monthly-goal-row').forEach(row=>{
+    const month=row.querySelector('[data-goal-month]').value,value=Number(row.querySelector('[data-goal-value]').value);
+    if(!month&&!value)return;
+    if(!/^\d{4}-\d{2}$/.test(month)||!Number.isFinite(value)||value<=0)throw new Error('Completá mes y meta positiva en todas las metas mensuales.');
+    if(Object.hasOwn(goals,month))throw new Error(`El mes ${month} está repetido.`);
+    goals[month]=value;
+  });
+  return goals;
+}
 function renderConfig(){
+  renderMonthlyGoals();
   $('dashTitle').value=cfg.dashTitle;
   $('weeklyTargetLine').value=cfg.weeklyTargetLine;
   $('dailyFixedProductionTarget').value=cfg.dailyFixedProductionTarget;
@@ -2385,6 +2445,7 @@ function renderKpiFieldsEditor(){
   });
 }
 function applyConfigFromPanel(){
+  cfg.monthlyGoals=collectMonthlyGoals();
   cfg.dashTitle=$('dashTitle').value||DEFAULT_CFG.dashTitle;
   cfg.weeklyTargetLine=normalizeNumber($('weeklyTargetLine').value);
   cfg.dailyFixedProductionTarget=Math.max(0,normalizeNumber($('dailyFixedProductionTarget').value)) || DEFAULT_CFG.dailyFixedProductionTarget;
@@ -3024,7 +3085,7 @@ function renderRollsDashboard(){
   const totalExpected=useSheetSummary && fullSummary?.totalExpected ? fullSummary.totalExpected : sumRollMetric(rows,'expected');
   const compliance=useSheetSummary && fullSummary?.compliance ? fullSummary.compliance : (totalExpected>0 ? totalProduction/totalExpected*100 : avgRollMetric(rows,'compliance'));
   const dailyFixedProductionTarget=Number(cfg.dailyFixedProductionTarget)||DEFAULT_CFG.dailyFixedProductionTarget;
-  const monthlyGoal=3000000;
+  const monthlyGoal=getMonthlyProductionGoal(allRows[allRows.length-1]?.date);
   const monthlyProduction=fullSummary?.totalProduction || sumRollMetric(allRows,'production');
   const monthlyCompliance=monthlyGoal>0 ? monthlyProduction/monthlyGoal*100 : 0;
   const businessDays=Math.max(0,Math.trunc(normalizeNumber(readSheetCell('AA2'))));
@@ -3054,7 +3115,8 @@ function renderRollsDashboard(){
   const trendPreviousProduction=sumRollMetric(comparison.rows,'production');
   const trendPct=trendPreviousProduction>0 ? (trendCurrentProduction-trendPreviousProduction)/trendPreviousProduction*100 : null;
   const bestDay=rows.reduce((best,row)=>!best||row.production>best.production?row:best,null);
-  const qualityIssues=rollDataQualityIssues(rows);
+  const qualityIssues=unifiedQualityIssues();
+  renderDataHealthBadge();
   const alerts=[];
   if(compliance<90) alerts.push({type:'critical',text:`Cumplimiento del período en ${formatPct(compliance,1)}: por debajo del 90%.`});
   if(latestRow.tmd*60>Number(cfg.compareDeadTimeTargetMinutes||96)) alerts.push({type:'critical',text:`Tiempo muerto del ${latestRow.date}: ${formatNum(latestRow.tmd*60,0)} min, supera la meta.`});
@@ -3067,7 +3129,7 @@ function renderRollsDashboard(){
       <div class="executive-card"><span>ESTADO GENERAL</span><strong class="${compliance>=100?'good':compliance>=90?'warn':'bad'}">${compliance>=100?'Objetivo cumplido':compliance>=90?'En seguimiento':'Requiere atención'}</strong><small>Cumplimiento: ${formatPct(compliance,1)}</small></div>
       <div class="executive-card"><span>TENDENCIA</span><strong class="${trendPct===null?'':trendPct>=0?'good':'bad'}">${trendPct===null?'Sin comparación':`${trendPct>=0?'+':''}${formatPct(trendPct,1)}`}</strong><small>${esc(comparison.label)}</small></div>
       <div class="executive-card"><span>MEJOR DÍA DEL PERÍODO</span><strong>${bestDay?esc(bestDay.date):'Sin datos'}</strong><small>${bestDay?`${formatNum(bestDay.production,0)} p²`:'--'}</small></div>
-      <div class="executive-card"><span>CALIDAD DE DATOS</span><strong class="${qualityIssues.length?'warn':'good'}">${qualityIssues.length?`${qualityIssues.length} aviso(s)`:'Datos consistentes'}</strong><small>${qualityIssues.length?esc(qualityIssues[0]):'Sin errores detectados'}</small></div>
+      <div class="executive-card"><span>CALIDAD DE DATOS · TODAS LAS FUENTES</span><strong class="${qualityIssues.length?'warn':'good'}">${qualityIssues.length?`${qualityIssues.length} aviso(s)`:'Sin incidencias detectadas'}</strong><small>${qualityIssues.length?esc(qualityIssues[0]):'Controles disponibles de producción e importación'}</small>${qualityIssues.length?`<details><summary>Ver fuentes y avisos</summary><ul>${qualityIssues.map(issue=>`<li>${esc(issue)}</li>`).join('')}</ul></details>`:''}</div>
     </div>
     <div class="operational-alerts">${alerts.slice(0,4).map(alert=>`<div class="operational-alert ${alert.type==='warning'?'':alert.type}">${alert.type==='ok'?'✓':'⚠'} ${esc(alert.text)}</div>`).join('')}</div>
     <div class="rolls-kpis">
@@ -3406,7 +3468,7 @@ function renderDashboard(){
   });
 
   const activeWeeks=getActiveWeeks(weekValues);
-  const actualDia=getActualDia(), actualSem=getActualSem(), actualMes=getActualMes(), objDia=numMetric('objDia'), objSem=numMetric('objSem'), objMes=numMetric('objMes');
+  const actualDia=getActualDia(), actualSem=getActualSem(), actualMes=getActualMes(), objDia=numMetric('objDia'), objSem=numMetric('objSem'), objMes=getMonthlyProductionGoal();
   const targetLine = objSem>0 ? objSem : cfg.weeklyTargetLine;
   const faltSemana=Math.max(objSem-actualSem,0), faltMes=Math.max(objMes-actualMes,0), faltTotalActivo=activeWeeks.length?activeWeeks.reduce((a,b)=>a+Math.max(targetLine-b,0),0):0;
   const expectedWeek = getExpectedProgress('week');
@@ -3879,6 +3941,7 @@ $('suggestionsContainer').addEventListener('change',async e=>{
 function buildRemoteConfigPayload(){
   applyConfigFromPanel();
   return {
+    monthly_production_goals: JSON.stringify(cfg.monthlyGoals||{}),
     title_window: cfg.dashTitle,
     sheet_to_read: cfg.selectedSheet,
     use_google_sheets: !!cfg.useGoogleSheet,
@@ -3934,6 +3997,7 @@ function buildRemoteConfigPayload(){
   };
 }
 async function performSaveCfg(mode='manual', reason=''){
+  const previousGoals={...(cfg.monthlyGoals||{})};
   try{
     setSaveStatus(mode==='auto' ? `Guardando automáticamente… ${reason||''}` : 'Guardando cambios…', 'saving');
     const remoteConfig = buildRemoteConfigPayload();
@@ -3944,6 +4008,12 @@ async function performSaveCfg(mode='manual', reason=''){
     };
     const saved = await jsonpRequest({ action:'saveGeneralConfig', payload: JSON.stringify(payload) });
     if(!saved || saved.status!=='ok') throw new Error((saved&&saved.message) || 'No se pudo guardar la configuración general');
+    if(Object.keys(cfg.monthlyGoals||{}).length||Object.keys(previousGoals).length){
+      const check=await jsonpRequest({action:'getConfig'});
+      const stored=check?.config?.monthly_production_goals;
+      let verified={};try{verified=typeof stored==='string'?JSON.parse(stored):stored||{};}catch(error){}
+      if(JSON.stringify(Object.entries(verified).sort())!==JSON.stringify(Object.entries(cfg.monthlyGoals).sort()))throw new Error('El servidor no confirmó las metas mensuales. Es necesario actualizar Apps Script para guardar monthly_production_goals.');
+    }
     saveCfgLS();
     renderConfig();
     renderDashboard();
@@ -3952,6 +4022,7 @@ async function performSaveCfg(mode='manual', reason=''){
     return true;
   }catch(err){
     console.error(err);
+    cfg.monthlyGoals=previousGoals;
     setSaveStatus(err.message || 'No se pudo guardar', 'error');
     if($('supportMsg')) $('supportMsg').textContent = err.message || 'No se pudo guardar.';
     if(mode==='manual') alert('No se pudo guardar la configuración. ' + (err.message||''));
@@ -3965,6 +4036,10 @@ function scheduleAutoSave(reason='cambio'){
   autoSaveTimer = setTimeout(()=>performSaveCfg('auto', reason), 900);
 }
 $('saveCfg').onclick=async ()=>{ await performSaveCfg('manual','guardar ahora'); };
+$('addMonthlyGoal').onclick=()=>{
+  if(currentUser?.role!=='admin')return;
+  $('monthlyGoalsEditor').insertAdjacentHTML('beforeend','<div class="row2 monthly-goal-row"><div class="field"><label>Mes</label><input type="month" data-goal-month></div><div class="field"><label>Meta (p²)</label><input type="number" min="1" step="1" data-goal-value></div></div>');
+};
 $('addKpiFieldBtn').onclick=()=>{
   if(!window.remoteKpiFields) window.remoteKpiFields=[];
   window.remoteKpiFields.push({activo:true,grupo:'indicators',titulo:'Nuevo KPI',subtitulo:'Descripción',source_type:'cell',source_key:'',celda:'A1',formato:'integer',tamano:'medium',orden:(window.remoteKpiFields.length+1)});
@@ -4000,7 +4075,19 @@ if($('saveUsersBtn')) $('saveUsersBtn').onclick=async ()=>{ const users=collectU
         activo: String(u.active || 'SI').toUpperCase() === 'SI'
       }))
     };
-    const data = await jsonpRequest({action:'saveUsers', payload: JSON.stringify(payload)}); if(data && data.status==='ok'){ $('usersMsg').textContent='Usuarios guardados correctamente.'; await refreshUsersFromBackend(); } else { $('usersMsg').textContent=(data&&data.message)||'No se pudieron guardar los usuarios.'; } }catch(err){ console.error(err); $('usersMsg').textContent='Error al guardar usuarios. Revisá Apps Script.'; } };
+    if(!users.some(u=>u.role==='admin'&&u.active==='SI'))throw new Error('Debe quedar al menos un administrador activo.');
+    const self=users.find(u=>u.username.toLowerCase()===currentUser.username.toLowerCase());
+    if(!self||self.role!=='admin'||self.active!=='SI')throw new Error('No podés eliminar, desactivar ni degradar tu propia cuenta.');
+    const data=await jsonpRequest({action:'saveUsers',payload:JSON.stringify(payload)});
+    if(!data||data.status!=='ok')throw new Error(data?.message||'No se pudieron guardar los usuarios.');
+    const check=await jsonpRequest({action:'listUsers'});
+    if(check?.status!=='ok'||!Array.isArray(check.users))throw new Error('Guardado enviado; no fue posible verificar el resultado en el servidor.');
+    const remaining=(window.pendingUserDeletes||[]).filter(name=>check.users.some(u=>String(u.usuario).toLowerCase()===name.toLowerCase()));
+    await refreshUsersFromBackend();
+    if(remaining.length){$('usersMsg').textContent=`El servidor conservó ${remaining.join(', ')}. La eliminación requiere actualizar Apps Script; no se eliminó esa cuenta.`;return;}
+    window.pendingUserDeletes=[];$('usersMsg').textContent='Guardado verificado: usuarios actualizados y eliminaciones confirmadas.';
+  }catch(err){console.error(err);$('usersMsg').textContent=err.message||'Error al guardar usuarios.';}
+};
 $('restoreMappingBtn').onclick=()=>{
   if(!confirm('¿Restaurar el mapeo recomendado? Esto reemplaza solo las celdas, manuales y notas del bloque de mapeo.')) return;
   cfg.mapping = deep(DEFAULT_MAPPING);
