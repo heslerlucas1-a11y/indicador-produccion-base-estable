@@ -196,6 +196,7 @@ body.plant-mode{background:#eef4f9}body.plant-mode .topbar,body.plant-mode .sugg
         <button class="view-btn" id="viewShiftCompareBtn" type="button">Comparación de turnos</button>
         <button class="view-btn" id="viewCascadeBtn" type="button">Tiempo muerto por sector</button>
         <button class="view-btn" id="viewFullTableBtn" type="button">Tabla completa</button>
+        <button class="view-btn" id="viewActivityBtn" type="button" data-admin-only="true" style="display:none">Actividad</button>
       </nav>
       <div class="industrial-account" aria-label="Cuenta">
         <button class="btn industrial-config" id="openCfg" data-admin-only="true">⚙ Configuración</button>
@@ -725,7 +726,7 @@ function jsonpRequest(params,timeoutMs=15000){
       finished = true;
       clearTimeout(timer);
       cleanup();
-      console.log('Respuesta backend:', data);
+      // Responses can contain private administration data; never log their contents.
       resolve(data);
     };
 
@@ -1790,6 +1791,7 @@ function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt
 function renderUserChip(){ $('userChip').textContent = currentUser ? `${currentUser.username} · ${currentUser.role}` : 'No autenticado'; }
 function updateRoleUi(){
   const isAdmin = !!(currentUser && currentUser.role==='admin');
+  if(!isAdmin) window.ActivityPanel?.clear();
   document.querySelectorAll('[data-admin-only="true"]').forEach(el=>{
     el.style.display = isAdmin ? '' : 'none';
   });
@@ -1820,6 +1822,7 @@ function setLoginPasswordVisible(visible){
   button.title=visible?'Ocultar contraseña':'Mostrar contraseña';
 }
 function lockApp(message='Ingrese usuario y contraseña para visualizar el dashboard'){
+  window.ActivityPanel?.clear();
   document.body.classList.remove('auth-ok');
   document.body.classList.add('auth-locked');
   $('appContent').setAttribute('aria-hidden','true');
@@ -2128,7 +2131,7 @@ async function refreshUsersFromBackend(){
   if(!currentUser || currentUser.role!=='admin') return;
   if(msg) msg.textContent='Cargando usuarios desde Apps Script...';
   try{
-    const data = await jsonpRequest({action:'listUsers'});
+    const data = await jsonpRequest({action:'listUsers',username:currentUser.username,password:currentUser.password});
     if(data && data.status==='ok' && Array.isArray(data.users)){
       window.userAdminRows = data.users.map(u=>({
         username:String(u.usuario || ''),
@@ -3409,6 +3412,10 @@ function autoArchiveHistoryForAdmin(){
   if(localStorage.getItem('history_last_archive_day')!==today)archiveCurrentHistory(false);
 }
 function showAppView(view){
+  if(view==='activity' && currentUser?.role!=='admin') return;
+  if($('activityView')) $('activityView').hidden=view!=='activity';
+  $('viewActivityBtn').classList.toggle('active',view==='activity');
+  if(view==='activity') window.ActivityPanel?.open();
   const rolls=view==='rolls';
   const full=view==='full';
   const compare=view==='compare';
@@ -4079,6 +4086,7 @@ $('cfgPanel').addEventListener('change', (e)=>{
 if($('addUserBtn')) $('addUserBtn').onclick=()=>{ if(!window.userAdminRows) window.userAdminRows=[]; window.userAdminRows.push({username:'',password:'',role:'visor',active:'SI',locked:false}); renderUsers(); };
 if($('saveUsersBtn')) $('saveUsersBtn').onclick=async ()=>{ const users=collectUsersFromPanel(); if(!users.length){ $('usersMsg').textContent='No hay usuarios para guardar.'; return; } if(!currentUser || currentUser.role!=='admin'){ $('usersMsg').textContent='Solo un administrador puede guardar usuarios.'; return; } $('usersMsg').textContent='Guardando usuarios en Apps Script...'; try{ const payload = {
       username: currentUser.username,
+      password: currentUser.password,
       users: users.map(u => ({
         usuario: u.username,
         password: u.password,
@@ -4091,7 +4099,7 @@ if($('saveUsersBtn')) $('saveUsersBtn').onclick=async ()=>{ const users=collectU
     if(!self||self.role!=='admin'||self.active!=='SI')throw new Error('No podés eliminar, desactivar ni degradar tu propia cuenta.');
     const data=await jsonpRequest({action:'saveUsers',payload:JSON.stringify(payload)});
     if(!data||data.status!=='ok')throw new Error(data?.message||'No se pudieron guardar los usuarios.');
-    const check=await jsonpRequest({action:'listUsers'});
+    const check=await jsonpRequest({action:'listUsers',username:currentUser.username,password:currentUser.password});
     if(check?.status!=='ok'||!Array.isArray(check.users))throw new Error('Guardado enviado; no fue posible verificar el resultado en el servidor.');
     const remaining=(window.pendingUserDeletes||[]).filter(name=>check.users.some(u=>String(u.usuario).toLowerCase()===name.toLowerCase()));
     await refreshUsersFromBackend();
@@ -4459,5 +4467,6 @@ setInterval(checkForPageUpdate,60000);
 <script src="whatsapp-report.js"></script>
 <script src="operational-reports.js"></script>
 <script src="mobile-toolbar.js"></script>
+<script src="activity-panel.js?v=20261029"></script>
 </body>
 </html>
